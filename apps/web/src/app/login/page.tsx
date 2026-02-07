@@ -2,19 +2,53 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useUser } from '@/context/UserContext'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleLogin = (e: React.FormEvent) => {
+  const { user, role, loading: contextLoading } = useUser()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Demo login
-    alert('Login successful! (This is a demo)')
-    router.push('/')
+    setLoading(true)
+    setError(null)
+
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (authError) throw authError
+
+      // Use the context role for redirection after login
+      // Wait for session change to propagate if needed, or rely on state
+      router.push('/') // Default, re-evaluated in useEffect
+      router.refresh()
+    } catch (err: any) {
+      setError(err.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
   }
+
+  // Redirect based on role when user is logged in
+  useEffect(() => {
+    if (user && !loading) {
+      if (role === 'VERIFIED_DOCTOR') {
+        router.push('/dashboard/doctor')
+      } else {
+        router.push('/')
+      }
+    }
+  }, [user, role, loading, router])
 
   return (
     <div className="min-h-screen bg-[#DAE0E6] flex items-center justify-center p-4">

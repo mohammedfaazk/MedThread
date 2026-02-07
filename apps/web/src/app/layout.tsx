@@ -1,10 +1,9 @@
+'use client'
+
 import type { Metadata } from 'next'
 import './globals.css'
-
-export const metadata: Metadata = {
-  title: 'MedThread - Professional Medical Discussion Platform',
-  description: 'Connect with verified healthcare professionals for trusted medical insights',
-}
+import { SocketProvider } from '@/context/SocketContext'
+import { UserProvider } from '@/context/UserContext'
 
 export default function RootLayout({
   children,
@@ -13,7 +12,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="antialiased">
+        <UserProvider>
+          <SocketProvider>
+            {children}
+          </SocketProvider>
+        </UserProvider>
+      </body>
     </html>
   )
 }

@@ -1,15 +1,32 @@
 'use client'
-
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
+import { useEffect, useState } from 'react'
 
 export function RightSidebar() {
-  const topDoctors = [
-    { name: 'Dr. Sarah Johnson', specialty: 'Cardiology', reputation: 2450, username: 'dr_sarah_j' },
-    { name: 'Dr. Michael Chen', specialty: 'Dermatology', reputation: 1890, username: 'dr_chen_derm' },
-    { name: 'Dr. Emily Rodriguez', specialty: 'Pediatrics', reputation: 1654, username: 'dr_emily_peds' },
-    { name: 'Dr. James Wilson', specialty: 'Neurology', reputation: 1432, username: 'dr_wilson_neuro' },
-    { name: 'Dr. Lisa Anderson', specialty: 'Orthopedics', reputation: 1289, username: 'dr_lisa_ortho' },
-  ]
+  const [topDoctors, setTopDoctors] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchTopDoctors()
+  }, [])
+
+  const fetchTopDoctors = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('doctors')
+        .select('*')
+        .order('reputation_score', { ascending: false })
+        .limit(5)
+
+      if (data) setTopDoctors(data)
+      if (error) console.error('Error fetching top doctors:', error)
+    } catch (error) {
+      console.error('Catch error fetching top doctors:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const trendingTopics = [
     { topic: 'COVID-19 Vaccines', posts: 234, slug: 'covid-vaccines' },
@@ -51,23 +68,35 @@ export function RightSidebar() {
             <h3 className="font-bold text-sm">Top Doctors This Week</h3>
           </div>
           <div className="p-3">
-            {topDoctors.map((doctor, idx) => (
-              <Link
-                key={doctor.username}
-                href={`/u/${doctor.username}`}
-                className="flex items-center gap-3 py-2 hover:bg-gray-50 rounded px-2 cursor-pointer"
-              >
-                <span className="text-sm font-bold text-gray-500 w-4">{idx + 1}</span>
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-sm">👨‍⚕️</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{doctor.name}</p>
-                  <p className="text-xs text-gray-500">{doctor.specialty}</p>
-                </div>
-                <span className="text-xs text-[#FF4500] font-semibold">⭐ {doctor.reputation}</span>
-              </Link>
-            ))}
+            {loading ? (
+              <p className="text-xs text-center text-gray-500 py-4">Loading top doctors...</p>
+            ) : topDoctors.length === 0 ? (
+              <p className="text-xs text-center text-gray-500 py-4">No doctors found</p>
+            ) : (
+              topDoctors.map((doctor, idx) => {
+                const displayUsername = doctor.username || doctor.id;
+                const displayName = doctor.full_name || doctor.name || `Dr. ${displayUsername}`;
+                const reputation = doctor.reputation_score || doctor.reputation || 0;
+
+                return (
+                  <Link
+                    key={doctor.id}
+                    href={`/u/${displayUsername}`}
+                    className="flex items-center gap-3 py-2 hover:bg-gray-50 rounded px-2 cursor-pointer"
+                  >
+                    <span className="text-sm font-bold text-gray-500 w-4">{idx + 1}</span>
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm">👨‍⚕️</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">{displayName}</p>
+                      <p className="text-xs text-gray-500 truncate">{doctor.specialty || 'Verified Doctor'}</p>
+                    </div>
+                    <span className="text-xs text-[#FF4500] font-semibold">⭐ {reputation}</span>
+                  </Link>
+                )
+              })
+            )}
           </div>
           <Link
             href="/doctors"

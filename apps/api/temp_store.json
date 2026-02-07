@@ -1,0 +1,80 @@
+{
+  "appointments": [
+    {
+      "id": "app-1770493674441",
+      "patientId": "5bae7f95-7c56-4653-bff3-0bb5a09d1e41",
+      "doctorId": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+      "startTime": "2026-02-11T10:30:00.000Z",
+      "endTime": "2026-02-11T11:30:00.000Z",
+      "reason": "Eye irritation and redness",
+      "status": "APPROVED",
+      "patient": {
+        "id": "5bae7f95-7c56-4653-bff3-0bb5a09d1e41",
+        "username": "Patient",
+        "avatar": null
+      },
+      "doctor": {
+        "id": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+        "username": "Doctor",
+        "avatar": null,
+        "specialty": "Medical"
+      }
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv-app-1770493674441",
+      "appointmentId": "app-1770493674441",
+      "participants": [
+        {
+          "id": "5bae7f95-7c56-4653-bff3-0bb5a09d1e41",
+          "username": "Patient",
+          "role": "PATIENT"
+        },
+        {
+          "id": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+          "username": "Doctor",
+          "role": "DOCTOR"
+        }
+      ],
+      "participantIds": [
+        "5bae7f95-7c56-4653-bff3-0bb5a09d1e41",
+        "7f6b352f-961c-44aa-be98-fcc5debd10c8"
+      ],
+      "messages": [],
+      "appointment": {
+        "status": "APPROVED",
+        "startTime": "2026-02-11T10:30:00.000Z",
+        "endTime": "2026-02-11T11:30:00.000Z"
+      }
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg-1770493826958",
+      "conversationId": "conv-app-1770493674441",
+      "senderId": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+      "content": "Hi. I am Dr. John Doe. How can I help you? ",
+      "type": "TEXT",
+      "createdAt": "2026-02-07T19:50:26.958Z",
+      "sender": {
+        "id": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1770494053574",
+      "conversationId": "conv-app-1770493674441",
+      "senderId": "5bae7f95-7c56-4653-bff3-0bb5a09d1e41",
+      "content": "Hello Doctor. I’ve been having redness and irritation in my right eye since yesterday. It feels itchy and slightly painful.",
+      "type": "TEXT",
+      "createdAt": "2026-02-07T19:54:13.574Z",
+      "sender": {
+        "id": "5bae7f95-7c56-4653-bff3-0bb5a09d1e41",
+        "username": "User",
+        "avatar": null
+      }
+    }
+  ]
+}

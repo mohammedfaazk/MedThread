@@ -11,7 +11,7 @@ interface PostCardProps {
   specialty?: string
   timeAgo: string
   title: string
-  content: string
+  content?: string
   tags: string[]
   upvotes: number
   downvotes: number
@@ -85,24 +85,21 @@ export function PostCard({
           <div className="w-10 bg-gray-50 flex flex-col items-center py-2 rounded-l">
             <button
               onClick={(e) => handleVote(e, 1)}
-              className={`p-1 hover:bg-gray-200 rounded ${
-                userVote === 1 ? 'text-[#FF4500]' : 'text-gray-400'
-              }`}
+              className={`p-1 hover:bg-gray-200 rounded ${userVote === 1 ? 'text-[#FF4500]' : 'text-gray-400'
+                }`}
             >
               <svg className="w-5 h-5" fill={userVote === 1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
               </svg>
             </button>
-            <span className={`text-xs font-bold my-1 ${
-              userVote === 1 ? 'text-[#FF4500]' : userVote === -1 ? 'text-[#7193ff]' : ''
-            }`}>
+            <span className={`text-xs font-bold my-1 ${userVote === 1 ? 'text-[#FF4500]' : userVote === -1 ? 'text-[#7193ff]' : ''
+              }`}>
               {score}
             </span>
             <button
               onClick={(e) => handleVote(e, -1)}
-              className={`p-1 hover:bg-gray-200 rounded ${
-                userVote === -1 ? 'text-[#7193ff]' : 'text-gray-400'
-              }`}
+              className={`p-1 hover:bg-gray-200 rounded ${userVote === -1 ? 'text-[#7193ff]' : 'text-gray-400'
+                }`}
             >
               <svg className="w-5 h-5" fill={userVote === -1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -191,9 +188,8 @@ export function PostCard({
               </button>
               <button
                 onClick={handleSave}
-                className={`flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded ${
-                  isSaved ? 'text-[#FF4500] font-semibold' : ''
-                }`}
+                className={`flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded ${isSaved ? 'text-[#FF4500] font-semibold' : ''
+                  }`}
               >
                 <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
