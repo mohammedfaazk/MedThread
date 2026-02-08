@@ -55,10 +55,13 @@ export const ChatList: React.FC<ChatListProps> = ({
 
     const loadConversations = async () => {
         try {
+            console.log('[ChatList] Loading conversations for userId:', currentUserId);
             const res = await axios.get(`/api/chat/conversations?userId=${currentUserId}`);
+            console.log('[ChatList] Received conversations:', res.data);
+            console.log('[ChatList] Number of conversations:', res.data.length);
             setConversations(res.data);
         } catch (error) {
-            console.error('Failed to load conversations:', error);
+            console.error('[ChatList] Failed to load conversations:', error);
         } finally {
             setLoading(false);
         }

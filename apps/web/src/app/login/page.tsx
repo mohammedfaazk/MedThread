@@ -41,14 +41,16 @@ export default function LoginPage() {
 
   // Redirect based on role when user is logged in
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !contextLoading && role) {
       if (role === 'VERIFIED_DOCTOR') {
-        router.push('/dashboard/doctor')
+        console.log('[Login] Redirecting doctor to dashboard');
+        router.push('/dashboard/doctor');
       } else {
-        router.push('/')
+        console.log('[Login] Redirecting patient to home');
+        router.push('/');
       }
     }
-  }, [user, role, loading, router])
+  }, [user, role, contextLoading, router])
 
   return (
     <div className="min-h-screen bg-[#DAE0E6] flex items-center justify-center p-4">

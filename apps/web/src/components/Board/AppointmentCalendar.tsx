@@ -55,21 +55,35 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
     const loadAvailability = async () => {
         try {
             setLoading(true);
+            
+            // Get all appointments for this doctor to mark booked slots
+            const appointmentsRes = await axios.get(`/api/appointments/appointments?userId=${doctorId}&role=doctor`);
+            const bookedAppointments = appointmentsRes.data || [];
+            
             const res = await axios.get(`/api/appointments/doctors/${doctorId}/availability`);
             if (res.data && res.data.length > 0) {
-                setAvailability(res.data);
+                // Mark slots as booked if they match an appointment
+                const slotsWithBookingStatus = res.data.map((slot: AvailabilitySlot) => {
+                    const isBooked = bookedAppointments.some((apt: any) => {
+                        const slotStart = new Date(slot.startTime).getTime();
+                        const aptStart = new Date(apt.startTime).getTime();
+                        return Math.abs(slotStart - aptStart) < 60000; // Within 1 minute
+                    });
+                    return { ...slot, isBooked };
+                });
+                setAvailability(slotsWithBookingStatus);
             } else {
-                generateDummySlots();
+                generateDummySlots(bookedAppointments);
             }
         } catch (error) {
             console.error('Failed to load availability, using dummy data:', error);
-            generateDummySlots();
+            generateDummySlots([]);
         } finally {
             setLoading(false);
         }
     };
 
-    const generateDummySlots = () => {
+    const generateDummySlots = (bookedAppointments: any[] = []) => {
         const dummySlots: AvailabilitySlot[] = [];
         const today = new Date();
 
@@ -85,12 +99,18 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                 const end = new Date(date);
                 end.setHours(hour + 1, 0, 0, 0);
 
+                // Check if this slot is booked
+                const isBooked = bookedAppointments.some((apt: any) => {
+                    const aptStart = new Date(apt.startTime).getTime();
+                    return Math.abs(start.getTime() - aptStart) < 60000;
+                });
+
                 dummySlots.push({
                     id: `dummy-${dayOfWeek}-${hour}-${i}`,
                     dayOfWeek,
                     startTime: start.toISOString(),
                     endTime: end.toISOString(),
-                    isBooked: false
+                    isBooked
                 });
             }
         }
@@ -167,10 +187,10 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                                 {slots.map((slot) => (
                                     <button
                                         key={slot.id}
-                                        onClick={() => setSelectedSlot(slot)}
+                                        onClick={() => !slot.isBooked && setSelectedSlot(slot)}
                                         disabled={slot.isBooked}
                                         className={`p-3 rounded-lg border-2 transition ${slot.isBooked
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            ? 'bg-red-100 border-red-300 text-red-600 cursor-not-allowed'
                                             : selectedSlot?.id === slot.id
                                                 ? 'border-blue-500 bg-blue-50'
                                                 : 'border-gray-200 hover:border-blue-300'
@@ -179,7 +199,7 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                                         {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         {' - '}
                                         {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        {slot.isBooked && <div className="text-xs mt-1">Booked</div>}
+                                        {slot.isBooked && <div className="text-xs mt-1 font-semibold">Not Available</div>}
                                     </button>
                                 ))}
                             </div>

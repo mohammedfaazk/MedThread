@@ -21,22 +21,41 @@ export default function UserProfilePage({ params }: { params: { username: string
 
   const fetchProfile = async () => {
     try {
-      // 1. Try finding as a doctor by ID
+      // 1. Try finding as a doctor by ID or user_id
       let { data: profile, error: dError } = await supabase
         .from('doctors')
         .select('*')
-        .eq('id', params.username)
+        .or(`id.eq.${params.username},user_id.eq.${params.username}`)
         .maybeSingle()
 
       let role: 'VERIFIED_DOCTOR' | 'PATIENT' = 'VERIFIED_DOCTOR'
 
-      // 2. Try finding as a patient by ID
+      // 2. If not found in Supabase, try doctor_data.json fallback
+      if (!profile) {
+        try {
+          const response = await fetch('/doctor_data.json');
+          if (response.ok) {
+            const doctorData = await response.json();
+            const matchedDoctor = doctorData.find((doc: any) => 
+              doc.id === params.username || doc.user_id === params.username
+            );
+            if (matchedDoctor) {
+              profile = matchedDoctor;
+              console.log('Found doctor in fallback JSON:', profile);
+            }
+          }
+        } catch (jsonError) {
+          console.warn('Failed to load doctor_data.json:', jsonError);
+        }
+      }
+
+      // 3. Try finding as a patient by ID
       if (!profile) {
         role = 'PATIENT'
         const { data: patientById } = await supabase
           .from('patient_health_record')
           .select('*')
-          .eq('user_id', params.username) // Use user_id for patients usually
+          .eq('user_id', params.username)
           .maybeSingle()
 
         if (!patientById) {

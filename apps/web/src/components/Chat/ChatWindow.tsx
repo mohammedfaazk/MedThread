@@ -125,6 +125,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Check file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB');
+            return;
+        }
+
         const reader = new FileReader();
         reader.onloadend = async () => {
             const base64 = reader.result as string;
@@ -137,11 +143,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     mimeType: file.type
                 });
 
+                const messageType = file.type.startsWith('image/') ? 'IMAGE' : 'FILE';
                 const message = {
                     conversationId,
                     senderId: currentUserId,
                     content: file.name,
-                    type: file.type.startsWith('image/') ? 'IMAGE' : 'FILE',
+                    type: messageType,
                     attachment: uploadRes.data.url
                 };
 
@@ -154,6 +161,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 setMessages(prev => [...prev, res.data]);
             } catch (error) {
                 console.error('Failed to upload file:', error);
+                alert('Failed to upload file. Please try again.');
             }
         };
 
@@ -187,14 +195,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                                 }`}
                         >
                             {msg.type === 'IMAGE' && msg.attachment && (
-                                <img src={msg.attachment} alt="attachment" className="max-w-full rounded mb-2" />
+                                <img src={msg.attachment} alt="attachment" className="max-w-full rounded mb-2 cursor-pointer" onClick={() => window.open(msg.attachment, '_blank')} />
                             )}
                             {msg.type === 'FILE' && msg.attachment && (
-                                <a href={msg.attachment} download className="underline">
-                                    📎 {msg.content}
+                                <a href={msg.attachment} download className="flex items-center gap-2 underline hover:opacity-80">
+                                    <span className="text-2xl">📄</span>
+                                    <div>
+                                        <div className="font-semibold">{msg.content}</div>
+                                        <div className="text-xs opacity-75">Click to download</div>
+                                    </div>
                                 </a>
                             )}
-                            {msg.type === 'TEXT' && <p>{msg.content}</p>}
+                            {msg.type === 'TEXT' && <p className="whitespace-pre-wrap break-words">{msg.content}</p>}
                             <p className="text-xs mt-1 opacity-75">
                                 {new Date(msg.createdAt).toLocaleTimeString()}
                             </p>
@@ -211,11 +223,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     ref={fileInputRef}
                     onChange={handleFileUpload}
                     className="hidden"
-                    accept="image/*,.pdf,.doc,.docx"
+                    accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
                 />
                 <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                    className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 transition"
+                    title="Attach document or image"
                 >
                     📎
                 </button>
@@ -232,7 +245,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 />
                 <button
                     onClick={sendMessage}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    disabled={!newMessage.trim()}
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
                 >
                     Send
                 </button>

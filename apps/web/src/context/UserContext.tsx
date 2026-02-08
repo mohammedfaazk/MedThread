@@ -32,7 +32,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             console.log('Fetching role for userId:', userId);
 
-            // 1. Check if user is a doctor
+            // 1. Check if user is a doctor in Supabase
             const { data: doctorData, error: dError } = await supabase
                 .from('doctors')
                 .select('id, user_id')
@@ -42,13 +42,33 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (dError) console.warn('Supabase doctor check error:', dError.message);
 
             if (doctorData) {
-                console.log('User identified as VERIFIED_DOCTOR, profileId:', doctorData.id);
+                console.log('User identified as VERIFIED_DOCTOR from Supabase, profileId:', doctorData.id);
                 setRole('VERIFIED_DOCTOR');
                 setProfileId(doctorData.id);
                 return;
             }
 
-            // 2. Check if user is a patient - try plural name as suggested by user
+            // 2. Fallback: Check doctor_data.json for doctor identification
+            try {
+                const doctorJsonResponse = await fetch('/doctor_data.json');
+                if (doctorJsonResponse.ok) {
+                    const doctorJsonData = await doctorJsonResponse.json();
+                    const matchedDoctor = doctorJsonData.find((doc: any) => 
+                        doc.user_id === userId || doc.id === userId
+                    );
+                    
+                    if (matchedDoctor) {
+                        console.log('User identified as VERIFIED_DOCTOR from doctor_data.json, profileId:', matchedDoctor.id);
+                        setRole('VERIFIED_DOCTOR');
+                        setProfileId(matchedDoctor.id);
+                        return;
+                    }
+                }
+            } catch (jsonError) {
+                console.warn('Failed to load doctor_data.json fallback:', jsonError);
+            }
+
+            // 3. Check if user is a patient - try plural name as suggested by user
             const { data: patientData, error: pError } = await supabase
                 .from('patient_health_records')
                 .select('id')
@@ -76,7 +96,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 return;
             }
 
-            // 3. Fallback to API
+            // 4. Fallback to API
             console.log('Check API fallback for role...');
             const response = await axios.get(`/api/users/${userId}`);
             if (response.data && response.data.role) {

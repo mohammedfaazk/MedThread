@@ -22,18 +22,23 @@ export function RightSidebar() {
       if (data && data.length > 0) {
         setTopDoctors(data);
       } else {
-        // Fallback to mock doctor data if DB is empty
-        console.log('[UI] Supabase doctors empty, using fallback');
-        setTopDoctors([
-          {
-            id: "7f6b352f-961c-44aa-be98-fcc5debd10c8",
-            user_id: "9d8480d1-b32d-4290-b9f3-a7b23bb9c2f4",
-            full_name: "Dr. John Doe M",
-            specialization: "Cardiologist",
-            reputation_score: 1500,
-            username: "drjohndoe.m"
+        // Fallback to doctor_data.json if DB is empty
+        console.log('[UI] Supabase doctors empty, loading from doctor_data.json');
+        try {
+          const response = await fetch('/doctor_data.json');
+          if (response.ok) {
+            const doctorData = await response.json();
+            // Sort by reputation_score if available, limit to 5
+            const sortedDoctors = doctorData
+              .sort((a: any, b: any) => (b.reputation_score || 0) - (a.reputation_score || 0))
+              .slice(0, 5);
+            setTopDoctors(sortedDoctors);
+          } else {
+            console.warn('[UI] Failed to load doctor_data.json');
           }
-        ]);
+        } catch (jsonError) {
+          console.error('[UI] Error loading doctor_data.json:', jsonError);
+        }
       }
       if (error) console.error('Error fetching top doctors:', error)
     } catch (error) {

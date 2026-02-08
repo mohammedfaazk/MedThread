@@ -19,6 +19,26 @@
         "avatar": null,
         "specialty": "Medical"
       }
+    },
+    {
+      "id": "app-1770561860520",
+      "patientId": "cd033969-da00-4e5f-b4c5-3d0a1fbcf49d",
+      "doctorId": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+      "startTime": "2026-02-09T10:30:00.000Z",
+      "endTime": "2026-02-09T11:30:00.000Z",
+      "reason": "chest discomfort and shortness of breath",
+      "status": "APPROVED",
+      "patient": {
+        "id": "cd033969-da00-4e5f-b4c5-3d0a1fbcf49d",
+        "username": "Patient",
+        "avatar": null
+      },
+      "doctor": {
+        "id": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+        "username": "Doctor",
+        "avatar": null,
+        "specialty": "Medical"
+      }
     }
   ],
   "conversations": [
@@ -47,6 +67,32 @@
         "startTime": "2026-02-11T10:30:00.000Z",
         "endTime": "2026-02-11T11:30:00.000Z"
       }
+    },
+    {
+      "id": "conv-app-1770561860520",
+      "appointmentId": "app-1770561860520",
+      "participants": [
+        {
+          "id": "cd033969-da00-4e5f-b4c5-3d0a1fbcf49d",
+          "username": "Patient",
+          "role": "PATIENT"
+        },
+        {
+          "id": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+          "username": "Doctor",
+          "role": "DOCTOR"
+        }
+      ],
+      "participantIds": [
+        "cd033969-da00-4e5f-b4c5-3d0a1fbcf49d",
+        "7f6b352f-961c-44aa-be98-fcc5debd10c8"
+      ],
+      "messages": [],
+      "appointment": {
+        "status": "APPROVED",
+        "startTime": "2026-02-09T10:30:00.000Z",
+        "endTime": "2026-02-09T11:30:00.000Z"
+      }
     }
   ],
   "messages": [
@@ -72,6 +118,32 @@
       "createdAt": "2026-02-07T19:54:13.574Z",
       "sender": {
         "id": "5bae7f95-7c56-4653-bff3-0bb5a09d1e41",
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1770562127578",
+      "conversationId": "conv-app-1770561860520",
+      "senderId": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+      "content": "Hi what seems to be the issue ?",
+      "type": "TEXT",
+      "createdAt": "2026-02-08T14:48:47.578Z",
+      "sender": {
+        "id": "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1770562197786",
+      "conversationId": "conv-app-1770561860520",
+      "senderId": "cd033969-da00-4e5f-b4c5-3d0a1fbcf49d",
+      "content": "Hello Doctor. I’ve been experiencing chest discomfort and shortness of breath for the past two days.",
+      "type": "TEXT",
+      "createdAt": "2026-02-08T14:49:57.786Z",
+      "sender": {
+        "id": "cd033969-da00-4e5f-b4c5-3d0a1fbcf49d",
         "username": "User",
         "avatar": null
       }

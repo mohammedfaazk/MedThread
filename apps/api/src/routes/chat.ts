@@ -40,14 +40,39 @@ router.get('/conversations', async (req, res) => {
             const approvedForUser = appointmentsStore.filter((a: any) =>
                 a.status === 'APPROVED' && (a.patientId === userId || a.doctorId === userId)
             );
-            approvedForUser.forEach(apt => createMockConversation(apt));
+            console.log(`[API] Found ${approvedForUser.length} approved appointments for user ${userId}`);
+            approvedForUser.forEach(apt => {
+                console.log(`[API] Creating/checking conversation for appointment ${apt.id}`);
+                createMockConversation(apt);
+            });
 
-            const userConversations = conversationsStore.filter(c =>
-                (c.participantIds && c.participantIds.includes(userId)) ||
-                c.participants.some((p: any) => p.id === userId)
-            );
-            console.log(`[API] Found ${userConversations.length} mock conversations for user ${userId}`);
-            res.json(userConversations);
+            const userConversations = conversationsStore.filter((c: any) => {
+                // Check both participantIds array and participants array
+                const hasInParticipantIds = c.participantIds && c.participantIds.includes(userId);
+                const hasInParticipants = c.participants && c.participants.some((p: any) => p.id === userId);
+                const match = hasInParticipantIds || hasInParticipants;
+                
+                if (match) {
+                    console.log(`[API] Conversation ${c.id} matches user ${userId}`);
+                }
+                return match;
+            });
+
+            // Populate messages for each conversation
+            const conversationsWithMessages = userConversations.map((conv: any) => {
+                const convMessages = messagesStore
+                    .filter((m: any) => m.conversationId === conv.id)
+                    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                
+                return {
+                    ...conv,
+                    messages: convMessages.slice(0, 1) // Only include last message for preview
+                };
+            });
+            
+            console.log(`[API] Returning ${conversationsWithMessages.length} mock conversations for user ${userId}`);
+            console.log(`[API] Total conversations in store: ${conversationsStore.length}`);
+            res.json(conversationsWithMessages);
         }
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch conversations' });

@@ -19,22 +19,25 @@ export default function DoctorsPage() {
       const { data, error } = await supabase
         .from('doctors')
         .select('*')
+        .order('reputation_score', { ascending: false })
 
       if (data && data.length > 0) {
+        console.log(`[UI] Found ${data.length} doctors in Supabase`);
         setDoctors(data);
       } else {
-        // Fallback to mock doctor data if DB is empty
-        console.log('[UI] Supabase doctors directory empty, using fallback');
-        setDoctors([
-          {
-            id: "7f6b352f-961c-44aa-be98-fcc5debd10c8",
-            user_id: "9d8480d1-b32d-4290-b9f3-a7b23bb9c2f4",
-            full_name: "Dr. John Doe M",
-            specialization: "Cardiologist",
-            reputation_score: 1500,
-            is_verified: true
+        // Fallback to doctor_data.json if DB is empty
+        console.log('[UI] Supabase doctors directory empty, loading from doctor_data.json');
+        try {
+          const response = await fetch('/doctor_data.json');
+          if (response.ok) {
+            const doctorData = await response.json();
+            setDoctors(doctorData);
+          } else {
+            console.warn('[UI] Failed to load doctor_data.json');
           }
-        ]);
+        } catch (jsonError) {
+          console.error('[UI] Error loading doctor_data.json:', jsonError);
+        }
       }
       if (error) console.error('Error fetching doctors:', error)
     } catch (error) {
@@ -59,13 +62,14 @@ export default function DoctorsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {doctors.map((doctor) => {
-              const displayUsername = doctor.id; // Use id as fallback for username
-              const displayName = doctor.full_name || `Dr. Professional`;
+              // Use user_id if available, otherwise use id
+              const doctorLinkId = doctor.user_id || doctor.id;
+              const displayName = doctor.full_name || doctor.name || `Dr. Professional`;
 
               return (
                 <Link
                   key={doctor.id}
-                  href={`/u/${displayUsername}`}
+                  href={`/u/${doctorLinkId}`}
                   className="bg-white rounded border border-gray-300 p-6 hover:border-gray-400 transition"
                 >
                   <div className="flex items-start gap-4">
@@ -81,10 +85,13 @@ export default function DoctorsPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">{doctor.specialization || 'Medical Professional'}</p>
+                      <p className="text-gray-600 text-sm mb-2">{doctor.specialization || doctor.specialty || 'Medical Professional'}</p>
                       <div className="flex items-center gap-4 text-sm">
                         <span className="text-[#FF4500] font-semibold">⭐ {doctor.reputation_score || 0} reputation</span>
                       </div>
+                      {doctor.hospital_name && (
+                        <p className="text-xs text-gray-500 mt-1">📍 {doctor.hospital_name}</p>
+                      )}
                     </div>
                   </div>
                 </Link>
