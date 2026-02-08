@@ -38,9 +38,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-        <h2 className="text-2xl font-bold mb-6">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 max-w-md w-full mx-4 shadow-elevated border border-white/20 relative">
+        <h2 className="text-2xl font-bold mb-6 text-charcoal">
           {isLogin ? 'Sign In' : 'Create Account'}
         </h2>
         
@@ -51,7 +51,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               placeholder="Username"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
               required
             />
           )}
@@ -61,7 +61,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             placeholder="Email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
             required
           />
           
@@ -70,13 +70,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             placeholder="Password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
             required
           />
           
           <button
             type="submit"
-            className="w-full py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition font-semibold"
+            className="w-full py-3 bg-charcoal text-white rounded-full hover:bg-charcoal-light transition font-semibold shadow-soft hover:shadow-elevated"
           >
             {isLogin ? 'Sign In' : 'Create Account'}
           </button>
@@ -85,7 +85,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         <div className="mt-4 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-orange-600 hover:text-orange-700 text-sm"
+            className="text-charcoal hover:text-yellow-200 text-sm font-medium transition"
           >
             {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
           </button>
@@ -93,7 +93,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-4 right-4 text-gray-400 hover:text-charcoal transition"
         >
           ✕
         </button>

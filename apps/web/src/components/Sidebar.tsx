@@ -4,16 +4,17 @@ import { useState } from 'react'
 import { CreatePostModal } from './CreatePostModal'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Home, TrendingUp, AlertCircle, List } from 'lucide-react'
 
 export function Sidebar() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const router = useRouter()
   
   const categories = [
-    { name: 'Home', icon: '🏠', href: '/', active: true },
-    { name: 'Popular', icon: '🔥', href: '/popular', active: false },
-    { name: 'Emergency', icon: '🚨', href: '/emergency', active: false },
-    { name: 'All', icon: '📋', href: '/all', active: false },
+    { name: 'Home', icon: Home, href: '/', active: true },
+    { name: 'Popular', icon: TrendingUp, href: '/popular', active: false },
+    { name: 'Emergency', icon: AlertCircle, href: '/emergency', active: false },
+    { name: 'All', icon: List, href: '/all', active: false },
   ]
 
   const specialties = [
@@ -36,28 +37,31 @@ export function Sidebar() {
       <aside className="hidden lg:block w-[260px] shrink-0">
         <div className="sticky top-[68px]">
           {/* Main Navigation */}
-          <div className="bg-white rounded border border-gray-300 mb-4">
-            {categories.map((cat) => (
-              <Link
-                key={cat.name}
-                href={cat.href}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 ${
-                  cat.active ? 'bg-gray-100 border-r-4 border-[#FF4500] font-semibold' : ''
-                }`}
-              >
-                <span className="text-lg">{cat.icon}</span>
-                <span>{cat.name}</span>
-              </Link>
-            ))}
+          <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/30 mb-4 shadow-lg overflow-hidden">
+            {categories.map((cat) => {
+              const IconComponent = cat.icon
+              return (
+                <Link
+                  key={cat.name}
+                  href={cat.href}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-cream-50/50 transition ${
+                    cat.active ? 'bg-yellow-100/50 border-r-4 border-yellow-200 font-semibold' : ''
+                  }`}
+                >
+                  <IconComponent className="w-5 h-5" />
+                  <span className="text-charcoal">{cat.name}</span>
+                </Link>
+              )
+            })}
           </div>
 
           {/* Specialties */}
-          <div className="bg-white rounded border border-gray-300 mb-4">
-            <div className="px-4 py-3 border-b border-gray-300 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-gray-500 uppercase">Medical Specialties</h3>
+          <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/30 mb-4 shadow-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200/50 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-600 uppercase">Medical Specialties</h3>
               <button
                 onClick={handleCreateCommunity}
-                className="text-xs text-blue-600 hover:underline font-semibold"
+                className="text-xs text-charcoal hover:text-yellow-200 font-semibold transition"
               >
                 + Create
               </button>
@@ -66,37 +70,37 @@ export function Sidebar() {
               {specialties.map((specialty) => (
                 <Link
                   key={specialty.slug}
-                  href={`/r/${specialty.slug}`}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                  href={`/m/${specialty.slug}`}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-cream-50/60 flex items-center gap-2 transition"
                 >
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  <span>r/{specialty.slug}</span>
+                  <span className="w-2 h-2 bg-yellow-200 rounded-full"></span>
+                  <span className="text-gray-700">m/{specialty.slug}</span>
                 </Link>
               ))}
             </div>
             <button
               onClick={handleCreateCommunity}
-              className="w-full px-4 py-2 text-sm text-blue-600 hover:bg-gray-50 border-t border-gray-200 font-semibold"
+              className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream-50/50 border-t border-gray-200/50 font-semibold transition"
             >
               + Create Community
             </button>
           </div>
 
           {/* Quick Links */}
-          <div className="bg-white rounded border border-gray-300 mb-4">
-            <div className="px-4 py-3 border-b border-gray-300">
-              <h3 className="text-xs font-bold text-gray-500 uppercase">Resources</h3>
+          <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/30 mb-4 shadow-lg overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200/50">
+              <h3 className="text-xs font-bold text-gray-600 uppercase">Resources</h3>
             </div>
-            <Link href="/about" className="block px-4 py-2 text-sm hover:bg-gray-50">
+            <Link href="/about" className="block px-4 py-2 text-sm hover:bg-cream-50/50 text-charcoal transition">
               About MedThread
             </Link>
-            <Link href="/help" className="block px-4 py-2 text-sm hover:bg-gray-50">
+            <Link href="/help" className="block px-4 py-2 text-sm hover:bg-cream-50/50 text-charcoal transition">
               Help Center
             </Link>
-            <Link href="/guidelines" className="block px-4 py-2 text-sm hover:bg-gray-50">
+            <Link href="/guidelines" className="block px-4 py-2 text-sm hover:bg-cream-50/50 text-charcoal transition">
               Community Guidelines
             </Link>
-            <Link href="/doctors" className="block px-4 py-2 text-sm hover:bg-gray-50">
+            <Link href="/doctors" className="block px-4 py-2 text-sm hover:bg-cream-50/50 text-charcoal transition">
               For Doctors
             </Link>
           </div>
@@ -104,7 +108,7 @@ export function Sidebar() {
           {/* Create Post Button */}
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="w-full px-4 py-2.5 bg-[#FF4500] text-white rounded-full font-semibold hover:bg-[#ff5722] transition"
+            className="w-full px-4 py-3 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition-all shadow-soft hover:shadow-elevated hover:scale-105"
           >
             Create Post
           </button>

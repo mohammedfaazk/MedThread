@@ -3,6 +3,7 @@
 import { Navbar } from '@/components/Navbar'
 import { Sidebar } from '@/components/Sidebar'
 import Link from 'next/link'
+import { Stethoscope, CheckCircle, Star } from 'lucide-react'
 
 export default function DoctorsPage() {
   const doctors = [
@@ -17,13 +18,13 @@ export default function DoctorsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#DAE0E6]">
+    <div className="min-h-screen">
       <Navbar />
       <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
         <Sidebar />
         <main className="flex-1 max-w-[900px]">
-          <div className="bg-white rounded border border-gray-300 p-6 mb-4">
-            <h1 className="text-3xl font-bold mb-2">Verified Doctors</h1>
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-6 mb-4 shadow-soft">
+            <h1 className="text-3xl font-bold mb-2 text-charcoal">Verified Doctors</h1>
             <p className="text-gray-600">Connect with verified healthcare professionals</p>
           </div>
 
@@ -32,24 +33,28 @@ export default function DoctorsPage() {
               <Link
                 key={doctor.username}
                 href={`/u/${doctor.username}`}
-                className="bg-white rounded border border-gray-300 p-6 hover:border-gray-400 transition"
+                className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-6 hover:border-yellow-200/50 hover:shadow-elevated transition shadow-soft"
               >
                 <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
-                    👨‍⚕️
+                  <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center shadow-soft">
+                    <Stethoscope className="w-8 h-8 text-charcoal" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-lg">{doctor.name}</h3>
+                      <h3 className="font-bold text-lg text-charcoal">{doctor.name}</h3>
                       {doctor.verified && (
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
-                          ✓ Verified
+                        <span className="px-2 py-0.5 bg-blue-600 text-white rounded-full text-xs font-semibold flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" />
+                          Verified
                         </span>
                       )}
                     </div>
                     <p className="text-gray-600 text-sm mb-2">{doctor.specialty}</p>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="text-[#FF4500] font-semibold">⭐ {doctor.reputation} reputation</span>
+                      <span className="text-yellow-200 font-semibold flex items-center gap-1">
+                        <Star className="w-4 h-4 fill-current" />
+                        {doctor.reputation} reputation
+                      </span>
                     </div>
                   </div>
                 </div>

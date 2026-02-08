@@ -18,7 +18,6 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
     medications: [] as string[],
     primarySymptoms: [] as string[],
     duration: '',
-    severity: 'MODERATE',
     description: ''
   })
 
@@ -37,14 +36,14 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
   }
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-sm">
+    <div className="bg-white/40 backdrop-blur-md rounded-2xl p-8 shadow-soft border border-white/20">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
           {[1, 2, 3].map(i => (
             <div
               key={i}
-              className={`flex-1 h-2 rounded-full ${
-                i <= step ? 'bg-orange-500' : 'bg-gray-200'
+              className={`flex-1 h-2 rounded-full transition ${
+                i <= step ? 'bg-yellow-200' : 'bg-gray-200/50'
               }`}
             />
           ))}
@@ -58,25 +57,25 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           animate={{ opacity: 1, x: 0 }}
           className="space-y-6"
         >
-          <h2 className="text-2xl font-bold mb-6">Basic Information</h2>
+          <h2 className="text-2xl font-bold mb-6 text-charcoal">Basic Information</h2>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Age</label>
+              <label className="block text-sm font-medium mb-2 text-charcoal">Age</label>
               <input
                 type="number"
                 value={formData.age}
                 onChange={e => setFormData({...formData, age: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
                 placeholder="Enter age"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Gender</label>
+              <label className="block text-sm font-medium mb-2 text-charcoal">Gender</label>
               <select
                 value={formData.gender}
                 onChange={e => setFormData({...formData, gender: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
               >
                 <option value="">Select</option>
                 <option value="male">Male</option>
@@ -87,19 +86,19 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Weight (kg)</label>
+            <label className="block text-sm font-medium mb-2 text-charcoal">Weight (kg)</label>
             <input
               type="number"
               value={formData.weight}
               onChange={e => setFormData({...formData, weight: e.target.value})}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
               placeholder="Enter weight"
             />
           </div>
 
           <button
             onClick={() => setStep(2)}
-            className="w-full py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition font-semibold"
+            className="w-full py-3 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-all font-semibold shadow-soft hover:shadow-elevated"
           >
             Continue
           </button>
@@ -112,19 +111,19 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           animate={{ opacity: 1, x: 0 }}
           className="space-y-6"
         >
-          <h2 className="text-2xl font-bold mb-6">Symptoms</h2>
+          <h2 className="text-2xl font-bold mb-6 text-charcoal">Symptoms</h2>
           
           <div>
-            <label className="block text-sm font-medium mb-3">Select your symptoms</label>
+            <label className="block text-sm font-medium mb-3 text-charcoal">Select your symptoms</label>
             <div className="flex flex-wrap gap-2">
               {commonSymptoms.map(symptom => (
                 <button
                   key={symptom}
                   onClick={() => toggleSymptom(symptom)}
-                  className={`px-4 py-2 rounded-full transition ${
+                  className={`px-4 py-2 rounded-full transition-all ${
                     formData.primarySymptoms.includes(symptom)
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-yellow-200 text-charcoal shadow-soft'
+                      : 'bg-cream-100/50 text-gray-700 hover:bg-cream-100'
                   }`}
                 >
                   {symptom}
@@ -134,11 +133,11 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Duration</label>
+            <label className="block text-sm font-medium mb-2 text-charcoal">Duration</label>
             <select
               value={formData.duration}
               onChange={e => setFormData({...formData, duration: e.target.value})}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
             >
               <option value="">Select duration</option>
               <option value="less_than_day">Less than a day</option>
@@ -149,35 +148,16 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Severity</label>
-            <div className="flex gap-2">
-              {['LOW', 'MODERATE', 'HIGH'].map(level => (
-                <button
-                  key={level}
-                  onClick={() => setFormData({...formData, severity: level})}
-                  className={`flex-1 py-2 rounded-lg transition ${
-                    formData.severity === level
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="flex gap-3">
             <button
               onClick={() => setStep(1)}
-              className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition font-semibold"
+              className="flex-1 py-3 border-2 border-gray-200 text-gray-700 rounded-full hover:bg-cream-50/50 transition-all font-semibold"
             >
               Back
             </button>
             <button
               onClick={() => setStep(3)}
-              className="flex-1 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition font-semibold"
+              className="flex-1 py-3 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-all font-semibold shadow-soft hover:shadow-elevated"
             >
               Continue
             </button>
@@ -191,17 +171,17 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           animate={{ opacity: 1, x: 0 }}
           className="space-y-6"
         >
-          <h2 className="text-2xl font-bold mb-6">Additional Details</h2>
+          <h2 className="text-2xl font-bold mb-6 text-charcoal">Additional Details</h2>
           
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-2 text-charcoal">
               Describe your symptoms in detail
             </label>
             <textarea
               value={formData.description}
               onChange={e => setFormData({...formData, description: e.target.value})}
               rows={6}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
               placeholder="Please provide as much detail as possible..."
             />
           </div>
@@ -209,13 +189,13 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           <div className="flex gap-3">
             <button
               onClick={() => setStep(2)}
-              className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition font-semibold"
+              className="flex-1 py-3 border-2 border-gray-200 text-gray-700 rounded-full hover:bg-cream-50/50 transition-all font-semibold"
             >
               Back
             </button>
             <button
               onClick={() => alert('Post created!')}
-              className="flex-1 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition font-semibold"
+              className="flex-1 py-3 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-all font-semibold shadow-soft hover:shadow-elevated"
             >
               Publish Post
             </button>

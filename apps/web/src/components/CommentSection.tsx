@@ -65,28 +65,28 @@ export function CommentSection({ postId }: CommentSectionProps) {
   }
 
   return (
-    <div className="bg-white rounded border border-gray-300">
+    <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 mb-4 shadow-lg">
       {/* Comment Input */}
-      <div className="p-4 border-b border-gray-200">
-        <p className="text-sm text-gray-600 mb-2">Comment as <span className="text-blue-600 font-semibold">guest</span></p>
+      <div className="p-4 border-b border-gray-200/50">
+        <p className="text-sm text-gray-600 mb-2">Comment as <span className="text-charcoal font-semibold">guest</span></p>
         <textarea
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           placeholder="What are your thoughts?"
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 resize-none"
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-yellow-200 resize-none bg-white/50 backdrop-blur-sm transition"
           rows={4}
         />
         <div className="flex justify-end gap-2 mt-2">
           <button
             onClick={() => setCommentText('')}
-            className="px-4 py-1.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-full"
+            className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-cream-50/50 rounded-full transition"
           >
             Cancel
           </button>
           <button
             onClick={handleComment}
             disabled={!commentText.trim()}
-            className="px-4 py-1.5 text-sm font-semibold bg-[#FF4500] text-white rounded-full hover:bg-[#ff5722] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-semibold bg-charcoal text-white rounded-full hover:bg-charcoal-light disabled:opacity-50 disabled:cursor-not-allowed transition shadow-soft"
           >
             Comment
           </button>
@@ -94,35 +94,35 @@ export function CommentSection({ postId }: CommentSectionProps) {
       </div>
 
       {/* Sort Options */}
-      <div className="px-4 py-2 border-b border-gray-200 flex items-center gap-2">
+      <div className="px-4 py-2 border-b border-gray-200/50 flex items-center gap-2">
         <button
           onClick={() => setSortBy('best')}
-          className={`px-3 py-1 text-sm font-semibold rounded ${
-            sortBy === 'best' ? 'bg-gray-100' : 'hover:bg-gray-50'
+          className={`px-3 py-1.5 text-sm font-semibold rounded-full transition ${
+            sortBy === 'best' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
           }`}
         >
           Best
         </button>
         <button
           onClick={() => setSortBy('top')}
-          className={`px-3 py-1 text-sm font-semibold rounded ${
-            sortBy === 'top' ? 'bg-gray-100' : 'hover:bg-gray-50'
+          className={`px-3 py-1.5 text-sm font-semibold rounded-full transition ${
+            sortBy === 'top' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
           }`}
         >
           Top
         </button>
         <button
           onClick={() => setSortBy('new')}
-          className={`px-3 py-1 text-sm font-semibold rounded ${
-            sortBy === 'new' ? 'bg-gray-100' : 'hover:bg-gray-50'
+          className={`px-3 py-1.5 text-sm font-semibold rounded-full transition ${
+            sortBy === 'new' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
           }`}
         >
           New
         </button>
         <button
           onClick={() => setSortBy('controversial')}
-          className={`px-3 py-1 text-sm font-semibold rounded ${
-            sortBy === 'controversial' ? 'bg-gray-100' : 'hover:bg-gray-50'
+          className={`px-3 py-1.5 text-sm font-semibold rounded-full transition ${
+            sortBy === 'controversial' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
           }`}
         >
           Controversial
@@ -130,7 +130,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
       </div>
 
       {/* Comments */}
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-gray-200/50">
         {comments.map((comment) => (
           <Comment key={comment.id} {...comment} />
         ))}

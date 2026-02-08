@@ -17,13 +17,13 @@ export default function TrendingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#DAE0E6]">
+    <div className="min-h-screen">
       <Navbar />
       <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
         <Sidebar />
         <main className="flex-1 max-w-[900px]">
-          <div className="bg-white rounded border border-gray-300 p-6 mb-4">
-            <h1 className="text-3xl font-bold mb-2">Trending Topics</h1>
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-6 mb-4 shadow-soft">
+            <h1 className="text-3xl font-bold mb-2 text-charcoal">Trending Topics</h1>
             <p className="text-gray-600">Most discussed health topics right now</p>
           </div>
 
@@ -32,17 +32,17 @@ export default function TrendingPage() {
               <Link
                 key={item.slug}
                 href={`/search?q=${item.slug}`}
-                className="bg-white rounded border border-gray-300 p-6 hover:border-gray-400 transition block"
+                className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-6 hover:border-yellow-200/50 hover:shadow-elevated transition block shadow-soft"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <span className="text-2xl font-bold text-gray-400">#{idx + 1}</span>
                     <div>
-                      <h3 className="font-bold text-lg">{item.topic}</h3>
+                      <h3 className="font-bold text-lg text-charcoal">{item.topic}</h3>
                       <p className="text-sm text-gray-600">{item.posts} posts</p>
                     </div>
                   </div>
-                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">
+                  <span className="px-3 py-1 bg-green-100/80 backdrop-blur-sm text-green-700 rounded-full text-sm font-semibold">
                     {item.growth}
                   </span>
                 </div>

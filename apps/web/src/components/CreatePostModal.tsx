@@ -66,12 +66,12 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-elevated border border-white/20">
         {/* Header */}
-        <div className="border-b border-gray-300 p-4 flex items-center justify-between sticky top-0 bg-white">
-          <h2 className="text-lg font-semibold">Create a post</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <div className="border-b border-gray-200/50 p-4 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md">
+          <h2 className="text-lg font-semibold text-charcoal">Create a post</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-charcoal transition">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -81,11 +81,11 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
         <div className="p-4">
           {/* Community Selector */}
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Choose a community</label>
+            <label className="block text-sm font-medium mb-2 text-charcoal">Choose a community</label>
             <select
               value={community}
               onChange={(e) => setCommunity(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-yellow-200 bg-white/50 backdrop-blur-sm transition"
             >
               <option value="general">r/general - General Health</option>
               <option value="cardiology">r/cardiology - Cardiology</option>
@@ -96,43 +96,43 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
           </div>
 
           {/* Post Type Tabs */}
-          <div className="flex gap-2 mb-4 border-b border-gray-300">
+          <div className="flex gap-2 mb-4 border-b border-gray-200/50">
             <button
               onClick={() => setPostType('text')}
-              className={`px-4 py-2 font-medium ${
+              className={`px-4 py-2 font-medium rounded-t-xl transition ${
                 postType === 'text'
-                  ? 'border-b-2 border-blue-500 text-blue-500'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-yellow-100 text-charcoal'
+                  : 'text-gray-600 hover:bg-cream-50/50'
               }`}
             >
               📝 Text
             </button>
             <button
               onClick={() => setPostType('image')}
-              className={`px-4 py-2 font-medium ${
+              className={`px-4 py-2 font-medium rounded-t-xl transition ${
                 postType === 'image'
-                  ? 'border-b-2 border-blue-500 text-blue-500'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-yellow-100 text-charcoal'
+                  : 'text-gray-600 hover:bg-cream-50/50'
               }`}
             >
               🖼️ Image
             </button>
             <button
               onClick={() => setPostType('link')}
-              className={`px-4 py-2 font-medium ${
+              className={`px-4 py-2 font-medium rounded-t-xl transition ${
                 postType === 'link'
-                  ? 'border-b-2 border-blue-500 text-blue-500'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-yellow-100 text-charcoal'
+                  : 'text-gray-600 hover:bg-cream-50/50'
               }`}
             >
               🔗 Link
             </button>
             <button
               onClick={() => setPostType('poll')}
-              className={`px-4 py-2 font-medium ${
+              className={`px-4 py-2 font-medium rounded-t-xl transition ${
                 postType === 'poll'
-                  ? 'border-b-2 border-blue-500 text-blue-500'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'bg-yellow-100 text-charcoal'
+                  : 'text-gray-600 hover:bg-cream-50/50'
               }`}
             >
               📊 Poll
@@ -147,7 +147,7 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={300}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-yellow-200 bg-white/50 backdrop-blur-sm transition"
             />
             <div className="text-xs text-gray-500 mt-1">{title.length}/300</div>
           </div>
@@ -160,19 +160,19 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500 resize-none"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-yellow-200 resize-none bg-white/50 backdrop-blur-sm transition"
               />
               <div className="flex gap-2 mt-2">
-                <button className="p-2 hover:bg-gray-100 rounded" title="Bold">
+                <button className="p-2 hover:bg-cream-50/50 rounded-lg transition" title="Bold">
                   <strong>B</strong>
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded" title="Italic">
+                <button className="p-2 hover:bg-cream-50/50 rounded-lg transition" title="Italic">
                   <em>I</em>
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded" title="Link">
+                <button className="p-2 hover:bg-cream-50/50 rounded-lg transition" title="Link">
                   🔗
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded" title="List">
+                <button className="p-2 hover:bg-cream-50/50 rounded-lg transition" title="List">
                   ≡
                 </button>
               </div>
@@ -181,12 +181,12 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
 
           {postType === 'image' && (
             <div className="mb-4">
-              <div className="border-2 border-dashed border-gray-300 rounded p-8 text-center">
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-cream-50/30">
                 <svg className="w-12 h-12 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p className="text-sm text-gray-600 mb-2">Drag and drop images or</p>
-                <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                <button className="px-4 py-2 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition shadow-soft">
                   Upload
                 </button>
               </div>
@@ -195,11 +195,11 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
 
           {/* Flair */}
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Flair (optional)</label>
+            <label className="block text-sm font-medium mb-2 text-charcoal">Flair (optional)</label>
             <select
               value={flair}
               onChange={(e) => setFlair(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-yellow-200 bg-white/50 backdrop-blur-sm transition"
             >
               <option value="">No flair</option>
               <option value="Question">Question</option>
@@ -217,33 +217,33 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
                 type="checkbox"
                 checked={isNSFW}
                 onChange={(e) => setIsNSFW(e.target.checked)}
-                className="w-4 h-4"
+                className="w-4 h-4 rounded"
               />
-              <span className="text-sm">Mark as NSFW</span>
+              <span className="text-sm text-charcoal">Mark as NSFW</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isSpoiler}
                 onChange={(e) => setIsSpoiler(e.target.checked)}
-                className="w-4 h-4"
+                className="w-4 h-4 rounded"
               />
-              <span className="text-sm">Mark as spoiler</span>
+              <span className="text-sm text-charcoal">Mark as spoiler</span>
             </label>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t border-gray-300">
+          <div className="flex gap-3 pt-4 border-t border-gray-200/50">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50"
+              className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-full font-semibold hover:bg-cream-50/50 text-charcoal transition"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!title.trim()}
-              className="flex-1 px-4 py-2 bg-[#FF4500] text-white rounded-full font-semibold hover:bg-[#ff5722] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-charcoal-light disabled:opacity-50 disabled:cursor-not-allowed transition shadow-soft hover:shadow-elevated"
             >
               Post
             </button>

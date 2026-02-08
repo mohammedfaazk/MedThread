@@ -28,7 +28,6 @@ interface Post {
   doctorReplies: number
   tags: string[]
   flair?: string
-  severity?: 'low' | 'moderate' | 'high'
   isPinned?: boolean
   isNSFW?: boolean
   isSpoiler?: boolean

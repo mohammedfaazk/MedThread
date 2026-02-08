@@ -3,6 +3,7 @@
 import { useStore } from '@/store/useStore'
 import { PostCard } from './PostCard'
 import { useEffect } from 'react'
+import { Flame, Sparkles, ArrowUp, TrendingUp } from 'lucide-react'
 
 export function PostFeed() {
   const { posts, setPosts, sortBy, setSortBy } = useStore()
@@ -25,7 +26,6 @@ export function PostFeed() {
         score: 22,
         comments: 12,
         doctorReplies: 3,
-        severity: 'moderate',
         userVote: null,
         isSaved: false,
         isHidden: false
@@ -67,7 +67,6 @@ export function PostFeed() {
         score: 64,
         comments: 34,
         doctorReplies: 5,
-        severity: 'high',
         userVote: null,
         isSaved: false,
         isHidden: false
@@ -87,7 +86,6 @@ export function PostFeed() {
         score: 41,
         comments: 28,
         doctorReplies: 4,
-        severity: 'low',
         userVote: null,
         isSaved: false,
         isHidden: false
@@ -119,40 +117,44 @@ export function PostFeed() {
   const visiblePosts = posts.filter(post => !post.isHidden)
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {/* Sort Options */}
-      <div className="bg-white rounded border border-gray-300 p-3 flex items-center gap-2">
+      <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 p-3 flex items-center gap-2 shadow-soft">
         <button
           onClick={() => setSortBy('hot')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-            sortBy === 'hot' ? 'bg-gray-100' : 'hover:bg-gray-50'
+          className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
+            sortBy === 'hot' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
           }`}
         >
-          🔥 Hot
+          <Flame className="w-4 h-4" />
+          Hot
         </button>
         <button
           onClick={() => setSortBy('new')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-            sortBy === 'new' ? 'bg-gray-100' : 'hover:bg-gray-50'
+          className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
+            sortBy === 'new' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
           }`}
         >
-          🆕 New
+          <Sparkles className="w-4 h-4" />
+          New
         </button>
         <button
           onClick={() => setSortBy('top')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-            sortBy === 'top' ? 'bg-gray-100' : 'hover:bg-gray-50'
+          className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
+            sortBy === 'top' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
           }`}
         >
-          ⬆️ Top
+          <ArrowUp className="w-4 h-4" />
+          Top
         </button>
         <button
           onClick={() => setSortBy('rising')}
-          className={`px-3 py-1.5 rounded-full text-sm font-semibold ${
-            sortBy === 'rising' ? 'bg-gray-100' : 'hover:bg-gray-50'
+          className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
+            sortBy === 'rising' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
           }`}
         >
-          📈 Rising
+          <TrendingUp className="w-4 h-4" />
+          Rising
         </button>
       </div>
 

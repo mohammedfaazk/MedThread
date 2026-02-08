@@ -14,19 +14,31 @@ MedThread's design reflects:
 ### Primary Colors
 ```css
 --color-white: #FFFFFF
+--color-cream-bg: #F5F1E8
+--color-warm-yellow: #FFD166
+--color-soft-yellow: #FFF4D6
+--color-charcoal: #2D2D2D
+--color-dark-gray: #3A3A3A
 --color-medical-orange: #FF8C42
 --color-light-orange: #FFF3E8
 --color-trust-blue: #2F6FED
 --color-success-green: #2AA876
 --color-alert-red: #E5484D
+--color-light-gray: #E8E8E8
+--color-medium-gray: #9E9E9E
 ```
 
 ### Usage
-- **Medical Orange**: Primary actions, doctor badges, highlights
-- **Light Orange**: Backgrounds, surfaces, subtle emphasis
-- **Trust Blue**: Secondary actions, informational elements
+- **Cream Background**: Main app background for warmth
+- **Warm Yellow**: Primary highlights, active states, progress indicators
+- **Soft Yellow**: Hover states, subtle emphasis
+- **Charcoal/Dark Gray**: Primary text, dark UI elements, cards
+- **Medical Orange**: Doctor badges, medical-specific highlights
+- **Light Orange**: Medical backgrounds, doctor reply surfaces
+- **Trust Blue**: Links, informational elements
 - **Success Green**: Positive feedback, recovery indicators
 - **Alert Red**: Warnings, emergency alerts
+- **Light/Medium Gray**: Borders, disabled states, secondary text
 
 ## Typography
 
@@ -61,66 +73,91 @@ xxl: 64px
 ```
 
 ## Border Radius
-- Default: 16px
+- Large cards: 24px
+- Default cards: 20px
 - Pills/Badges: 999px (fully rounded)
-- Small elements: 8px
+- Small elements: 12px
+- Buttons: 999px (fully rounded)
 
 ## Shadows
 
-### Card Shadow
+### Soft Card Shadow
 ```css
-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 ```
 
 ### Elevated Shadow
 ```css
-box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+```
+
+### Subtle Inner Shadow
+```css
+box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
 ```
 
 ## Components
 
 ### Post Card
 - Background: White
-- Border Radius: 16px
+- Border Radius: 20px
 - Padding: 24px
-- Shadow: Card shadow
-- Hover: Slight elevation increase
+- Shadow: Soft card shadow (0 4px 20px rgba(0, 0, 0, 0.06))
+- Hover: Slight elevation increase + subtle scale
+- Border: None (shadow only)
 
 ### Thread Reply
-- Doctor replies: Orange background (#FFF3E8)
+- Doctor replies: Soft yellow background (#FFF4D6) with orange accent
 - Regular replies: White background
-- Border: 2px solid for doctors, 1px for others
-- Nested indicator: Left border line
+- Border Radius: 16px
+- Nested indicator: Left border line in warm yellow
 
 ### Symptom Tag
-- Padding: 6px 12px
+- Padding: 8px 16px
 - Border Radius: 999px (pill)
-- Background: Light orange (#FFF3E8)
-- Text: Medical orange (#FF8C42)
+- Background: Soft yellow (#FFF4D6)
+- Text: Charcoal (#2D2D2D)
+- Hover: Warm yellow (#FFD166)
 
 ### Doctor Badge
-- Border: 2px solid orange
-- Background: White
-- Icon: Checkmark in orange circle
+- Background: Charcoal (#2D2D2D)
+- Text: White
+- Border Radius: 999px
+- Padding: 6px 12px
+- Icon: Checkmark in warm yellow
 - Reputation score displayed
 
 ### Buttons
 
 #### Primary
 ```css
-background: #FF8C42
+background: #2D2D2D (charcoal)
 color: white
-padding: 12px 24px
+padding: 12px 28px
 border-radius: 999px
+hover: background: #3A3A3A
+transition: all 150ms ease
 ```
 
-#### Secondary
+#### Secondary (Accent)
+```css
+background: #FFD166 (warm yellow)
+color: #2D2D2D
+padding: 12px 28px
+border-radius: 999px
+hover: background: #FFC94D
+transition: all 150ms ease
+```
+
+#### Tertiary (Outline)
 ```css
 background: transparent
-border: 2px solid #FF8C42
-color: #FF8C42
-padding: 12px 24px
+border: 2px solid #E8E8E8
+color: #2D2D2D
+padding: 12px 28px
 border-radius: 999px
+hover: border-color: #FFD166
+transition: all 150ms ease
 ```
 
 ## Animations

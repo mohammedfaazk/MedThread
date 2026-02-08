@@ -7,9 +7,9 @@ import { RightSidebar } from '@/components/RightSidebar'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#DAE0E6]">
+    <div className="min-h-screen">
       <Navbar />
-      <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
+      <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
         <Sidebar />
         <main className="flex-1 max-w-[640px]">
           <PostFeed />

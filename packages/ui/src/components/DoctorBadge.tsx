@@ -1,4 +1,5 @@
 import React from 'react';
+import { CheckCircle, Star } from 'lucide-react';
 
 interface DoctorBadgeProps {
   doctorName: string;
@@ -16,38 +17,41 @@ export const DoctorBadge: React.FC<DoctorBadgeProps> = ({
       display: 'inline-flex',
       alignItems: 'center',
       gap: '8px',
-      padding: '8px 12px',
+      padding: '8px 16px',
       borderRadius: '999px',
-      border: '2px solid #FF8C42',
-      backgroundColor: '#FFFFFF'
+      border: '2px solid rgba(255, 209, 102, 0.5)',
+      backgroundColor: 'rgba(255, 255, 255, 0.4)',
+      backdropFilter: 'blur(12px)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
     }}>
       <div style={{
         width: '24px',
         height: '24px',
         borderRadius: '50%',
-        backgroundColor: '#FF8C42',
-        color: '#FFFFFF',
+        backgroundColor: '#FFD166',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '12px',
-        fontWeight: 'bold'
+        justifyContent: 'center'
       }}>
-        ✓
+        <CheckCircle style={{ width: '16px', height: '16px', color: '#2D2D2D' }} />
       </div>
       <div>
-        <div style={{ fontSize: '14px', fontWeight: 600 }}>{doctorName}</div>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: '#2D2D2D' }}>{doctorName}</div>
         {specialty && (
           <div style={{ fontSize: '12px', color: '#4B5563' }}>{specialty}</div>
         )}
       </div>
       <div style={{ 
         fontSize: '12px', 
-        color: '#FF8C42',
+        color: '#FFD166',
         fontWeight: 600,
-        marginLeft: '4px'
+        marginLeft: '4px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px'
       }}>
-        ⭐ {reputationScore}
+        <Star style={{ width: '12px', height: '12px', fill: 'currentColor' }} />
+        {reputationScore}
       </div>
     </div>
   );

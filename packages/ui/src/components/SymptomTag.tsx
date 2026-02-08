@@ -7,9 +7,9 @@ interface SymptomTagProps {
 
 export const SymptomTag: React.FC<SymptomTagProps> = ({ label, category = 'general' }) => {
   const colors = {
-    general: { bg: '#FFF3E8', text: '#FF8C42' },
-    urgent: { bg: '#FEE2E2', text: '#E5484D' },
-    chronic: { bg: '#E0F2FE', text: '#2F6FED' }
+    general: { bg: 'rgba(255, 209, 102, 0.15)', text: '#2D2D2D' },
+    urgent: { bg: 'rgba(254, 226, 226, 0.8)', text: '#DC2626' },
+    chronic: { bg: 'rgba(224, 242, 254, 0.8)', text: '#2563EB' }
   };
   
   const color = colors[category];
@@ -22,7 +22,9 @@ export const SymptomTag: React.FC<SymptomTagProps> = ({ label, category = 'gener
       backgroundColor: color.bg,
       color: color.text,
       fontSize: '14px',
-      fontWeight: 500
+      fontWeight: 500,
+      backdropFilter: 'blur(8px)',
+      border: '1px solid rgba(255, 255, 255, 0.2)'
     }}>
       {label}
     </span>

@@ -9,7 +9,7 @@ export function CreatePostButton({ floating }: CreatePostButtonProps) {
     return (
       <button
         onClick={() => window.location.href = '/create'}
-        className="w-14 h-14 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition flex items-center justify-center text-2xl"
+        className="w-14 h-14 bg-charcoal text-white rounded-full shadow-elevated hover:bg-charcoal-light transition-all flex items-center justify-center text-2xl hover:scale-110"
       >
         +
       </button>
@@ -19,7 +19,7 @@ export function CreatePostButton({ floating }: CreatePostButtonProps) {
   return (
     <button
       onClick={() => window.location.href = '/create'}
-      className="w-full px-6 py-3 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition font-semibold"
+      className="w-full px-6 py-3 bg-charcoal text-white rounded-full hover:bg-charcoal-light transition-all font-semibold shadow-lg hover:shadow-elevated"
     >
       Create New Post
     </button>

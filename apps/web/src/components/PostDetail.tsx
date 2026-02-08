@@ -1,6 +1,7 @@
 'use client'
 
 import { useStore } from '@/store/useStore'
+import { User, Stethoscope, CheckCircle } from 'lucide-react'
 
 interface PostDetailProps {
   postId: string
@@ -19,10 +20,10 @@ export function PostDetail({ postId }: PostDetailProps) {
   }
 
   return (
-    <div className="bg-white rounded border border-gray-300 mb-4">
+    <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 mb-4 shadow-lg">
       <div className="flex">
         {/* Vote Section */}
-        <div className="w-10 bg-gray-50 flex flex-col items-center py-4 rounded-l">
+        <div className="w-10 bg-gray-40 flex flex-col items-center py-4 rounded-l">
           <button
             onClick={() => handleVote(1)}
             className={`p-1 hover:bg-gray-200 rounded ${
@@ -54,12 +55,14 @@ export function PostDetail({ postId }: PostDetailProps) {
         <div className="flex-1 p-4">
           {/* Header */}
           <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-            <span className="font-semibold hover:underline cursor-pointer">
-              {post.authorType === 'doctor' ? '👨‍⚕️' : '👤'} {post.author}
+            <span className="font-semibold hover:underline cursor-pointer flex items-center gap-1">
+              {post.authorType === 'doctor' ? <Stethoscope className="w-4 h-4" /> : <User className="w-4 h-4" />}
+              {post.author}
             </span>
             {post.verified && (
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
-                ✓ Verified
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Verified
               </span>
             )}
             <span className="text-gray-500">• {post.timeAgo}</span>
