@@ -19,7 +19,22 @@ export function RightSidebar() {
         .order('reputation_score', { ascending: false })
         .limit(5)
 
-      if (data) setTopDoctors(data)
+      if (data && data.length > 0) {
+        setTopDoctors(data);
+      } else {
+        // Fallback to mock doctor data if DB is empty
+        console.log('[UI] Supabase doctors empty, using fallback');
+        setTopDoctors([
+          {
+            id: "7f6b352f-961c-44aa-be98-fcc5debd10c8",
+            user_id: "9d8480d1-b32d-4290-b9f3-a7b23bb9c2f4",
+            full_name: "Dr. John Doe M",
+            specialization: "Cardiologist",
+            reputation_score: 1500,
+            username: "drjohndoe.m"
+          }
+        ]);
+      }
       if (error) console.error('Error fetching top doctors:', error)
     } catch (error) {
       console.error('Catch error fetching top doctors:', error)
