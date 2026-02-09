@@ -9,6 +9,7 @@ interface UserContextType {
     role: 'PATIENT' | 'VERIFIED_DOCTOR' | null;
     profileId: string | null;
     loading: boolean;
+    loggingOut: boolean;
     signOut: () => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ const UserContext = createContext<UserContextType>({
     role: null,
     profileId: null,
     loading: true,
+    loggingOut: false,
     signOut: async () => { },
 });
 
@@ -27,6 +29,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [role, setRole] = useState<'PATIENT' | 'VERIFIED_DOCTOR' | null>(null);
     const [profileId, setProfileId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [loggingOut, setLoggingOut] = useState(false);
 
     const fetchRole = async (userId: string) => {
         try {
@@ -53,10 +56,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const doctorJsonResponse = await fetch('/doctor_data.json');
                 if (doctorJsonResponse.ok) {
                     const doctorJsonData = await doctorJsonResponse.json();
-                    const matchedDoctor = doctorJsonData.find((doc: any) => 
+                    const matchedDoctor = doctorJsonData.find((doc: any) =>
                         doc.user_id === userId || doc.id === userId
                     );
-                    
+
                     if (matchedDoctor) {
                         console.log('User identified as VERIFIED_DOCTOR from doctor_data.json, profileId:', matchedDoctor.id);
                         setRole('VERIFIED_DOCTOR');
@@ -143,14 +146,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const signOut = async () => {
-        await supabase.auth.signOut();
-        setUser(null);
-        setRole(null);
-        setProfileId(null);
+        try {
+            setLoggingOut(true);
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+
+            setUser(null);
+            setRole(null);
+            setProfileId(null);
+        } catch (error) {
+            console.error('Logout failed:', error);
+        } finally {
+            setLoggingOut(false);
+        }
     };
 
     return (
-        <UserContext.Provider value={{ user, role, profileId, loading, signOut }}>
+        <UserContext.Provider value={{ user, role, profileId, loading, loggingOut, signOut }}>
             {children}
         </UserContext.Provider>
     );

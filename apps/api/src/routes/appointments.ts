@@ -231,13 +231,13 @@ router.get('/appointments', async (req, res) => {
         const { userId, role } = req.query;
         console.log(`[API] Fetching appointments for userId: ${userId}, role: ${role}`);
 
-        let appointments = [];
+        let dbAppointments: any[] = [];
         try {
             const where = role === 'doctor'
                 ? { doctorId: userId as string }
                 : { patientId: userId as string };
 
-            appointments = await prisma.appointment.findMany({
+            dbAppointments = await prisma.appointment.findMany({
                 where,
                 include: {
                     patient: { select: { id: true, username: true, avatar: true } },
@@ -245,33 +245,44 @@ router.get('/appointments', async (req, res) => {
                 },
                 orderBy: { startTime: 'asc' }
             });
-            console.log(`[API] Found ${appointments.length} appointments in DB`);
+            console.log(`[API] Found ${dbAppointments.length} appointments in DB`);
         } catch (dbError) {
-            console.error('[API] DB appointments fetch failed, checking In-Memory store');
-            appointments = appointmentsStore.filter(a =>
-                role === 'doctor' ? a.doctorId === userId : a.patientId === userId
-            );
-
-            // If still empty, return one dummy so the UI isn't empty (optional but helpful)
-            if (appointments.length === 0) {
-                console.log('[API] Returning default dummy for empty list');
-                appointments = [
-                    {
-                        id: 'dummy-info-1',
-                        patientId: userId as string,
-                        doctorId: 'any',
-                        startTime: new Date(Date.now() + 3600000).toISOString(),
-                        endTime: new Date(Date.now() + 7200000).toISOString(),
-                        status: 'PENDING',
-                        reason: 'Please create a NEW request from the Patient side to test persistence.',
-                        patient: { id: userId as string, username: 'Real_User_ID_Check', avatar: null },
-                        doctor: { id: 'any', username: 'System', avatar: null, specialty: 'Instructions' }
-                    }
-                ];
-            }
+            console.error('[API] DB appointments fetch failed:', dbError);
         }
 
-        res.json(appointments);
+        // Always check Mock Store and merge
+        const mockAppointments = appointmentsStore.filter((a: any) =>
+            role === 'doctor' ? a.doctorId === userId : a.patientId === userId
+        );
+        console.log(`[API] Found ${mockAppointments.length} appointments in Mock Store`);
+
+        // Merge results, avoiding duplicates if any ID is in both (unlikely given current flow)
+        const allAppointments = [...dbAppointments];
+        mockAppointments.forEach((mockApt: any) => {
+            if (!allAppointments.find((dbApt: any) => dbApt.id === mockApt.id)) {
+                allAppointments.push(mockApt);
+            }
+        });
+
+        // Final fallback if both are empty
+        if (allAppointments.length === 0) {
+            console.log('[API] Returning default dummy for empty list');
+            return res.json([
+                {
+                    id: 'dummy-info-1',
+                    patientId: userId as string,
+                    doctorId: 'any',
+                    startTime: new Date(Date.now() + 3600000).toISOString(),
+                    endTime: new Date(Date.now() + 7200000).toISOString(),
+                    status: 'PENDING',
+                    reason: 'No appointments found. Please create a request from the Patient side.',
+                    patient: { id: userId as string, username: 'Patient', avatar: null },
+                    doctor: { id: 'any', username: 'System', avatar: null, specialty: 'Instructions' }
+                }
+            ]);
+        }
+
+        res.json(allAppointments);
     } catch (error) {
         console.error('Fetch appointments error:', error);
         res.status(500).json({ error: 'Failed to fetch appointments' });

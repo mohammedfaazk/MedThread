@@ -1,16 +1,15 @@
-'use client'
-
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/context/UserContext'
+import { Search, Bell, User, LogOut, Settings, Heart, Leaf, Stethoscope, ChevronDown, CheckCircle2 } from 'lucide-react'
 
 export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const router = useRouter()
-  const { user, loading, signOut } = useUser()
+  const { user, role, loading, loggingOut, signOut } = useUser()
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,8 +19,8 @@ export function Navbar() {
   }
 
   const handleLogout = async () => {
-    await signOut()
     setShowUserMenu(false)
+    await signOut()
     router.push('/login')
   }
 
@@ -29,28 +28,27 @@ export function Navbar() {
     <nav className="bg-white border-b border-gray-300 sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto px-6 h-12 flex items-center gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 mr-4 hover:opacity-80 transition">
-          <div className="w-8 h-8 bg-[#FF4500] rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-lg">M</span>
+        <Link href="/" className="flex items-center gap-2 mr-6 hover:opacity-80 transition group">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:scale-105 transition-transform">
+            <Leaf className="text-white w-6 h-6" />
           </div>
-          <span className="font-bold text-xl hidden sm:block">MedThread</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-xl tracking-tight text-slate-800 leading-none">MedThread</span>
+            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-0.5">Healthcare</span>
+          </div>
         </Link>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-[600px]">
-          <div className="relative">
+        <form onSubmit={handleSearch} className="flex-1 max-w-[500px]">
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
             <input
               type="text"
-              placeholder="Search medical discussions..."
+              placeholder={role === 'VERIFIED_DOCTOR' ? "Search patients, cases, medical records..." : "Search doctors, symptoms, medications..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-1.5 bg-gray-100 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-blue-500 focus:bg-white"
+              className="w-full pl-11 pr-4 py-2 bg-slate-100 border border-transparent rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
             />
-            <button type="submit" className="absolute right-3 top-2">
-              <svg className="w-5 h-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </button>
           </div>
         </form>
 
@@ -89,15 +87,19 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 rounded border border-transparent hover:border-gray-200"
+                  className="flex items-center gap-3 px-2 py-1.5 hover:bg-slate-50 rounded-2xl transition-all group"
                 >
-                  <div className="w-6 h-6 bg-[#FF4500] rounded-full flex items-center justify-center text-white text-[10px] font-bold">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-700 font-bold border border-blue-200 group-hover:shadow-md transition-all">
                     {user.email?.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-sm font-medium hidden md:block max-w-[100px] truncate">{user.email}</span>
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <div className="flex flex-col items-start hidden lg:flex">
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <span className="text-sm font-semibold text-slate-700 leading-none">{user.email?.split('@')[0]}</span>
+                      {role === 'VERIFIED_DOCTOR' && <CheckCircle2 className="w-3 h-3 text-blue-500 fill-blue-500/10" />}
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{role?.replace('_', ' ')}</span>
+                  </div>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showUserMenu && (
@@ -106,6 +108,11 @@ export function Navbar() {
                       <p className="font-semibold text-sm">My Profile</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </Link>
+                    {role === 'VERIFIED_DOCTOR' ? (
+                      <Link href="/dashboard/doctor" className="block px-4 py-2 hover:bg-gray-50 text-sm font-semibold text-blue-600">Doctor Dashboard</Link>
+                    ) : (
+                      <Link href="/dashboard/patient" className="block px-4 py-2 hover:bg-gray-50 text-sm font-semibold text-blue-600">Patient Dashboard</Link>
+                    )}
                     <Link href="/settings" className="block px-4 py-2 hover:bg-gray-50 text-sm">Settings</Link>
                     <Link href="/saved" className="block px-4 py-2 hover:bg-gray-50 text-sm">Saved Posts</Link>
                     <div className="border-t border-gray-200">
@@ -130,6 +137,17 @@ export function Navbar() {
           )}
         </div>
       </div>
+
+      {/* Logout Loading Overlay */}
+      {loggingOut && (
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-lg font-semibold text-gray-700">Logging out...</p>
+            <p className="text-sm text-gray-500">Please wait while we secure your session</p>
+          </div>
+        </div>
+      )}
     </nav>
   )
 }

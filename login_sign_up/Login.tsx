@@ -1,151 +1,80 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import { Mail, Lock, Phone, Fingerprint, Eye, EyeOff, AlertCircle, Stethoscope, User, Loader2, ArrowRight } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/context/UserContext';
-import Link from 'next/link';
+import { authService } from '@/services/authService';
+import { useTranslation } from '@/hooks/useTranslation';
+import { supabase } from '@/config/supabase';
 
-export default function LoginPage() {
-  const router = useRouter();
+export const Login = () => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [userType, setUserType] = useState<'patient' | 'doctor'>('patient');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const { user, role, loading: contextLoading } = useUser();
 
-  // Redirect based on role when user is logged in
-  useEffect(() => {
-    // Only redirect if we ARE NOT currently trying to log in manually
-    // This prevents the context from redirecting a user before handleLogin validation finishes
-    if (user && !contextLoading && role && !isLoggingIn) {
-      console.log(`[Login] User detected with role ${role}, redirecting to home`);
-      router.push('/');
-    }
-  }, [user, role, contextLoading, router, isLoggingIn]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) return;
-
+  // Patient Login Logic
+  const handlePatientLogin = async () => {
     setLoading(true);
     setError('');
-    setIsLoggingIn(true);
+    const result = await authService.login({ email, password });
+    if (result.success) {
+      navigate('/home');
+    } else {
+      setError(result.error || 'Login failed');
+    }
+    setLoading(false);
+  };
 
+  // Doctor Login Logic
+  const handleDoctorLogin = async () => {
+    setLoading(true);
+    setError('');
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
 
-      if (authError) {
-        setIsLoggingIn(false);
-        throw authError;
+      if (authError) throw authError;
+
+      // Check if doctor profile exists
+      const { data: doctor, error: docError } = await supabase
+        .from('doctors')
+        .select('*')
+        .eq('user_id', authData.user.id)
+        .single();
+
+      if (docError || !doctor) {
+        await supabase.auth.signOut();
+        throw new Error("This account is not registered as a doctor");
       }
 
-      const userId = data.user.id;
-      console.log(`[Login] ID: ${userId}, Type: ${userType}`);
-
-      // Strict Role Validation
-      if (userType === 'doctor') {
-        const { data: doctorData, error: docError } = await supabase
-          .from('doctors')
-          .select('id')
-          .or(`id.eq.${userId},user_id.eq.${userId}`)
-          .maybeSingle();
-
-        if (docError) console.warn('[Login] DB Doctor check error (could be 404):', docError.message);
-
-        let isDoctor = !!doctorData;
-
-        // Fallback: Check doctor_data.json
-        if (!isDoctor) {
-          console.log('[Login] DB check did not find doctor, checking doctor_data.json...');
-          try {
-            const doctorJsonResponse = await fetch('/doctor_data.json');
-            if (doctorJsonResponse.ok) {
-              const doctorJsonData = await doctorJsonResponse.json();
-              isDoctor = doctorJsonData.some((doc: any) => doc.user_id === userId || doc.id === userId);
-              console.log('[Login] JSON check result:', isDoctor);
-            }
-          } catch (e) {
-            console.warn('Failed to check doctor_data.json fallback during login');
-          }
-        }
-
-        // Final Doctor validation
-        if (!isDoctor) {
-          console.warn('[Login] Validation FAILED for doctor portal');
-          await supabase.auth.signOut();
-          setIsLoggingIn(false);
-          throw new Error('This account is not registered as a doctor. Please use the Patient login.');
-        }
-      } else {
-        // Patient login: Ensure they are NOT a doctor
-        const { data: dbDoctor, error: dbDocError } = await supabase
-          .from('doctors')
-          .select('id')
-          .or(`id.eq.${userId},user_id.eq.${userId}`)
-          .maybeSingle();
-
-        if (dbDocError) console.warn('[Login] DB Patient check anti-doctor error:', dbDocError.message);
-
-        let isActuallyDoctor = !!dbDoctor;
-
-        if (!isActuallyDoctor) {
-          try {
-            const doctorJsonResponse = await fetch('/doctor_data.json');
-            if (doctorJsonResponse.ok) {
-              const doctorJsonData = await doctorJsonResponse.json();
-              isActuallyDoctor = doctorJsonData.some((doc: any) => doc.user_id === userId || doc.id === userId);
-              console.log('[Login] Patient portal anti-doctor JSON check:', isActuallyDoctor);
-            }
-          } catch (e) { }
-        }
-
-        if (isActuallyDoctor) {
-          console.warn('[Login] Validation FAILED: Doctor tried to login through patient portal');
-          await supabase.auth.signOut();
-          setIsLoggingIn(false);
-          throw new Error('This account is registered as a doctor. Please use the Doctor login.');
-        }
-
-        console.log('[Login] Patient validation PASSED');
-      }
-
-      console.log('[Login] Sign in successful and role verified');
-
-      // Now it's safe to redirect
-      router.push('/');
-      router.refresh();
-
-      // We don't necessarily need to set isLoggingIn(false) if we are redirecting,
-      // but it's good practice in case router.push doesn't immediately unmount the component
+      navigate('/doctor/dashboard');
     } catch (err: any) {
-      setIsLoggingIn(false);
-      setError(err.message || 'Login failed');
+      setError(err.message || "Doctor login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEmergency = () => {
-    // router.push('/emergency');
-    window.location.href = 'tel:911'; // Example
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+
+    if (userType === 'patient') {
+      handlePatientLogin();
+    } else {
+      handleDoctorLogin();
+    }
   };
 
-  if (contextLoading && user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
+  const handleEmergency = () => {
+    navigate('/emergency');
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden flex flex-col items-center justify-center p-4">
@@ -174,8 +103,8 @@ export default function LoginPage() {
         <div className="bg-gradient-to-br from-blue-600 to-indigo-700 p-8 text-center text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-white/10 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]" />
           <Mail className="w-12 h-12 mx-auto mb-4 text-blue-100" />
-          <h1 className="text-2xl font-bold">Welcome Back</h1>
-          <p className="text-blue-100 text-sm mt-1">Sign in to your MedThread account</p>
+          <h1 className="text-2xl font-bold">{t('login_title')}</h1>
+          <p className="text-blue-100 text-sm mt-1">{t('login_subtitle')}</p>
         </div>
 
         {/* Role Tabs */}
@@ -224,16 +153,15 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={userType === 'doctor' ? "doctor@hospital.com" : "Enter email"}
+                  placeholder={userType === 'doctor' ? "doctor@hospital.com" : t('enter_email')}
                   className="w-full h-12 pl-12 pr-4 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                  required
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5 ml-1">
-                Password
+                {t('password')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -243,7 +171,6 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full h-12 pl-12 pr-12 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                  required
                 />
                 <button
                   type="button"
@@ -254,9 +181,9 @@ export default function LoginPage() {
                 </button>
               </div>
               <div className="text-right mt-2">
-                <Link href="/forgot-password" title="Forgot Password" className="text-xs font-medium text-blue-600 hover:underline">
-                  Forgot Password?
-                </Link>
+                <button type="button" className="text-xs font-medium text-blue-600 hover:underline">
+                  {t('forgot_password')}
+                </button>
               </div>
             </div>
 
@@ -271,7 +198,7 @@ export default function LoginPage() {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  Sign In <ArrowRight className="w-4 h-4" />
+                  {t('login')} <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </motion.button>
@@ -283,7 +210,7 @@ export default function LoginPage() {
                 className="w-full h-12 border border-slate-200 hover:border-blue-200 bg-white text-slate-700 hover:bg-blue-50 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
               >
                 <Fingerprint className="w-5 h-5 text-blue-600" />
-                Sign in with Biometrics
+                {t('login_biometrics')}
               </motion.button>
             )}
           </form>
@@ -292,16 +219,16 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
           <p className="text-slate-600 text-sm">
-            New here?{' '}
-            <Link
-              href="/signup"
+            {t('new_user')}{' '}
+            <button
+              onClick={() => navigate(userType === 'doctor' ? '/doctor/signup' : '/signup')}
               className="text-blue-600 font-bold hover:underline"
             >
               Create {userType === 'doctor' ? 'Doctor' : 'Patient'} Account
-            </Link>
+            </button>
           </p>
         </div>
       </motion.div>
     </div>
   );
-}
+};

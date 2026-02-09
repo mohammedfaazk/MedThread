@@ -38,7 +38,7 @@ export const createMockConversation = (appointment: any) => {
     // Check if it already exists
     const existing = conversationsStore.find((c: any) => c.appointmentId === appointment.id);
     if (existing) {
-        console.log(`[STORE] Conversation already exists for appointment ${appointment.id}`);
+        console.log(`[STORE] Conversation already exists for appointment ${appointment.id} (ID: ${existing.id})`);
         return existing;
     }
 
@@ -49,20 +49,23 @@ export const createMockConversation = (appointment: any) => {
         id: `conv-${appointment.id}`,
         appointmentId: appointment.id,
         participants: [
-            { 
-                id: appointment.patientId, 
-                username: appointment.patient?.username || 'Patient', 
+            {
+                id: appointment.patientId,
+                username: appointment.patient?.username || 'Patient',
                 avatar: appointment.patient?.avatar || null,
-                role: 'PATIENT' 
+                role: 'PATIENT'
             },
-            { 
-                id: appointment.doctorId, 
-                username: appointment.doctor?.username || 'Doctor', 
+            {
+                id: appointment.doctorId,
+                username: appointment.doctor?.username || 'Doctor',
                 avatar: appointment.doctor?.avatar || null,
-                role: 'VERIFIED_DOCTOR' 
+                role: 'VERIFIED_DOCTOR'
             }
         ],
-        participantIds: [appointment.patientId, appointment.doctorId],
+        participantIds: [
+            appointment.patientId.trim().toLowerCase(),
+            appointment.doctorId.trim().toLowerCase()
+        ],
         messages: [],
         appointment: {
             status: appointment.status,
@@ -72,7 +75,7 @@ export const createMockConversation = (appointment: any) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     };
-    
+
     conversationsStore.push(conversation);
     saveStore();
     console.log(`[STORE] Conversation created: ${conversation.id} with participants: ${conversation.participantIds.join(', ')}`);

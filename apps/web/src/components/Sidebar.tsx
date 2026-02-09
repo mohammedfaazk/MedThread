@@ -21,26 +21,28 @@ export function Sidebar() {
   }
 
   const commonCategories: NavItem[] = [
-    { name: 'Home', icon: '🏠', href: '/' },
-    { name: 'Popular', icon: '🔥', href: '/popular' },
-    { name: 'Emergency', icon: '🚨', href: '/emergency' },
+    { name: 'Dashboard', icon: '📊', href: '/dashboard/patient' },
+    { name: 'Symptom Checker', icon: '🩺', href: '/symptom-checker' },
+    { name: 'Book Appointment', icon: '📅', href: '/doctors' },
+    { name: 'View Doctors', icon: '👨‍⚕️', href: '/doctors' },
   ]
 
   const doctorNav: NavItem[] = [
+    { name: 'Dashboard', icon: '📊', href: '/dashboard/doctor' },
+    { name: 'Pending Appointments', icon: '⏳', href: '/dashboard/doctor#pending' },
+    { name: 'Manage Slots', icon: '📅', href: '/dashboard/doctor#slots' },
     { name: 'Chat with Patients', icon: '💬', href: '/profile?tab=consultation' },
-    { name: 'Appointments', icon: '📅', href: '/profile?tab=appointments' },
-    { name: 'Create Post', icon: '✍️', href: '#' }, // Triggers modal
+    { name: 'Case Timeline', icon: '🧠', href: '/dashboard/doctor#cases' },
+    { name: 'Discussion Threads', icon: '✍️', href: '#' }, // Triggers modal (Create Post)
+    { name: 'Reputation & Reviews', icon: '⭐', href: '/dashboard/doctor#reviews' },
     { name: 'Profile', icon: '👤', href: '/profile' },
     { name: 'Settings', icon: '⚙️', href: '/settings' },
   ]
 
   const patientNav: NavItem[] = [
-    { name: 'Chat with Doctor', icon: '💬', href: '/profile?tab=consultation' },
-    { name: 'Book Appointment', icon: '📅', href: '/doctors' },
-    { name: 'AI Chatbot', icon: '🤖', isExternal: true, href: process.env.NEXT_PUBLIC_AI_CHATBOT_URL || '#' },
-    { name: 'Diet Planner', icon: '🥗', isExternal: true, href: process.env.NEXT_PUBLIC_DIET_PLANNER_URL || '#' },
-    { name: 'Medication Reminder', icon: '💊', isExternal: true, href: process.env.NEXT_PUBLIC_MED_REMINDER_URL || '#' },
-    { name: 'Profile', icon: '👤', href: '/profile' },
+    { name: 'Chat with Doctors', icon: '💬', href: '/profile?tab=consultation' },
+    { name: 'Medication Reminder', icon: '💊', href: '/medications' },
+    { name: 'Health Profile', icon: '👤', href: '/profile' },
     { name: 'Settings', icon: '⚙️', href: '/settings' },
   ]
 
@@ -105,11 +107,11 @@ export function Sidebar() {
                       setIsCreateModalOpen(true);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition ${isActive ? 'bg-gray-100 border-r-4 border-[#FF4500] font-semibold' : ''
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50/50 transition-all rounded-xl mb-1 ${isActive ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600'
                     }`}
                 >
-                  <span className="text-lg">{item.icon}</span>
-                  <span>{item.name}</span>
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="font-medium">{item.name}</span>
                 </Link>
               )
             })}

@@ -11,11 +11,8 @@ export default function Home() {
   const { user, role, loading } = useUser()
   const router = useRouter()
 
-  useEffect(() => {
-    if (!loading && user && role === 'VERIFIED_DOCTOR') {
-      router.push('/dashboard/doctor')
-    }
-  }, [user, role, loading, router])
+  // Removed automatic redirection to dashboard. 
+  // All users now land on the MedThread main page as requested.
 
   return (
     <div className="min-h-screen bg-[#DAE0E6]">

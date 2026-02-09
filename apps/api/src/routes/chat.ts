@@ -12,8 +12,19 @@ router.get('/conversations', async (req, res) => {
         const { userId } = req.query;
         console.log('[API] Fetching conversations for userId:', userId);
 
+        // Proactive Sync: Ensure any approved appointments for this user have mock conversations
+        // This is now done in the main path to support hybrid dev mode
+        const approvedForUser = appointmentsStore.filter((a: any) =>
+            a.status === 'APPROVED' && (a.patientId === userId || a.doctorId === userId)
+        );
+        console.log(`[API] Found ${approvedForUser.length} approved appointments for user ${userId} in Mock Store`);
+        approvedForUser.forEach((apt: any) => {
+            createMockConversation(apt);
+        });
+
+        let dbConversations: any[] = [];
         try {
-            const conversations = await prisma.conversation.findMany({
+            dbConversations = await prisma.conversation.findMany({
                 where: {
                     participants: {
                         some: { id: userId as string }
@@ -32,49 +43,44 @@ router.get('/conversations', async (req, res) => {
                     }
                 }
             });
-            res.json(conversations);
+            console.log(`[API] Found ${dbConversations.length} conversations in DB`);
         } catch (dbError) {
-            console.error('[API] DB Conversation fetch failed, checking mock store');
-
-            // Proactive Sync: Ensure any approved appointments for this user have mock conversations
-            const approvedForUser = appointmentsStore.filter((a: any) =>
-                a.status === 'APPROVED' && (a.patientId === userId || a.doctorId === userId)
-            );
-            console.log(`[API] Found ${approvedForUser.length} approved appointments for user ${userId}`);
-            approvedForUser.forEach(apt => {
-                console.log(`[API] Creating/checking conversation for appointment ${apt.id}`);
-                createMockConversation(apt);
-            });
-
-            const userConversations = conversationsStore.filter((c: any) => {
-                // Check both participantIds array and participants array
-                const hasInParticipantIds = c.participantIds && c.participantIds.includes(userId);
-                const hasInParticipants = c.participants && c.participants.some((p: any) => p.id === userId);
-                const match = hasInParticipantIds || hasInParticipants;
-                
-                if (match) {
-                    console.log(`[API] Conversation ${c.id} matches user ${userId}`);
-                }
-                return match;
-            });
-
-            // Populate messages for each conversation
-            const conversationsWithMessages = userConversations.map((conv: any) => {
-                const convMessages = messagesStore
-                    .filter((m: any) => m.conversationId === conv.id)
-                    .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                
-                return {
-                    ...conv,
-                    messages: convMessages.slice(0, 1) // Only include last message for preview
-                };
-            });
-            
-            console.log(`[API] Returning ${conversationsWithMessages.length} mock conversations for user ${userId}`);
-            console.log(`[API] Total conversations in store: ${conversationsStore.length}`);
-            res.json(conversationsWithMessages);
+            console.error('[API] DB Conversation fetch failed:', dbError);
         }
+
+        // Get and Filter Mock Conversations
+        const userIdStr = (userId as string || '').trim().toLowerCase();
+        const mockConversations = conversationsStore.filter((c: any) => {
+            const hasInParticipantIds = c.participantIds && c.participantIds.map((id: string) => id.trim().toLowerCase()).includes(userIdStr);
+            const hasInParticipants = c.participants && c.participants.some((p: any) => p.id && p.id.trim().toLowerCase() === userIdStr);
+            return hasInParticipantIds || hasInParticipants;
+        });
+        console.log(`[API] Found ${mockConversations.length} matching mock conversations for ${userIdStr}`);
+
+        // Populate messages for mock conversations
+        const mockConversationsWithMessages = mockConversations.map((conv: any) => {
+            const convMessages = messagesStore
+                .filter((m: any) => m.conversationId === conv.id)
+                .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+            return {
+                ...conv,
+                messages: convMessages.slice(0, 1) // Only include last message for preview
+            };
+        });
+
+        // Merge Results
+        const allConversations = [...dbConversations];
+        mockConversationsWithMessages.forEach((mockConv: any) => {
+            if (!allConversations.find(dbConv => dbConv.id === mockConv.id)) {
+                allConversations.push(mockConv);
+            }
+        });
+
+        console.log(`[API] Returning total ${allConversations.length} merged conversations`);
+        res.json(allConversations);
     } catch (error) {
+        console.error('[API] Fetch conversations error:', error);
         res.status(500).json({ error: 'Failed to fetch conversations' });
     }
 });
@@ -85,8 +91,9 @@ router.get('/conversations/:id/messages', async (req, res) => {
         const { id } = req.params;
         const { limit = 50, before } = req.query;
 
+        let dbMessages: any[] = [];
         try {
-            const messages = await prisma.message.findMany({
+            dbMessages = await prisma.message.findMany({
                 where: {
                     conversationId: id,
                     ...(before && { createdAt: { lt: new Date(before as string) } })
@@ -97,14 +104,29 @@ router.get('/conversations/:id/messages', async (req, res) => {
                 orderBy: { createdAt: 'desc' },
                 take: Number(limit)
             });
-
-            res.json(messages.reverse());
+            console.log(`[API] Found ${dbMessages.length} messages in DB for conversation ${id}`);
         } catch (dbError) {
-            console.error('[API] DB Message fetch failed, using mock store');
-            const convMessages = messagesStore.filter(m => m.conversationId === id);
-            res.json(convMessages);
+            console.error('[API] DB Message fetch failed:', dbError);
         }
+
+        // Always check Mock Store
+        const mockMessages = messagesStore.filter((m: any) => m.conversationId === id);
+        console.log(`[API] Found ${mockMessages.length} messages in Mock Store for conversation ${id}`);
+
+        // Merge and sort
+        const allMessages = [...dbMessages];
+        mockMessages.forEach((mockMsg: any) => {
+            if (!allMessages.find(dbMsg => dbMsg.id === mockMsg.id)) {
+                allMessages.push(mockMsg);
+            }
+        });
+
+        // Sort by creation time (ascending for ChatWindow)
+        allMessages.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+        res.json(allMessages);
     } catch (error) {
+        console.error('Failed to fetch messages:', error);
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
 });
@@ -115,37 +137,43 @@ router.post('/messages', async (req, res) => {
         const { conversationId, senderId, content, type = 'TEXT', attachment } = req.body;
 
         try {
-            const message = await prisma.message.create({
-                data: {
-                    conversationId,
-                    senderId,
-                    receiverId: senderId, // Will be updated to proper receiver
-                    content,
-                    type,
-                    attachment
-                },
-                include: {
-                    sender: { select: { id: true, username: true, avatar: true } }
-                }
-            });
-            res.json(message);
+            // First try DB if it exists (not starting with conv-)
+            if (!conversationId.startsWith('conv-')) {
+                const message = await prisma.message.create({
+                    data: {
+                        conversationId,
+                        senderId,
+                        receiverId: senderId, // Will be updated to proper receiver
+                        content,
+                        type,
+                        attachment
+                    },
+                    include: {
+                        sender: { select: { id: true, username: true, avatar: true } }
+                    }
+                });
+                return res.json(message);
+            }
         } catch (dbError) {
-            console.error('[API] DB Message save failed, using mock store');
-            const message = {
-                id: `msg-${Date.now()}`,
-                conversationId,
-                senderId,
-                content,
-                type,
-                attachment,
-                createdAt: new Date().toISOString(),
-                sender: { id: senderId, username: 'User', avatar: null }
-            };
-            messagesStore.push(message);
-            saveStore();
-            res.json(message);
+            console.error('[API] DB Message save failed, falling back to mock store');
         }
+
+        // Fallback to mock store
+        const message = {
+            id: `msg-${Date.now()}`,
+            conversationId,
+            senderId,
+            content,
+            type,
+            attachment,
+            createdAt: new Date().toISOString(),
+            sender: { id: senderId, username: 'User', avatar: null }
+        };
+        messagesStore.push(message);
+        saveStore();
+        res.json(message);
     } catch (error) {
+        console.error('Failed to send message:', error);
         res.status(500).json({ error: 'Failed to send message' });
     }
 });
