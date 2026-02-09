@@ -4,7 +4,7 @@ import { PrismaClient } from '@medthread/database';
 const router = Router();
 const prisma = new PrismaClient();
 
-import { appointmentsStore, createMockConversation, saveStore } from '../lib/mockStore';
+import { appointmentsStore, availabilityStore, createMockConversation, saveStore } from '../lib/mockStore';
 
 // Get doctor's availability
 router.get('/doctors/:doctorId/availability', async (req, res) => {
@@ -22,6 +22,13 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
         } catch (dbError) {
             console.error('[API] DB availability fetch failed, falling back to defaults:', dbError);
         }
+
+        // Check in-memory store
+        const mockAvailability = (availabilityStore || []).filter((a: any) => a.doctorId === doctorId && !a.isBooked);
+        console.log(`[API] Found ${mockAvailability.length} slots in Mock Store`);
+
+        // Merge results
+        availability = [...availability, ...mockAvailability];
 
         // If no availability set, provide default slots
         if (availability.length === 0) {
@@ -86,17 +93,46 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
 router.post('/availability', async (req, res) => {
     try {
         const { doctorId, dayOfWeek, startTime, endTime } = req.body;
-        const availability = await prisma.availability.create({
-            data: {
+        console.log('[API] Creating availability:', { doctorId, dayOfWeek, startTime, endTime });
+        
+        if (!doctorId || dayOfWeek === undefined || !startTime || !endTime) {
+            console.error('[API] Missing required fields');
+            return res.status(400).json({ error: 'Missing required fields: doctorId, dayOfWeek, startTime, endTime' });
+        }
+        
+        let availability;
+        try {
+            availability = await prisma.availability.create({
+                data: {
+                    doctorId,
+                    dayOfWeek,
+                    startTime: new Date(startTime),
+                    endTime: new Date(endTime),
+                }
+            });
+            console.log('[API] Availability created successfully in DB:', availability.id);
+        } catch (dbError: any) {
+            console.error('[API] DB Save failed, using In-Memory persistence:', dbError.message);
+            // Fallback to in-memory store
+            availability = {
+                id: `avail-${Date.now()}`,
                 doctorId,
                 dayOfWeek,
-                startTime: new Date(startTime),
-                endTime: new Date(endTime),
-            }
-        });
+                startTime: new Date(startTime).toISOString(),
+                endTime: new Date(endTime).toISOString(),
+                isBooked: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            availabilityStore.push(availability);
+            saveStore();
+            console.log('[API] Availability saved to Mock Store:', availability.id);
+        }
+        
         res.json(availability);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create availability' });
+    } catch (error: any) {
+        console.error('[API] Failed to create availability:', error);
+        res.status(500).json({ error: 'Failed to create availability', details: error.message });
     }
 });
 
@@ -126,6 +162,36 @@ router.post('/book', async (req, res) => {
         } catch (dbError) {
             console.error('[API] DB Save failed, using In-Memory persistence');
             console.log('[API] Mock booking with IDs:', { patientId, doctorId });
+            
+            // Try to get actual user info from Supabase or use fallback
+            let patientUsername = 'Patient';
+            let doctorUsername = 'Doctor';
+            
+            try {
+                // Try to fetch from Supabase auth users (if available)
+                const { createClient } = require('@supabase/supabase-js');
+                const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+                const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+                
+                if (supabaseUrl && supabaseKey) {
+                    const supabase = createClient(supabaseUrl, supabaseKey);
+                    
+                    // Fetch patient info
+                    const { data: patientAuth } = await supabase.auth.admin.getUserById(patientId);
+                    if (patientAuth?.user?.email) {
+                        patientUsername = patientAuth.user.email.split('@')[0];
+                    }
+                    
+                    // Fetch doctor info
+                    const { data: doctorAuth } = await supabase.auth.admin.getUserById(doctorId);
+                    if (doctorAuth?.user?.email) {
+                        doctorUsername = 'Dr. ' + doctorAuth.user.email.split('@')[0];
+                    }
+                }
+            } catch (authError) {
+                console.log('[API] Could not fetch user info from auth:', authError);
+            }
+            
             appointment = {
                 id: `app-${Date.now()}`,
                 patientId,
@@ -134,8 +200,8 @@ router.post('/book', async (req, res) => {
                 endTime: new Date(endTime).toISOString(),
                 reason,
                 status: 'PENDING',
-                patient: { id: patientId, username: 'Patient', avatar: null },
-                doctor: { id: doctorId, username: 'Doctor', avatar: null, specialty: 'Medical' }
+                patient: { id: patientId, username: patientUsername, avatar: null },
+                doctor: { id: doctorId, username: doctorUsername, avatar: null, specialty: 'Medical' }
             };
             appointmentsStore.push(appointment);
             saveStore();

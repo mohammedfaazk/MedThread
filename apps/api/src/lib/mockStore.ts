@@ -6,13 +6,20 @@ const STORE_FILE = path.join(process.cwd(), 'temp_store.json');
 const loadStore = () => {
     if (fs.existsSync(STORE_FILE)) {
         try {
-            return JSON.parse(fs.readFileSync(STORE_FILE, 'utf8'));
+            const data = JSON.parse(fs.readFileSync(STORE_FILE, 'utf8'));
+            // Ensure all properties exist
+            return {
+                appointments: data.appointments || [],
+                conversations: data.conversations || [],
+                messages: data.messages || [],
+                availability: data.availability || []
+            };
         } catch (e) {
             console.error('Failed to load store:', e);
-            return { appointments: [], conversations: [], messages: [] };
+            return { appointments: [], conversations: [], messages: [], availability: [] };
         }
     }
-    return { appointments: [], conversations: [], messages: [] };
+    return { appointments: [], conversations: [], messages: [], availability: [] };
 };
 
 const store = loadStore();
@@ -20,13 +27,15 @@ const store = loadStore();
 export const appointmentsStore = store.appointments;
 export const conversationsStore = store.conversations;
 export const messagesStore = store.messages;
+export const availabilityStore = store.availability;
 
 export const saveStore = () => {
     try {
         fs.writeFileSync(STORE_FILE, JSON.stringify({
             appointments: appointmentsStore,
             conversations: conversationsStore,
-            messages: messagesStore
+            messages: messagesStore,
+            availability: availabilityStore
         }, null, 2));
         console.log('[STORE] Persisted to disk');
     } catch (e) {

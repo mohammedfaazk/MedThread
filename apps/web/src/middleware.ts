@@ -32,6 +32,7 @@ export async function middleware(req: NextRequest) {
     // Exclude login page and public assets from redirect
     if (
         url.pathname === '/login' ||
+        url.pathname === '/signup' ||
         url.pathname.startsWith('/_next') ||
         url.pathname.startsWith('/api') ||
         url.pathname.includes('.')

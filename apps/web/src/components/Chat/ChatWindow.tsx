@@ -171,13 +171,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return (
         <div className="flex flex-col h-full bg-white rounded-lg shadow">
             {/* Header */}
-            <div className="p-4 border-b flex items-center gap-3">
+            <div className="p-4 border-b flex items-center gap-3 bg-gradient-to-r from-[#9DD4D3] to-[#C8E3D4]">
                 {otherUser.avatar && (
                     <img src={otherUser.avatar} alt={otherUser.username} className="w-10 h-10 rounded-full" />
                 )}
+                {!otherUser.avatar && (
+                    <div className="w-10 h-10 rounded-full bg-[#5CB8B2] flex items-center justify-center text-white font-bold">
+                        {otherUser.username.charAt(0).toUpperCase()}
+                    </div>
+                )}
                 <div>
-                    <h3 className="font-semibold">{otherUser.username}</h3>
-                    {otherUserTyping && <p className="text-sm text-gray-500">typing...</p>}
+                    <h3 className="font-semibold text-gray-900">{otherUser.username}</h3>
+                    {otherUserTyping && <p className="text-sm text-gray-600">typing...</p>}
                 </div>
             </div>
 
@@ -190,7 +195,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     >
                         <div
                             className={`max-w-[70%] rounded-lg p-3 ${msg.senderId === currentUserId
-                                    ? 'bg-blue-500 text-white'
+                                    ? 'bg-[#5CB8B2] text-white'
                                     : 'bg-gray-200 text-gray-900'
                                 }`}
                         >
@@ -241,12 +246,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     }}
                     onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5CB8B2] focus:border-[#5CB8B2]"
                 />
                 <button
                     onClick={sendMessage}
                     disabled={!newMessage.trim()}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                    className="px-6 py-2 bg-[#5CB8B2] text-white rounded-lg hover:bg-[#4DA9A3] disabled:bg-gray-300 disabled:cursor-not-allowed transition"
                 >
                     Send
                 </button>

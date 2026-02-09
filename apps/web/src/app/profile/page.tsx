@@ -3,7 +3,6 @@
 import { Navbar } from '@/components/Navbar'
 import { ChatList } from '@/components/Chat/ChatList'
 import { ChatWindow } from '@/components/Chat/ChatWindow'
-import { AvailabilityScheduler } from '@/components/Board/AvailabilityScheduler'
 import { useUser } from '@/context/UserContext'
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -21,7 +20,8 @@ interface Appointment {
 
 export default function ProfilePage() {
   const searchParams = useSearchParams()
-  const initialTab = searchParams.get('tab') || 'profile'
+  const initialTab = searchParams.get('tab') || 'consultation'
+  const conversationIdParam = searchParams.get('conversationId')
   const [activeTab, setActiveTab] = useState(initialTab)
   const { user, role, profileId, loading: userLoading } = useUser()
   const [selectedConversation, setSelectedConversation] = useState<any>(null)
@@ -67,73 +67,10 @@ export default function ProfilePage() {
   if (userLoading || !user) return <div className="p-8">Loading...</div>
 
   return (
-    <div className="min-h-screen bg-[#DAE0E6]">
+    <div className="min-h-screen bg-gradient-to-r from-[#9DD4D3] via-[#C8E3D4] to-[#F5E6D3]">
       <Navbar />
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Tabs */}
-        <div className="bg-white rounded border border-gray-300 mb-6">
-          <div className="flex gap-4 p-4 border-b">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`px-6 py-2 rounded-full font-semibold ${activeTab === 'profile' ? 'bg-[#FF4500] text-white' : 'bg-gray-200'
-                }`}
-            >
-              Profile
-            </button>
-            {userRole === 'VERIFIED_DOCTOR' && (
-              <button
-                onClick={() => setActiveTab('availability')}
-                className={`px-6 py-2 rounded-full font-semibold ${activeTab === 'availability' ? 'bg-[#FF4500] text-white' : 'bg-gray-200'
-                  }`}
-              >
-                My Availability
-              </button>
-            )}
-            <button
-              onClick={() => setActiveTab('appointments')}
-              className={`px-6 py-2 rounded-full font-semibold ${activeTab === 'appointments' ? 'bg-[#FF4500] text-white' : 'bg-gray-200'
-                }`}
-            >
-              Appointments
-            </button>
-            <button
-              onClick={() => setActiveTab('consultation')}
-              className={`px-6 py-2 rounded-full font-semibold ${activeTab === 'consultation' ? 'bg-[#FF4500] text-white' : 'bg-gray-200'
-                }`}
-            >
-              Online Consultation
-            </button>
-          </div>
-        </div>
-
         {/* Content */}
-        {activeTab === 'profile' && (
-          <div className="bg-white rounded border border-gray-300 p-8">
-            <h1 className="text-3xl font-bold mb-6">My Profile</h1>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Username</label>
-                <input type="text" value="current_user" className="w-full px-4 py-2 border border-gray-300 rounded" readOnly />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
-                <input type="email" value="user@example.com" className="w-full px-4 py-2 border border-gray-300 rounded" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Bio</label>
-                <textarea rows={4} className="w-full px-4 py-2 border border-gray-300 rounded" placeholder="Tell us about yourself..."></textarea>
-              </div>
-              <button className="px-6 py-2 bg-[#FF4500] text-white rounded-full font-semibold hover:bg-[#ff5722]">
-                Save Changes
-              </button>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'availability' && userRole === 'VERIFIED_DOCTOR' && (
-          <AvailabilityScheduler doctorId={effectiveUserId} />
-        )}
-
         {activeTab === 'appointments' && (
           <div className="bg-white rounded border border-gray-300 p-8">
             <h1 className="text-3xl font-bold mb-6">
@@ -193,7 +130,10 @@ export default function ProfilePage() {
               <ChatList
                 currentUserId={effectiveUserId}
                 autoSelectOtherUserId={searchParams.get('doctor')}
+                autoSelectConversationId={conversationIdParam}
                 onSelectConversation={setSelectedConversation}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
               />
             </div>
             <div className="md:col-span-2">

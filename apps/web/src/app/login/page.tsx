@@ -293,12 +293,12 @@ export default function LoginPage() {
         <div className="bg-slate-50 p-6 text-center border-t border-slate-100">
           <p className="text-slate-600 text-sm">
             New here?{' '}
-            <Link
-              href="/signup"
-              className="text-blue-600 font-bold hover:underline"
+            <button
+              onClick={() => router.push(`/signup?type=${userType}`)}
+              className="text-blue-600 font-bold hover:underline cursor-pointer bg-transparent border-none"
             >
               Create {userType === 'doctor' ? 'Doctor' : 'Patient'} Account
-            </Link>
+            </button>
           </p>
         </div>
       </motion.div>
