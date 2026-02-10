@@ -6,11 +6,12 @@ import axios from 'axios';
 
 interface UserContextType {
     user: any;
-    role: 'PATIENT' | 'VERIFIED_DOCTOR' | null;
+    role: 'PATIENT' | 'DOCTOR' | 'VERIFIED_DOCTOR' | 'ADMIN' | null;
     profileId: string | null;
     loading: boolean;
     loggingOut: boolean;
     signOut: () => Promise<void>;
+    doctorVerificationStatus?: string;
 }
 
 const UserContext = createContext<UserContextType>({
@@ -26,14 +27,42 @@ export const useUser = () => useContext(UserContext);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<any>(null);
-    const [role, setRole] = useState<'PATIENT' | 'VERIFIED_DOCTOR' | null>(null);
+    const [role, setRole] = useState<'PATIENT' | 'DOCTOR' | 'VERIFIED_DOCTOR' | 'ADMIN' | null>(null);
     const [profileId, setProfileId] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [loggingOut, setLoggingOut] = useState(false);
+    const [doctorVerificationStatus, setDoctorVerificationStatus] = useState<string | undefined>();
+    const [useJWT, setUseJWT] = useState(false); // Track if we're using JWT
 
     const fetchRole = async (userId: string) => {
         try {
             console.log('Fetching role for userId:', userId);
+
+            // 0. First check JWT auth data (highest priority)
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                try {
+                    const parsedUser = JSON.parse(userData);
+                    if (parsedUser.role === 'DOCTOR' && parsedUser.doctorVerificationStatus === 'APPROVED') {
+                        console.log('User identified as VERIFIED_DOCTOR from JWT auth');
+                        setRole('VERIFIED_DOCTOR');
+                        setProfileId(parsedUser.id);
+                        return;
+                    } else if (parsedUser.role === 'ADMIN') {
+                        console.log('User identified as ADMIN from JWT auth');
+                        setRole('ADMIN');
+                        setProfileId(parsedUser.id);
+                        return;
+                    } else if (parsedUser.role === 'PATIENT') {
+                        console.log('User identified as PATIENT from JWT auth');
+                        setRole('PATIENT');
+                        setProfileId(parsedUser.id);
+                        return;
+                    }
+                } catch (parseError) {
+                    console.warn('Failed to parse JWT user data:', parseError);
+                }
+            }
 
             // 1. Check if user is a doctor in Supabase
             const { data: doctorData, error: dError } = await supabase
@@ -118,42 +147,124 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     useEffect(() => {
-        const fetchUserAndRole = async () => {
+        let mounted = true;
+        
+        const loadJWTAuth = () => {
+            const token = localStorage.getItem('auth_token');
+            const userData = localStorage.getItem('user');
+
+            console.log('🔍 UserContext: Checking JWT auth...');
+
+            if (token && userData) {
+                try {
+                    const parsedUser = JSON.parse(userData);
+                    console.log('✅ JWT User found:', parsedUser);
+                    
+                    if (mounted) {
+                        setUseJWT(true); // Mark that we're using JWT
+                        setUser(parsedUser);
+                        setProfileId(parsedUser.id);
+                        setDoctorVerificationStatus(parsedUser.doctorVerificationStatus);
+                        
+                        // Map role correctly
+                        if (parsedUser.role === 'DOCTOR' && parsedUser.doctorVerificationStatus === 'APPROVED') {
+                            setRole('VERIFIED_DOCTOR');
+                        } else {
+                            setRole(parsedUser.role);
+                        }
+                        
+                        setLoading(false);
+                    }
+                    return true;
+                } catch (error) {
+                    console.error('❌ Failed to parse JWT user:', error);
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user');
+                }
+            }
+            return false;
+        };
+
+        const loadSupabaseAuth = async () => {
+            console.log('ℹ️ No JWT, checking Supabase...');
             const { data: { session } } = await supabase.auth.getSession();
 
-            if (session?.user) {
+            if (session?.user && mounted) {
+                console.log('✅ Supabase user found');
                 setUser(session.user);
                 await fetchRole(session.user.id);
             }
-            setLoading(false);
+            
+            if (mounted) {
+                setLoading(false);
+            }
         };
 
-        fetchUserAndRole();
+        // Try JWT first
+        const hasJWT = loadJWTAuth();
+        
+        // Only try Supabase if no JWT
+        if (!hasJWT) {
+            loadSupabaseAuth();
+        }
 
+        // Listen for storage changes
+        const handleStorageChange = () => {
+            console.log('🔄 Storage changed');
+            const hasJWT = loadJWTAuth();
+            if (!hasJWT && mounted) {
+                loadSupabaseAuth();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        // Supabase auth listener - ONLY if not using JWT
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-            if (session?.user) {
+            // CRITICAL: Ignore ALL Supabase events if we have JWT
+            if (useJWT || localStorage.getItem('auth_token')) {
+                console.log('⏭️ Ignoring Supabase event (using JWT)');
+                return;
+            }
+            
+            console.log('🔄 Supabase auth changed:', event);
+            if (session?.user && mounted) {
                 setUser(session.user);
                 await fetchRole(session.user.id);
-            } else {
+            } else if (mounted) {
                 setUser(null);
                 setRole(null);
                 setProfileId(null);
             }
-            setLoading(false);
+            if (mounted) {
+                setLoading(false);
+            }
         });
 
-        return () => subscription.unsubscribe();
-    }, []);
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, [useJWT]); // Add useJWT as dependency
 
     const signOut = async () => {
         try {
             setLoggingOut(true);
+            
+            // Clear localStorage (JWT auth)
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('user');
+            
+            // Also sign out from Supabase if using it
             const { error } = await supabase.auth.signOut();
-            if (error) throw error;
+            if (error) console.warn('Supabase signout error:', error);
 
             setUser(null);
             setRole(null);
             setProfileId(null);
+            setDoctorVerificationStatus(undefined);
+            setUseJWT(false);
         } catch (error) {
             console.error('Logout failed:', error);
         } finally {
@@ -162,7 +273,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <UserContext.Provider value={{ user, role, profileId, loading, loggingOut, signOut }}>
+        <UserContext.Provider value={{ user, role, profileId, loading, loggingOut, signOut, doctorVerificationStatus }}>
             {children}
         </UserContext.Provider>
     );

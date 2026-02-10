@@ -5,6 +5,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "seed:admin": "tsx src/scripts/seed-admin.ts",
+    "create:admin": "tsx src/scripts/create-admin.ts",
     "lint": "echo 'Lint check passed for @medthread/api'"
   },
   "dependencies": {
@@ -14,6 +16,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "socket.io": "^4.8.3",
     "zod": "^3.22.4"

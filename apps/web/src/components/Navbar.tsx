@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@/context/UserContext'
+import { useJWTAuth } from '@/context/JWTAuthContext'
 import { Search, Bell, User, LogOut, Settings, Heart, Leaf, Stethoscope, ChevronDown, CheckCircle2 } from 'lucide-react'
 
 export function Navbar() {
@@ -9,7 +9,11 @@ export function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const router = useRouter()
-  const { user, role, loading, loggingOut, signOut } = useUser()
+  const { user, role, loading, logout } = useJWTAuth()
+  
+  // Display name helper
+  const displayName = user?.username || user?.email?.split('@')[0] || 'User'
+  const displayRole = role?.replace('_', ' ')
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,7 +24,7 @@ export function Navbar() {
 
   const handleLogout = async () => {
     setShowUserMenu(false)
-    await signOut()
+    logout()
     router.push('/login')
   }
 
@@ -137,17 +141,6 @@ export function Navbar() {
           )}
         </div>
       </div>
-
-      {/* Logout Loading Overlay */}
-      {loggingOut && (
-        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-lg font-semibold text-gray-700">Logging out...</p>
-            <p className="text-sm text-gray-500">Please wait while we secure your session</p>
-          </div>
-        </div>
-      )}
     </nav>
   )
 }

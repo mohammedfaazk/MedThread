@@ -2,7 +2,7 @@
 
 import { Navbar } from '@/components/Navbar'
 import { Sidebar } from '@/components/Sidebar'
-import { useUser } from '@/context/UserContext'
+import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
@@ -34,7 +34,7 @@ interface AvailabilitySlot {
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function DoctorDashboard() {
-    const { user, role, profileId, loading } = useUser()
+    const { user, role, loading, isDoctorVerified, isDoctorPending } = useJWTAuth()
     const router = useRouter()
     const [appointments, setAppointments] = useState<Appointment[]>([])
     const [fetching, setFetching] = useState(false)
@@ -55,27 +55,30 @@ export default function DoctorDashboard() {
     const [slots, setSlots] = useState<AvailabilitySlot[]>([])
     const [addingSlot, setAddingSlot] = useState(false)
 
-    const effectiveUserId = profileId || user?.id;
+    const effectiveUserId = user?.id;
 
     useEffect(() => {
-        if (!loading && (!user || role !== 'VERIFIED_DOCTOR')) {
+        if (!loading && (!user || (role !== 'VERIFIED_DOCTOR' && role !== 'DOCTOR'))) {
             router.push('/')
         }
     }, [user, role, loading, router])
 
     useEffect(() => {
-        if (effectiveUserId && role === 'VERIFIED_DOCTOR') {
-            loadAppointments()
-            loadAvailabilitySlots()
-            loadMessagesCount()
-            loadConversations()
+        if (effectiveUserId && (role === 'VERIFIED_DOCTOR' || role === 'DOCTOR')) {
+            if (isDoctorVerified || role === 'VERIFIED_DOCTOR') {
+                loadAppointments()
+                loadAvailabilitySlots()
+                loadMessagesCount()
+                loadConversations()
+            }
         }
-    }, [effectiveUserId, role])
+    }, [effectiveUserId, role, isDoctorVerified])
 
     const loadAppointments = async () => {
         setFetching(true)
         try {
-            const res = await axios.get(`/api/appointments/appointments?userId=${effectiveUserId}&role=doctor`)
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const res = await axios.get(`${API_URL}/api/appointments/appointments?userId=${effectiveUserId}&role=doctor`)
             setAppointments(res.data)
             
             // Calculate stats
@@ -90,7 +93,8 @@ export default function DoctorDashboard() {
 
     const loadAvailabilitySlots = async () => {
         try {
-            const res = await axios.get(`/api/appointments/doctors/${effectiveUserId}/availability`)
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const res = await axios.get(`${API_URL}/api/appointments/doctors/${effectiveUserId}/availability`)
             const userSlots = res.data.filter((slot: any) => !slot.id.startsWith('default-'))
             setSlots(userSlots)
         } catch (error) {
@@ -100,7 +104,8 @@ export default function DoctorDashboard() {
 
     const loadMessagesCount = async () => {
         try {
-            const res = await axios.get(`/api/chat/conversations?userId=${effectiveUserId}`)
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const res = await axios.get(`${API_URL}/api/v1/chat/conversations?userId=${effectiveUserId}`)
             if (res.data && Array.isArray(res.data)) {
                 const unreadCount = res.data.reduce((total: number, conv: any) => {
                     return total + (conv.unreadCount || 0)
@@ -116,7 +121,8 @@ export default function DoctorDashboard() {
     const loadConversations = async () => {
         setLoadingChats(true)
         try {
-            const res = await axios.get(`/api/chat/conversations?userId=${effectiveUserId}`)
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const res = await axios.get(`${API_URL}/api/v1/chat/conversations?userId=${effectiveUserId}`)
             if (res.data && Array.isArray(res.data)) {
                 const sortedConvs = res.data
                     .sort((a: any, b: any) => {
@@ -137,13 +143,18 @@ export default function DoctorDashboard() {
 
     const handleApproveReject = async (appointmentId: string, status: 'APPROVED' | 'REJECTED') => {
         try {
-            await axios.put(`/api/appointments/appointments/${appointmentId}`, {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            await axios.put(`${API_URL}/api/appointments/appointments/${appointmentId}`, {
                 status,
                 doctorId: effectiveUserId
             })
             loadAppointments()
+            if (status === 'APPROVED') {
+                alert('Appointment approved! You can now chat with the patient.')
+            }
         } catch (error) {
             console.error('Failed to update appointment:', error)
+            alert('Failed to update appointment. Please try again.')
         }
     }
 
@@ -155,6 +166,7 @@ export default function DoctorDashboard() {
         
         setAddingSlot(true)
         try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
             const slot = {
                 doctorId: effectiveUserId,
                 dayOfWeek: selectedDay,
@@ -162,7 +174,7 @@ export default function DoctorDashboard() {
                 endTime: `2024-01-01T${endTime}:00Z`
             }
 
-            const response = await axios.post('/api/appointments/availability', slot)
+            const response = await axios.post(`${API_URL}/api/appointments/availability`, slot)
             setSlots([...slots, response.data])
             alert('Availability added successfully!')
         } catch (error: any) {
@@ -195,16 +207,41 @@ export default function DoctorDashboard() {
 
                 <main className="flex-1 p-6 overflow-y-auto">
 
+                    {/* Pending Verification Banner */}
+                    {isDoctorPending && (
+                        <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-xl">
+                            <div className="flex items-start gap-4">
+                                <div className="flex-shrink-0">
+                                    <Clock className="w-8 h-8 text-yellow-600" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-lg font-bold text-yellow-900 mb-2">
+                                        Verification Pending
+                                    </h3>
+                                    <p className="text-yellow-800 mb-3">
+                                        Your doctor account is currently under review. You can view your dashboard, but posting and messaging features are disabled until your account is verified by our admin team.
+                                    </p>
+                                    <div className="flex items-center gap-2 text-sm text-yellow-700">
+                                        <Shield className="w-4 h-4" />
+                                        <span>Typically takes 24-48 hours for verification</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Header Section */}
                     <div className="mb-8">
                         <div className="flex items-start justify-between mb-6">
                             <div>
                                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                                    Welcome back, <span className="text-blue-600">{user.user_metadata?.full_name || user.email?.split('@')[0]}</span>
+                                    Welcome back, <span className="text-blue-600">{user?.username || user?.email?.split('@')[0]}</span>
                                 </h1>
                                 <div className="flex items-center gap-2">
                                     <Shield className="w-4 h-4 text-blue-600" />
-                                    <span className="text-sm text-gray-600 font-medium">VERIFIED CARDIOLOGIST</span>
+                                    <span className="text-sm text-gray-600 font-medium">
+                                        VERIFIED {(user as any)?.specialty?.toUpperCase() || 'DOCTOR'}
+                                    </span>
                                 </div>
                             </div>
 
@@ -280,8 +317,19 @@ export default function DoctorDashboard() {
                                                         <Clock className="w-4 h-4" />
                                                         {new Date(apt.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                                                     </div>
-                                                    <button className="text-sm text-blue-600 hover:text-blue-700 font-semibold">
-                                                        View Details
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleApproveReject(apt.id, 'APPROVED')}
+                                                        className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleApproveReject(apt.id, 'REJECTED')}
+                                                        className="flex-1 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold text-sm"
+                                                    >
+                                                        Reject
                                                     </button>
                                                 </div>
                                             </div>

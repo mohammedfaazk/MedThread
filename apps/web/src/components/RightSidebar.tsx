@@ -13,36 +13,53 @@ export function RightSidebar() {
 
   const fetchTopDoctors = async () => {
     try {
-      const { data, error } = await supabase
-        .from('doctors')
-        .select('*')
-        .order('reputation_score', { ascending: false })
-        .limit(5)
-
-      if (data && data.length > 0) {
-        setTopDoctors(data);
-      } else {
-        // Fallback to doctor_data.json if DB is empty
-        console.log('[UI] Supabase doctors empty, loading from doctor_data.json');
-        try {
-          const response = await fetch('/doctor_data.json');
-          if (response.ok) {
-            const doctorData = await response.json();
-            // Sort by reputation_score if available, limit to 5
-            const sortedDoctors = doctorData
-              .sort((a: any, b: any) => (b.reputation_score || 0) - (a.reputation_score || 0))
+      // Fetch from API first
+      console.log('[UI] Loading doctors from API...');
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      
+      try {
+        const response = await fetch(`${API_URL}/api/v1/doctor-verification/verified`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('[UI] API Response:', data);
+          
+          // API returns { success: true, data: { doctors: [...] } }
+          const doctorsList = data?.data?.doctors || data?.doctors || [];
+          
+          if (doctorsList.length > 0) {
+            console.log(`[UI] Found ${doctorsList.length} verified doctors from API`);
+            // Sort by totalKarma/reputation and limit to 5
+            const sortedDoctors = doctorsList
+              .sort((a: any, b: any) => (b.totalKarma || b.reputation_score || 0) - (a.totalKarma || a.reputation_score || 0))
               .slice(0, 5);
             setTopDoctors(sortedDoctors);
-          } else {
-            console.warn('[UI] Failed to load doctor_data.json');
+            setLoading(false);
+            return;
           }
-        } catch (jsonError) {
-          console.error('[UI] Error loading doctor_data.json:', jsonError);
         }
+      } catch (apiError) {
+        console.warn('[UI] API fetch failed, falling back to JSON:', apiError);
       }
-      if (error) console.error('Error fetching top doctors:', error)
+      
+      // Fallback to local JSON data
+      console.log('[UI] Loading doctors from doctor_data.json');
+      try {
+        const response = await fetch('/doctor_data.json');
+        if (response.ok) {
+          const doctorData = await response.json();
+          // Sort by reputation_score if available, limit to 5
+          const sortedDoctors = doctorData
+            .sort((a: any, b: any) => (b.reputation_score || 0) - (a.reputation_score || 0))
+            .slice(0, 5);
+          setTopDoctors(sortedDoctors);
+        } else {
+          console.warn('[UI] Failed to load doctor_data.json');
+        }
+      } catch (jsonError) {
+        console.error('[UI] Error loading doctor_data.json:', jsonError);
+      }
     } catch (error) {
-      console.error('Catch error fetching top doctors:', error)
+      console.error('Error fetching top doctors:', error)
     } finally {
       setLoading(false)
     }

@@ -10,10 +10,26 @@ userRouter.get('/:id', async (req, res) => {
       select: {
         id: true,
         username: true,
+        email: true,
         role: true,
         verified: true,
         totalKarma: true,
-        createdAt: true
+        doctorVerificationStatus: true,
+        // Doctor professional info
+        specialty: true,
+        subSpecialty: true,
+        yearsOfExperience: true,
+        hospitalAffiliation: true,
+        clinicAddress: true,
+        medicalLicenseNumber: true,
+        licenseIssuingAuthority: true,
+        licenseExpiryDate: true,
+        // Contact and profile
+        phone: true,
+        bio: true,
+        avatar: true,
+        createdAt: true,
+        verifiedAt: true,
       }
     });
 
@@ -21,44 +37,58 @@ userRouter.get('/:id', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json(user);
+    res.json({ success: true, data: user });
   } catch (error) {
-    console.error('[API] Error fetching user, checking doctor_data.json fallback:', error);
+    console.error('[API] Error fetching user:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch user' });
+  }
+});
 
-    // Fallback to doctor_data.json
-    try {
-      const fs = require('fs');
-      const path = require('path');
-      const doctorDataPath = path.join(process.cwd(), '../../doctor_data.json');
+// PUT endpoint for updating user profile
+userRouter.put('/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const updateData = req.body;
 
-      if (fs.existsSync(doctorDataPath)) {
-        const doctors = JSON.parse(fs.readFileSync(doctorDataPath, 'utf8'));
-        const doctor = doctors.find((d: any) => d.user_id === req.params.id || d.id === req.params.id);
+    // Remove fields that shouldn't be updated via this endpoint
+    delete updateData.id;
+    delete updateData.email;
+    delete updateData.role;
+    delete updateData.medicalLicenseNumber;
+    delete updateData.licenseIssuingAuthority;
+    delete updateData.licenseExpiryDate;
+    delete updateData.doctorVerificationStatus;
+    delete updateData.verified;
 
-        if (doctor) {
-          console.log('[API] User found in doctor_data.json, returning VERIFIED_DOCTOR');
-          return res.json({
-            id: req.params.id,
-            username: doctor.full_name || 'test_doctor',
-            role: 'VERIFIED_DOCTOR',
-            verificationStatus: 'VERIFIED',
-            reputationScore: doctor.reputation_score || 100,
-            createdAt: new Date().toISOString()
-          });
-        }
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        role: true,
+        verified: true,
+        totalKarma: true,
+        doctorVerificationStatus: true,
+        specialty: true,
+        subSpecialty: true,
+        yearsOfExperience: true,
+        hospitalAffiliation: true,
+        clinicAddress: true,
+        bio: true,
+        phone: true,
+        medicalLicenseNumber: true,
+        licenseIssuingAuthority: true,
+        licenseExpiryDate: true,
+        createdAt: true
       }
-    } catch (fallbackError) {
-      console.error('[API] Secondary fallback failed:', fallbackError);
-    }
-
-    res.json({
-      id: req.params.id,
-      username: 'test_user',
-      role: 'PATIENT',
-      verificationStatus: 'VERIFIED',
-      reputationScore: 100,
-      createdAt: new Date().toISOString()
     });
+
+    res.json({ success: true, data: updatedUser });
+  } catch (error) {
+    console.error('[API] Error updating user profile:', error);
+    res.status(500).json({ success: false, error: 'Failed to update profile' });
   }
 });
 

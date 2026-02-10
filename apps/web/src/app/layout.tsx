@@ -3,6 +3,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { SocketProvider } from '@/context/SocketContext'
+import { JWTAuthProvider } from '@/context/JWTAuthContext'
 import { UserProvider } from '@/context/UserContext'
 
 export default function RootLayout({
@@ -13,11 +14,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <UserProvider>
-          <SocketProvider>
-            {children}
-          </SocketProvider>
-        </UserProvider>
+        <JWTAuthProvider>
+          <UserProvider>
+            <SocketProvider>
+              {children}
+            </SocketProvider>
+          </UserProvider>
+        </JWTAuthProvider>
       </body>
     </html>
   )

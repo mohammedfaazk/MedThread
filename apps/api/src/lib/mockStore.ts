@@ -44,11 +44,31 @@ export const saveStore = () => {
 };
 
 export const createMockConversation = (appointment: any) => {
-    // Check if it already exists
-    const existing = conversationsStore.find((c: any) => c.appointmentId === appointment.id);
-    if (existing) {
-        console.log(`[STORE] Conversation already exists for appointment ${appointment.id} (ID: ${existing.id})`);
-        return existing;
+    // Check if conversation already exists for this appointment
+    const existingByAppointment = conversationsStore.find((c: any) => c.appointmentId === appointment.id);
+    if (existingByAppointment) {
+        console.log(`[STORE] Conversation already exists for appointment ${appointment.id} (ID: ${existingByAppointment.id})`);
+        return existingByAppointment;
+    }
+
+    // Also check if a conversation already exists between these two participants
+    const patientIdLower = appointment.patientId.trim().toLowerCase();
+    const doctorIdLower = appointment.doctorId.trim().toLowerCase();
+    
+    const existingByParticipants = conversationsStore.find((c: any) => {
+        if (!c.participantIds || c.participantIds.length !== 2) return false;
+        const ids = c.participantIds.map((id: string) => id.trim().toLowerCase());
+        return ids.includes(patientIdLower) && ids.includes(doctorIdLower);
+    });
+    
+    if (existingByParticipants) {
+        console.log(`[STORE] Conversation already exists between patient ${patientIdLower} and doctor ${doctorIdLower} (ID: ${existingByParticipants.id})`);
+        // Update the existing conversation with this appointment if it doesn't have one
+        if (!existingByParticipants.appointmentId) {
+            existingByParticipants.appointmentId = appointment.id;
+            saveStore();
+        }
+        return existingByParticipants;
     }
 
     console.log(`[STORE] Creating new conversation for appointment ${appointment.id}`);
@@ -72,8 +92,8 @@ export const createMockConversation = (appointment: any) => {
             }
         ],
         participantIds: [
-            appointment.patientId.trim().toLowerCase(),
-            appointment.doctorId.trim().toLowerCase()
+            patientIdLower,
+            doctorIdLower
         ],
         messages: [],
         appointment: {

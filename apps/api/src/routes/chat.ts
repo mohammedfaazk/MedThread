@@ -69,15 +69,39 @@ router.get('/conversations', async (req, res) => {
             };
         });
 
-        // Merge Results
+        // Merge Results - with deduplication
         const allConversations = [...dbConversations];
-        mockConversationsWithMessages.forEach((mockConv: any) => {
-            if (!allConversations.find(dbConv => dbConv.id === mockConv.id)) {
-                allConversations.push(mockConv);
+        const seenParticipantPairs = new Set<string>();
+        
+        // Add DB conversations to seen set
+        dbConversations.forEach((conv: any) => {
+            if (conv.participants && conv.participants.length === 2) {
+                const ids = conv.participants.map((p: any) => p.id).sort().join('-');
+                seenParticipantPairs.add(ids);
             }
         });
+        
+        // Only add mock conversations if they don't duplicate existing ones
+        mockConversationsWithMessages.forEach((mockConv: any) => {
+            // Check by conversation ID
+            if (allConversations.find(dbConv => dbConv.id === mockConv.id)) {
+                return; // Skip duplicate by ID
+            }
+            
+            // Check by participant pair
+            if (mockConv.participantIds && mockConv.participantIds.length === 2) {
+                const ids = [...mockConv.participantIds].sort().join('-');
+                if (seenParticipantPairs.has(ids)) {
+                    console.log(`[API] Skipping duplicate conversation for participants: ${ids}`);
+                    return; // Skip duplicate by participants
+                }
+                seenParticipantPairs.add(ids);
+            }
+            
+            allConversations.push(mockConv);
+        });
 
-        console.log(`[API] Returning total ${allConversations.length} merged conversations`);
+        console.log(`[API] Returning total ${allConversations.length} merged conversations (after deduplication)`);
         res.json(allConversations);
     } catch (error) {
         console.error('[API] Fetch conversations error:', error);

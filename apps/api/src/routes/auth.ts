@@ -10,7 +10,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3),
   password: z.string().min(8),
-  role: z.enum(['PATIENT', 'VERIFIED_DOCTOR', 'NURSE', 'MEDICAL_STUDENT', 'PHARMACIST'])
+  role: z.enum(['PATIENT', 'DOCTOR', 'NURSE', 'MEDICAL_STUDENT', 'PHARMACIST', 'ADMIN'])
 });
 
 authRouter.post('/register', async (req, res) => {
@@ -22,7 +22,12 @@ authRouter.post('/register', async (req, res) => {
     });
     
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ 
+        success: false,
+        error: existingUser.email === data.email 
+          ? 'Email already registered' 
+          : 'Username already taken'
+      });
     }
     
     const passwordHash = await bcrypt.hash(data.password, 10);
@@ -42,9 +47,26 @@ authRouter.post('/register', async (req, res) => {
       { expiresIn: '7d' }
     );
     
-    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+    res.json({ 
+      success: true,
+      data: {
+        token, 
+        user: { id: user.id, username: user.username, email: user.email, role: user.role }
+      }
+    });
   } catch (error) {
-    res.status(400).json({ error: 'Registration failed' });
+    console.error('Registration error:', error);
+    
+    // Handle Zod validation errors
+    if (error instanceof z.ZodError) {
+      const firstError = error.errors[0];
+      return res.status(400).json({ 
+        success: false, 
+        error: `${firstError.path.join('.')}: ${firstError.message}` 
+      });
+    }
+    
+    res.status(400).json({ success: false, error: 'Registration failed' });
   }
 });
 
@@ -70,9 +92,22 @@ authRouter.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
     
-    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+    res.json({ 
+      success: true,
+      data: {
+        token, 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email, 
+          role: user.role,
+          doctorVerificationStatus: user.doctorVerificationStatus
+        }
+      }
+    });
   } catch (error) {
-    res.status(400).json({ error: 'Login failed' });
+    console.error('Login error:', error);
+    res.status(400).json({ success: false, error: 'Login failed' });
   }
 });
 

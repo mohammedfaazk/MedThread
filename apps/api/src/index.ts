@@ -11,6 +11,7 @@ import { timelineRouter } from './routes/timeline';
 import { appointmentRouter } from './routes/appointments';
 import { chatRouter } from './routes/chat';
 import { chatHandler } from './handlers/chat.handler';
+import { doctorVerificationRouter } from './routes/doctor-verification.routes';
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.use('/api/replies', replyRouter);
 app.use('/api/timeline', timelineRouter);
 app.use('/api/appointments', appointmentRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/v1/doctor-verification', doctorVerificationRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -16,12 +16,28 @@ replyRouter.post('/', async (req, res) => {
     const data = createReplySchema.parse(req.body);
     
     const author = await prisma.user.findUnique({
-      where: { id: data.authorId }
+      where: { id: data.authorId },
+      select: {
+        id: true,
+        role: true,
+        doctorVerificationStatus: true,
+      }
     });
     
     if (!author) {
       return res.status(404).json({ error: 'Author not found' });
     }
+    
+    // Check if doctor is trying to reply without verification
+    if (author.role === 'DOCTOR' && author.doctorVerificationStatus !== 'APPROVED') {
+      return res.status(403).json({ 
+        error: 'Doctor verification required',
+        message: 'Your doctor account must be verified before you can post replies.'
+      });
+    }
+    
+    // Determine if this is a verified doctor reply
+    const isDoctorVerified = author.role === 'DOCTOR' && author.doctorVerificationStatus === 'APPROVED';
     
     const reply = await prisma.threadReply.create({
       data: {
@@ -30,7 +46,7 @@ replyRouter.post('/', async (req, res) => {
         authorId: data.authorId,
         authorRole: author.role,
         content: data.content,
-        doctorVerified: author.role === 'VERIFIED_DOCTOR'
+        doctorVerified: isDoctorVerified
       }
     });
     

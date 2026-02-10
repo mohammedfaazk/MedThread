@@ -16,6 +16,24 @@ export default function DoctorsPage() {
 
   const fetchDoctors = async () => {
     try {
+      // First, try to fetch approved doctors from our API
+      console.log('[UI] Fetching approved doctors from API...');
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await axios.get(`${API_URL}/api/v1/doctor-verification/verified`);
+      
+      console.log('[UI] API Response:', response.data);
+      // API returns { success: true, data: { doctors: [...], pagination: {...} } }
+      const doctorsList = response.data?.data?.doctors || response.data?.doctors || [];
+      
+      if (doctorsList.length > 0) {
+        console.log(`[UI] Found ${doctorsList.length} approved doctors from API`);
+        setDoctors(doctorsList);
+        setLoading(false);
+        return;
+      }
+
+      // Fallback to Supabase
+      console.log('[UI] No approved doctors in API, checking Supabase...');
       const { data, error } = await supabase
         .from('doctors')
         .select('*')
@@ -28,9 +46,9 @@ export default function DoctorsPage() {
         // Fallback to doctor_data.json if DB is empty
         console.log('[UI] Supabase doctors directory empty, loading from doctor_data.json');
         try {
-          const response = await fetch('/doctor_data.json');
-          if (response.ok) {
-            const doctorData = await response.json();
+          const jsonResponse = await fetch('/doctor_data.json');
+          if (jsonResponse.ok) {
+            const doctorData = await jsonResponse.json();
             setDoctors(doctorData);
           } else {
             console.warn('[UI] Failed to load doctor_data.json');
@@ -62,9 +80,11 @@ export default function DoctorsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {doctors.map((doctor) => {
-              // Use user_id if available, otherwise use id
-              const doctorLinkId = doctor.user_id || doctor.id;
-              const displayName = doctor.full_name || doctor.name || `Dr. Professional`;
+              // Use id for link
+              const doctorLinkId = doctor.id;
+              const displayName = doctor.username || `Dr. ${doctor.email?.split('@')[0]}`;
+              const specialty = doctor.specialty || 'Medical Professional';
+              const experience = doctor.yearsOfExperience ? `${doctor.yearsOfExperience} years exp.` : '';
 
               return (
                 <Link
@@ -79,18 +99,27 @@ export default function DoctorsPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-bold text-lg">{displayName}</h3>
-                        {doctor.is_verified && (
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
-                            ✓ Verified
-                          </span>
-                        )}
+                        <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+                          ✓ Verified
+                        </span>
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">{doctor.specialization || doctor.specialty || 'Medical Professional'}</p>
+                      <p className="text-gray-600 text-sm mb-2">{specialty}</p>
+                      {doctor.subSpecialty && (
+                        <p className="text-gray-500 text-xs mb-2">Subspecialty: {doctor.subSpecialty}</p>
+                      )}
                       <div className="flex items-center gap-4 text-sm">
-                        <span className="text-[#FF4500] font-semibold">⭐ {doctor.reputation_score || 0} reputation</span>
+                        {experience && (
+                          <span className="text-blue-600 font-semibold">📅 {experience}</span>
+                        )}
+                        <span className="text-[#FF4500] font-semibold">⭐ {doctor.totalKarma || 0} karma</span>
                       </div>
-                      {doctor.hospital_name && (
-                        <p className="text-xs text-gray-500 mt-1">📍 {doctor.hospital_name}</p>
+                      {doctor.hospitalAffiliation && (
+                        <p className="text-xs text-gray-500 mt-2">🏥 {doctor.hospitalAffiliation}</p>
+                      )}
+                      {doctor.verifiedAt && (
+                        <p className="text-xs text-green-600 mt-1">
+                          Verified on {new Date(doctor.verifiedAt).toLocaleDateString()}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -98,6 +127,14 @@ export default function DoctorsPage() {
               )
             })}
           </div>
+
+          {doctors.length === 0 && !loading && (
+            <div className="bg-white rounded border border-gray-300 p-12 text-center">
+              <div className="text-6xl mb-4">👨‍⚕️</div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">No Verified Doctors Yet</h3>
+              <p className="text-gray-600">Check back soon as we verify more healthcare professionals.</p>
+            </div>
+          )}
         </main>
       </div>
     </div>

@@ -9,13 +9,21 @@ datasource db {
 
 enum UserRole {
   PATIENT
-  VERIFIED_DOCTOR
+  DOCTOR
   NURSE
   MEDICAL_STUDENT
   PHARMACIST
   COMMUNITY_CONTRIBUTOR
   MODERATOR
   ADMIN
+}
+
+enum DoctorVerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
 }
 
 enum PostType {
@@ -44,15 +52,33 @@ model User {
   passwordHash      String
   role              UserRole  @default(PATIENT)
   verified          Boolean   @default(false)
-  specialty         String?
+  
+  // Doctor-specific fields
+  doctorVerificationStatus DoctorVerificationStatus?
+  medicalLicenseNumber     String?
+  licenseIssuingAuthority  String?
+  licenseExpiryDate        DateTime?
+  specialty                String?
+  subSpecialty             String?
+  yearsOfExperience        Int?
+  hospitalAffiliation      String?
+  clinicAddress            String?
+  phone                    String?
+  
+  // KYC Documents (stored as URLs or base64)
+  kycDocuments             Json?  // { idProof, medicalDegree, licenseDocument, etc. }
+  verificationDocuments    Json?  // Additional verification docs
+  verificationNotes        String?  // Admin notes
+  verifiedAt               DateTime?
+  verifiedBy               String?  // Admin user ID who verified
+  rejectionReason          String?
+  
   bio               String?
   avatar            String?
   banner            String?
   postKarma         Int       @default(0)
   commentKarma      Int       @default(0)
   totalKarma        Int       @default(0)
-  reputationScore   Int       @default(0)
-  verificationStatus String?
   isPremium         Boolean   @default(false)
   isNSFW            Boolean   @default(false)
   isSuspended       Boolean   @default(false)
@@ -95,7 +121,6 @@ model User {
   @@index([email])
   @@index([username])
   @@index([totalKarma])
-  @@index([reputationScore])
 }
 
 model Community {

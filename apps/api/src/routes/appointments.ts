@@ -13,12 +13,29 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
         console.log(`[API] Fetching availability for doctorId: ${doctorId}`);
 
         let availability: any[] = [];
+        let bookedSlots: any[] = [];
+        
         try {
+            // Get existing availability from DB
             availability = await prisma.availability.findMany({
                 where: { doctorId, isBooked: false },
                 orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }]
             });
             console.log(`[API] Found ${availability.length} slots in DB`);
+            
+            // Get all booked appointments for this doctor
+            const bookedAppointments = await prisma.appointment.findMany({
+                where: { 
+                    doctorId,
+                    status: { in: ['APPROVED', 'PENDING'] }
+                },
+                select: {
+                    startTime: true,
+                    endTime: true
+                }
+            });
+            bookedSlots = bookedAppointments;
+            console.log(`[API] Found ${bookedSlots.length} booked appointments`);
         } catch (dbError) {
             console.error('[API] DB availability fetch failed, falling back to defaults:', dbError);
         }
@@ -35,51 +52,71 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
             const today = new Date();
             const defaultSlots = [];
 
-            // Generate slots for the next 7 days (including today)
-            for (let i = 0; i <= 7; i++) {
+            // Generate slots for the next 14 days (2 weeks)
+            for (let i = 0; i <= 14; i++) {
                 const date = new Date(today);
                 date.setDate(today.getDate() + i);
                 const dayOfWeek = date.getDay();
 
-                // Weekdays: 4pm - 8pm
+                // Monday-Friday: 4pm (16:00) to 9pm (21:00) - 1 hour slots
                 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                    for (let hour = 16; hour < 20; hour++) {
+                    for (let hour = 16; hour < 21; hour++) {
                         const start = new Date(date);
                         start.setHours(hour, 0, 0, 0);
                         const end = new Date(date);
                         end.setHours(hour + 1, 0, 0, 0);
 
-                        defaultSlots.push({
-                            id: `default-${dayOfWeek}-${hour}-${i}`,
-                            doctorId,
-                            dayOfWeek,
-                            startTime: start,
-                            endTime: end,
-                            isBooked: false
+                        // Check if this slot is already booked
+                        const isBooked = bookedSlots.some((booked: any) => {
+                            const bookedStart = new Date(booked.startTime);
+                            const bookedEnd = new Date(booked.endTime);
+                            return (start >= bookedStart && start < bookedEnd) ||
+                                   (end > bookedStart && end <= bookedEnd);
                         });
+
+                        if (!isBooked) {
+                            defaultSlots.push({
+                                id: `default-${doctorId}-${dayOfWeek}-${hour}-${i}`,
+                                doctorId,
+                                dayOfWeek,
+                                startTime: start,
+                                endTime: end,
+                                isBooked: false
+                            });
+                        }
                     }
                 }
-                // Weekends: 10am - 7pm
-                else {
-                    for (let hour = 10; hour < 19; hour++) {
+                // Saturday-Sunday: 7am (07:00) to 9pm (21:00) - 1 hour slots
+                else if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    for (let hour = 7; hour < 21; hour++) {
                         const start = new Date(date);
                         start.setHours(hour, 0, 0, 0);
                         const end = new Date(date);
                         end.setHours(hour + 1, 0, 0, 0);
 
-                        defaultSlots.push({
-                            id: `default-${dayOfWeek}-${hour}-${i}`,
-                            doctorId,
-                            dayOfWeek,
-                            startTime: start,
-                            endTime: end,
-                            isBooked: false
+                        // Check if this slot is already booked
+                        const isBooked = bookedSlots.some((booked: any) => {
+                            const bookedStart = new Date(booked.startTime);
+                            const bookedEnd = new Date(booked.endTime);
+                            return (start >= bookedStart && start < bookedEnd) ||
+                                   (end > bookedStart && end <= bookedEnd);
                         });
+
+                        if (!isBooked) {
+                            defaultSlots.push({
+                                id: `default-${doctorId}-${dayOfWeek}-${hour}-${i}`,
+                                doctorId,
+                                dayOfWeek,
+                                startTime: start,
+                                endTime: end,
+                                isBooked: false
+                            });
+                        }
                     }
                 }
             }
             availability = defaultSlots as any;
-            console.log(`[API] Returning ${availability.length} default slots`);
+            console.log(`[API] Returning ${availability.length} default slots for doctor ${doctorId} (filtered out ${bookedSlots.length} booked)`);
         }
 
         res.json(availability);

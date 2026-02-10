@@ -77,9 +77,15 @@ export function PostCard({
     alert('Link copied to clipboard!')
   }
 
+  const handleCardClick = () => {
+    window.location.href = `/post/${id}`
+  }
+
   return (
-    <Link href={`/post/${id}`}>
-      <div className="bg-white rounded border border-gray-300 hover:border-gray-400 transition-colors cursor-pointer">
+    <div 
+      onClick={handleCardClick}
+      className="bg-white rounded border border-gray-300 hover:border-gray-400 transition-colors cursor-pointer"
+    >
         <div className="flex">
           {/* Vote Section */}
           <div className="w-10 bg-gray-50 flex flex-col items-center py-2 rounded-l">
@@ -212,6 +218,5 @@ export function PostCard({
           </div>
         </div>
       </div>
-    </Link>
   )
 }
