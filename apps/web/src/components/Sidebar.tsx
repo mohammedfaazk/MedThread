@@ -29,12 +29,8 @@ export function Sidebar() {
 
   const doctorNav: NavItem[] = [
     { name: 'Dashboard', icon: '📊', href: '/dashboard/doctor' },
-    { name: 'Pending Appointments', icon: '⏳', href: '/dashboard/doctor#pending' },
-    { name: 'Manage Slots', icon: '📅', href: '/dashboard/doctor#slots' },
     { name: 'Chat with Patients', icon: '💬', href: '/profile?tab=consultation' },
-    { name: 'Case Timeline', icon: '🧠', href: '/dashboard/doctor#cases' },
     { name: 'Discussion Threads', icon: '✍️', href: '#' }, // Triggers modal (Create Post)
-    { name: 'Reputation & Reviews', icon: '⭐', href: '/dashboard/doctor#reviews' },
     { name: 'Profile', icon: '👤', href: '/profile' },
     { name: 'Settings', icon: '⚙️', href: '/settings' },
   ]
@@ -47,7 +43,7 @@ export function Sidebar() {
   ]
 
 
-  const navItems = role === 'VERIFIED_DOCTOR' ? [...commonCategories, ...doctorNav] : [...commonCategories, ...patientNav]
+  const navItems = role === 'VERIFIED_DOCTOR' ? doctorNav : [...commonCategories, ...patientNav]
 
   const specialties = [
     { name: 'General Health', slug: 'general' },

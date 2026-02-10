@@ -29,12 +29,12 @@ export function Navbar() {
       <div className="max-w-[1400px] mx-auto px-6 h-12 flex items-center gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 mr-6 hover:opacity-80 transition group">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:scale-105 transition-transform">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#5CB8B2] to-[#4DA9A3] rounded-xl flex items-center justify-center shadow-lg shadow-[#9DD4D3] group-hover:scale-105 transition-transform">
             <Leaf className="text-white w-6 h-6" />
           </div>
           <div className="flex flex-col">
             <span className="font-bold text-xl tracking-tight text-slate-800 leading-none">MedThread</span>
-            <span className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-0.5">Healthcare</span>
+            <span className="text-[10px] text-[#5CB8B2] font-bold uppercase tracking-widest mt-0.5">Healthcare</span>
           </div>
         </Link>
 

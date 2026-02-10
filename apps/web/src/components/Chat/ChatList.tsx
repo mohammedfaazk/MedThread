@@ -25,12 +25,18 @@ interface ChatListProps {
     currentUserId: string;
     onSelectConversation: (conversation: Conversation) => void;
     autoSelectOtherUserId?: string | null;
+    autoSelectConversationId?: string | null;
+    activeTab?: string;
+    onTabChange?: (tab: string) => void;
 }
 
 export const ChatList: React.FC<ChatListProps> = ({
     currentUserId,
     onSelectConversation,
-    autoSelectOtherUserId
+    autoSelectOtherUserId,
+    autoSelectConversationId,
+    activeTab = 'consultation',
+    onTabChange
 }) => {
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -40,18 +46,27 @@ export const ChatList: React.FC<ChatListProps> = ({
     }, [currentUserId]);
 
     useEffect(() => {
-        if (!loading && conversations.length > 0 && autoSelectOtherUserId) {
-            const target = conversations.find(c =>
-                c.participants.some(p => p.id === autoSelectOtherUserId)
-            );
-            if (target) {
-                onSelectConversation(target);
+        if (!loading && conversations.length > 0) {
+            // First priority: select by conversationId
+            if (autoSelectConversationId) {
+                const target = conversations.find(c => c.id === autoSelectConversationId);
+                if (target) {
+                    onSelectConversation(target);
+                    return;
+                }
             }
-        } else if (!loading && conversations.length > 0 && !autoSelectOtherUserId) {
-            // Default to first conversation if nothing selected? 
-            // Maybe not, keep it optional
+            
+            // Second priority: select by other user ID
+            if (autoSelectOtherUserId) {
+                const target = conversations.find(c =>
+                    c.participants.some(p => p.id === autoSelectOtherUserId)
+                );
+                if (target) {
+                    onSelectConversation(target);
+                }
+            }
         }
-    }, [loading, conversations, autoSelectOtherUserId]);
+    }, [loading, conversations, autoSelectOtherUserId, autoSelectConversationId]);
 
     const loadConversations = async () => {
         try {
@@ -77,8 +92,32 @@ export const ChatList: React.FC<ChatListProps> = ({
 
     return (
         <div className="bg-white rounded-lg shadow h-full overflow-y-auto">
-            <div className="p-4 border-b flex justify-between items-center">
-                <h2 className="text-xl font-bold">Messages</h2>
+            {/* Tab Buttons */}
+            <div className="p-4 flex gap-3">
+                <button
+                    onClick={() => onTabChange?.('appointments')}
+                    className={`flex-1 py-3 px-6 rounded-full font-semibold transition-all ${
+                        activeTab === 'appointments'
+                            ? 'bg-white text-[#5CB8B2] shadow-md border-2 border-[#9DD4D3]'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                >
+                    Appointments
+                </button>
+                <button
+                    onClick={() => onTabChange?.('consultation')}
+                    className={`flex-1 py-3 px-6 rounded-full font-semibold transition-all ${
+                        activeTab === 'consultation'
+                            ? 'bg-white text-[#5CB8B2] shadow-md border-2 border-[#9DD4D3]'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                >
+                    Chat
+                </button>
+            </div>
+
+            <div className="px-4 pb-4 border-b flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Messages</h2>
                 <button
                     onClick={loadConversations}
                     disabled={loading}

@@ -20,8 +20,15 @@ export const AvailabilityScheduler: React.FC<AvailabilitySchedulerProps> = ({ do
     const [startTime, setStartTime] = useState('09:00');
     const [endTime, setEndTime] = useState('17:00');
     const [slots, setSlots] = useState<AvailabilitySlot[]>([]);
+    const [loading, setLoading] = useState(false);
 
     const addSlot = async () => {
+        if (!startTime || !endTime) {
+            alert('Please select both start and end times');
+            return;
+        }
+        
+        setLoading(true);
         try {
             const slot = {
                 doctorId,
@@ -36,6 +43,8 @@ export const AvailabilityScheduler: React.FC<AvailabilitySchedulerProps> = ({ do
         } catch (error) {
             console.error('Failed to add availability:', error);
             alert('Failed to add availability');
+        } finally {
+            setLoading(false);
         }
     };
 

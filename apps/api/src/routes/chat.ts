@@ -158,7 +158,25 @@ router.post('/messages', async (req, res) => {
             console.error('[API] DB Message save failed, falling back to mock store');
         }
 
-        // Fallback to mock store
+        // Fallback to mock store - try to get actual username
+        let senderUsername = 'User';
+        
+        try {
+            const { createClient } = require('@supabase/supabase-js');
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            
+            if (supabaseUrl && supabaseKey) {
+                const supabase = createClient(supabaseUrl, supabaseKey);
+                const { data: userAuth } = await supabase.auth.admin.getUserById(senderId);
+                if (userAuth?.user?.email) {
+                    senderUsername = userAuth.user.email.split('@')[0];
+                }
+            }
+        } catch (authError) {
+            console.log('[API] Could not fetch sender info:', authError);
+        }
+        
         const message = {
             id: `msg-${Date.now()}`,
             conversationId,
@@ -167,7 +185,7 @@ router.post('/messages', async (req, res) => {
             type,
             attachment,
             createdAt: new Date().toISOString(),
-            sender: { id: senderId, username: 'User', avatar: null }
+            sender: { id: senderId, username: senderUsername, avatar: null }
         };
         messagesStore.push(message);
         saveStore();
