@@ -3,19 +3,51 @@
 import { useState } from 'react'
 import { CreatePostModal } from './CreatePostModal'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Home, TrendingUp, AlertCircle, List } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useUser } from '@/context/UserContext'
 
 export function Sidebar() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const router = useRouter()
-  
-  const categories = [
-    { name: 'Home', icon: Home, href: '/', active: true },
-    { name: 'Popular', icon: TrendingUp, href: '/popular', active: false },
-    { name: 'Emergency', icon: AlertCircle, href: '/emergency', active: false },
-    { name: 'All', icon: List, href: '/all', active: false },
+  const pathname = usePathname()
+  const { role, loading } = useUser()
+
+  interface NavItem {
+    name: string;
+    icon: string;
+    href: string;
+    isExternal?: boolean;
+    active?: boolean;
+  }
+
+  const commonCategories: NavItem[] = [
+    { name: 'Dashboard', icon: '📊', href: '/dashboard/patient' },
+    { name: 'Symptom Checker', icon: '🩺', href: '/symptom-checker' },
+    { name: 'Book Appointment', icon: '📅', href: '/doctors' },
+    { name: 'View Doctors', icon: '👨‍⚕️', href: '/doctors' },
   ]
+
+  const doctorNav: NavItem[] = [
+    { name: 'Dashboard', icon: '📊', href: '/dashboard/doctor' },
+    { name: 'Pending Appointments', icon: '⏳', href: '/dashboard/doctor#pending' },
+    { name: 'Manage Slots', icon: '📅', href: '/dashboard/doctor#slots' },
+    { name: 'Chat with Patients', icon: '💬', href: '/profile?tab=consultation' },
+    { name: 'Case Timeline', icon: '🧠', href: '/dashboard/doctor#cases' },
+    { name: 'Discussion Threads', icon: '✍️', href: '#' }, // Triggers modal (Create Post)
+    { name: 'Reputation & Reviews', icon: '⭐', href: '/dashboard/doctor#reviews' },
+    { name: 'Profile', icon: '👤', href: '/profile' },
+    { name: 'Settings', icon: '⚙️', href: '/settings' },
+  ]
+
+  const patientNav: NavItem[] = [
+    { name: 'Chat with Doctors', icon: '💬', href: '/profile?tab=consultation' },
+    { name: 'Medication Reminder', icon: '💊', href: '/medications' },
+    { name: 'Health Profile', icon: '👤', href: '/profile' },
+    { name: 'Settings', icon: '⚙️', href: '/settings' },
+  ]
+
+
+  const navItems = role === 'VERIFIED_DOCTOR' ? [...commonCategories, ...doctorNav] : [...commonCategories, ...patientNav]
 
   const specialties = [
     { name: 'General Health', slug: 'general' },
@@ -28,8 +60,19 @@ export function Sidebar() {
     { name: 'Gastroenterology', slug: 'gastroenterology' },
   ]
 
-  const handleCreateCommunity = () => {
-    router.push('/communities/create')
+  const handleExternalNav = (href: string) => {
+    window.location.href = href;
+  }
+
+  if (loading) {
+    return (
+      <aside className="hidden lg:block w-[260px] shrink-0">
+        <div className="animate-pulse space-y-4">
+          <div className="h-40 bg-gray-200 rounded"></div>
+          <div className="h-60 bg-gray-200 rounded"></div>
+        </div>
+      </aside>
+    )
   }
 
   return (
@@ -37,81 +80,62 @@ export function Sidebar() {
       <aside className="hidden lg:block w-[260px] shrink-0">
         <div className="sticky top-[68px]">
           {/* Main Navigation */}
-          <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/30 mb-4 shadow-lg overflow-hidden">
-            {categories.map((cat) => {
-              const IconComponent = cat.icon
+          <div className="bg-white rounded border border-gray-300 mb-4 overflow-hidden">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+
+              if (item.isExternal) {
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => handleExternalNav(item.href)}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 text-left transition"
+                  >
+                    <span className="text-lg">{item.icon}</span>
+                    <span>{item.name}</span>
+                  </button>
+                )
+              }
+
               return (
                 <Link
-                  key={cat.name}
-                  href={cat.href}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-cream-50/50 transition ${
-                    cat.active ? 'bg-yellow-100/50 border-r-4 border-yellow-200 font-semibold' : ''
-                  }`}
+                  key={item.name}
+                  href={item.href}
+                  onClick={(e) => {
+                    if (item.name === 'Create Post') {
+                      e.preventDefault();
+                      setIsCreateModalOpen(true);
+                    }
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-blue-50/50 transition-all rounded-xl mb-1 ${isActive ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600'
+                    }`}
                 >
-                  <IconComponent className="w-5 h-5" />
-                  <span className="text-charcoal">{cat.name}</span>
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="font-medium">{item.name}</span>
                 </Link>
               )
             })}
           </div>
 
           {/* Specialties */}
-          <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/30 mb-4 shadow-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-200/50 flex items-center justify-between">
-              <h3 className="text-xs font-bold text-gray-600 uppercase">Medical Specialties</h3>
-              <button
-                onClick={handleCreateCommunity}
-                className="text-xs text-charcoal hover:text-yellow-200 font-semibold transition"
-              >
-                + Create
-              </button>
+          <div className="bg-white rounded border border-gray-300 mb-4">
+            <div className="px-4 py-3 border-b border-gray-300 flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-500 uppercase">Medical Specialties</h3>
             </div>
-            <div className="max-h-[400px] overflow-y-auto">
+            <div className="max-h-[300px] overflow-y-auto">
               {specialties.map((specialty) => (
                 <Link
                   key={specialty.slug}
-                  href={`/m/${specialty.slug}`}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-cream-50/60 flex items-center gap-2 transition"
+                  href={`/r/${specialty.slug}`}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
                 >
-                  <span className="w-2 h-2 bg-yellow-200 rounded-full"></span>
-                  <span className="text-gray-700">m/{specialty.slug}</span>
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <span>r/{specialty.slug}</span>
                 </Link>
               ))}
             </div>
-            <button
-              onClick={handleCreateCommunity}
-              className="w-full px-4 py-2 text-sm text-charcoal hover:bg-cream-50/50 border-t border-gray-200/50 font-semibold transition"
-            >
-              + Create Community
-            </button>
           </div>
 
-          {/* Quick Links */}
-          <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/30 mb-4 shadow-lg overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-200/50">
-              <h3 className="text-xs font-bold text-gray-600 uppercase">Resources</h3>
-            </div>
-            <Link href="/about" className="block px-4 py-2 text-sm hover:bg-cream-50/50 text-charcoal transition">
-              About MedThread
-            </Link>
-            <Link href="/help" className="block px-4 py-2 text-sm hover:bg-cream-50/50 text-charcoal transition">
-              Help Center
-            </Link>
-            <Link href="/guidelines" className="block px-4 py-2 text-sm hover:bg-cream-50/50 text-charcoal transition">
-              Community Guidelines
-            </Link>
-            <Link href="/doctors" className="block px-4 py-2 text-sm hover:bg-cream-50/50 text-charcoal transition">
-              For Doctors
-            </Link>
-          </div>
-
-          {/* Create Post Button */}
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="w-full px-4 py-3 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition-all shadow-soft hover:shadow-elevated hover:scale-105"
-          >
-            Create Post
-          </button>
         </div>
       </aside>
 
