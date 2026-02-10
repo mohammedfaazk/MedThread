@@ -51,6 +51,8 @@ model User {
   postKarma         Int       @default(0)
   commentKarma      Int       @default(0)
   totalKarma        Int       @default(0)
+  reputationScore   Int       @default(0)
+  verificationStatus String?
   isPremium         Boolean   @default(false)
   isNSFW            Boolean   @default(false)
   isSuspended       Boolean   @default(false)
@@ -85,9 +87,15 @@ model User {
   appointmentsAsPatient  Appointment[]    @relation("PatientAppointments")
   conversations          Conversation[]   @relation("ConversationParticipants")
   
+  // Medical Threads
+  medicalThreads         MedicalThread[]  @relation("PatientThreads")
+  threadReplies          ThreadReply[]
+  timelineEvents         CaseTimelineEvent[]
+  
   @@index([email])
   @@index([username])
   @@index([totalKarma])
+  @@index([reputationScore])
 }
 
 model Community {
@@ -454,3 +462,63 @@ enum MessageType {
 // Actually, I need to modify the existing Message model. Since I can't do random access easily, I will rely on the fact that I am appending new models at the end, 
 // BUT I also need to modify User and existing Message.
 // Let's do the Append first, then I will use another call to modify User and Message.
+
+// Medical Thread Models
+model MedicalThread {
+  id            String              @id @default(cuid())
+  patientId     String
+  patient       User                @relation("PatientThreads", fields: [patientId], references: [id])
+  title         String
+  symptoms      Json
+  severityScore String?
+  tags          String[]
+  status        String              @default("OPEN")
+  isResolved    Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  
+  replies       ThreadReply[]
+  timeline      CaseTimelineEvent[]
+  
+  @@index([patientId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+model ThreadReply {
+  id              String         @id @default(cuid())
+  threadId        String
+  thread          MedicalThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  parentReplyId   String?
+  parentReply     ThreadReply?   @relation("ReplyReplies", fields: [parentReplyId], references: [id])
+  childReplies    ThreadReply[]  @relation("ReplyReplies")
+  authorId        String
+  author          User           @relation(fields: [authorId], references: [id])
+  authorRole      UserRole
+  content         String
+  doctorVerified  Boolean        @default(false)
+  upvotes         Int            @default(0)
+  downvotes       Int            @default(0)
+  isHelpful       Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  @@index([threadId])
+  @@index([authorId])
+  @@index([parentReplyId])
+}
+
+model CaseTimelineEvent {
+  id        String        @id @default(cuid())
+  threadId  String
+  thread    MedicalThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  eventType String
+  data      Json
+  timestamp DateTime      @default(now())
+  
+  @@index([threadId])
+  @@index([userId])
+  @@index([timestamp])
+}

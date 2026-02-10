@@ -12,7 +12,7 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
         const { doctorId } = req.params;
         console.log(`[API] Fetching availability for doctorId: ${doctorId}`);
 
-        let availability = [];
+        let availability: any[] = [];
         try {
             availability = await prisma.availability.findMany({
                 where: { doctorId, isBooked: false },

@@ -1,10 +1,15 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import { prisma } from '@medthread/database';
 import { authenticate } from '../middleware/auth';
 
 export const timelineRouter = Router();
 
-timelineRouter.post('/', authenticate, async (req, res) => {
+// Extend Request type to include userId
+interface AuthRequest extends Request {
+  userId?: string;
+}
+
+timelineRouter.post('/', authenticate, async (req: AuthRequest, res) => {
   try {
     const { threadId, eventType, data } = req.body;
     
