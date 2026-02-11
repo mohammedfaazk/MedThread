@@ -1,0 +1,67 @@
+{
+  "appointments": [],
+  "conversations": [
+    {
+      "id": "conv-cmlgk7c270003r5mshwl1865u",
+      "appointmentId": "cmlgk7c270003r5mshwl1865u",
+      "participants": [
+        {
+          "id": "cmlgfw81s0000lrbjhn86kubg",
+          "username": "ms_giggles_",
+          "avatar": null,
+          "role": "PATIENT"
+        },
+        {
+          "id": "cmlgbh26r0001kpk47d070r3o",
+          "username": "navin",
+          "avatar": null,
+          "role": "VERIFIED_DOCTOR"
+        }
+      ],
+      "participantIds": [
+        "cmlgfw81s0000lrbjhn86kubg",
+        "cmlgbh26r0001kpk47d070r3o"
+      ],
+      "messages": [],
+      "appointment": {
+        "status": "APPROVED",
+        "startTime": "2026-02-10T10:30:00.000Z",
+        "endTime": "2026-02-10T11:30:00.000Z"
+      },
+      "createdAt": "2026-02-10T12:11:52.768Z",
+      "updatedAt": "2026-02-10T12:11:52.768Z"
+    },
+    {
+      "id": "conv-cmlgjtwhr0001r5mscy0htdg6",
+      "appointmentId": "cmlgjtwhr0001r5mscy0htdg6",
+      "participants": [
+        {
+          "id": "cmlgfw81s0000lrbjhn86kubg",
+          "username": "ms_giggles_",
+          "avatar": null,
+          "role": "PATIENT"
+        },
+        {
+          "id": "cmlgbh26r0001kpk47d070r3o",
+          "username": "navin",
+          "avatar": null,
+          "role": "VERIFIED_DOCTOR"
+        }
+      ],
+      "participantIds": [
+        "cmlgfw81s0000lrbjhn86kubg",
+        "cmlgbh26r0001kpk47d070r3o"
+      ],
+      "messages": [],
+      "appointment": {
+        "status": "APPROVED",
+        "startTime": "2026-02-16T13:30:00.000Z",
+        "endTime": "2026-02-16T14:30:00.000Z"
+      },
+      "createdAt": "2026-02-10T12:12:05.303Z",
+      "updatedAt": "2026-02-10T12:12:05.303Z"
+    }
+  ],
+  "messages": [],
+  "availability": []
+}

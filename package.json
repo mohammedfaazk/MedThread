@@ -1,0 +1,25 @@
+{
+  "name": "medthread",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "db:generate": "cd packages/database && prisma generate",
+    "db:push": "cd packages/database && prisma db push"
+  },
+  "devDependencies": {
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "pg": "^8.18.0"
+  }
+}
