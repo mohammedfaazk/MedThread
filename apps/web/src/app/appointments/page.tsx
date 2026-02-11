@@ -163,7 +163,7 @@ export default function AppointmentsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="min-h-screen">
             <Navbar />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
@@ -180,7 +180,7 @@ export default function AppointmentsPage() {
                         {/* Left: Doctor List */}
                         <div className="lg:col-span-2">
                             {/* Search and Filter */}
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-6">
+                            <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg mb-6 hover:shadow-xl transition-all">
                                 <div className="flex flex-col md:flex-row gap-4">
                                     <div className="flex-1 relative">
                                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -189,7 +189,7 @@ export default function AppointmentsPage() {
                                             placeholder="Search doctors by name or specialty..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="w-full pl-12 pr-4 py-3 border border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/50 backdrop-blur-sm transition-all"
                                         />
                                     </div>
                                     <div className="relative">
@@ -197,7 +197,7 @@ export default function AppointmentsPage() {
                                         <select
                                             value={specialtyFilter}
                                             onChange={(e) => setSpecialtyFilter(e.target.value)}
-                                            className="pl-12 pr-8 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white min-w-[200px]"
+                                            className="pl-12 pr-8 py-3 border border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-white/50 backdrop-blur-sm min-w-[200px] transition-all"
                                         >
                                             <option value="">All Specialties</option>
                                             {specialties.map(specialty => (
@@ -211,12 +211,12 @@ export default function AppointmentsPage() {
                             {/* Doctors List */}
                             <div className="space-y-4">
                                 {loadingDoctors ? (
-                                    <div className="bg-white p-12 rounded-2xl border border-slate-100 shadow-sm text-center">
+                                    <div className="bg-white/40 backdrop-blur-xl p-12 rounded-2xl border border-white/20 shadow-lg text-center">
                                         <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                                         <p className="text-slate-500">Loading doctors...</p>
                                     </div>
                                 ) : filteredDoctors.length === 0 ? (
-                                    <div className="bg-white p-12 rounded-2xl border border-slate-100 shadow-sm text-center">
+                                    <div className="bg-white/40 backdrop-blur-xl p-12 rounded-2xl border border-white/20 shadow-lg text-center">
                                         <Stethoscope className="w-16 h-16 text-slate-300 mx-auto mb-4" />
                                         <p className="text-slate-500 font-medium">No doctors found</p>
                                         <p className="text-slate-400 text-sm mt-2">Try adjusting your search or filters</p>
@@ -227,9 +227,9 @@ export default function AppointmentsPage() {
                                             key={doctor.id}
                                             whileHover={{ scale: 1.01 }}
                                             onClick={() => handleDoctorSelect(doctor)}
-                                            className={`bg-white p-6 rounded-2xl border-2 cursor-pointer transition-all ${selectedDoctor?.id === doctor.id
-                                                ? 'border-blue-500 shadow-lg shadow-blue-100'
-                                                : 'border-slate-100 hover:border-blue-200 shadow-sm'
+                                            className={`bg-white/40 backdrop-blur-xl p-6 rounded-2xl border-2 cursor-pointer transition-all shadow-lg hover:shadow-xl ${selectedDoctor?.id === doctor.id
+                                                ? 'border-blue-500/60 shadow-blue-200'
+                                                : 'border-white/20 hover:border-blue-300/40'
                                                 }`}
                                         >
                                             <div className="flex items-start gap-6">
@@ -288,7 +288,7 @@ export default function AppointmentsPage() {
 
                         {/* Right: Booking Panel */}
                         <div className="lg:col-span-1">
-                            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm sticky top-8">
+                            <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg sticky top-8 hover:shadow-xl transition-all">
                                 {!selectedDoctor ? (
                                     <div className="text-center py-12">
                                         <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
@@ -304,13 +304,13 @@ export default function AppointmentsPage() {
                                                     setSelectedDoctor(null)
                                                     setSelectedSlot(null)
                                                 }}
-                                                className="p-2 hover:bg-slate-100 rounded-lg transition"
+                                                className="p-2 hover:bg-neutral-300/20 rounded-lg transition-all"
                                             >
                                                 <X className="w-5 h-5 text-slate-400" />
                                             </button>
                                         </div>
 
-                                        <div className="mb-6 p-4 bg-blue-50 rounded-xl">
+                                        <div className="mb-6 p-4 bg-blue-50/50 backdrop-blur-sm rounded-xl border border-blue-200/30">
                                             <p className="text-sm font-semibold text-blue-900">Dr. {selectedDoctor.username}</p>
                                             <p className="text-xs text-blue-700">{selectedDoctor.specialty}</p>
                                         </div>
@@ -339,8 +339,8 @@ export default function AppointmentsPage() {
                                                                 key={slot.id}
                                                                 onClick={() => setSelectedSlot(slot)}
                                                                 className={`w-full p-3 rounded-xl border-2 transition-all text-left ${isSelected
-                                                                    ? 'border-blue-500 bg-blue-50'
-                                                                    : 'border-slate-200 hover:border-blue-300 bg-white'
+                                                                    ? 'border-blue-500/60 bg-blue-50/50 backdrop-blur-sm'
+                                                                    : 'border-neutral-400/20 hover:border-blue-300/40 bg-white/50 backdrop-blur-sm'
                                                                     }`}
                                                             >
                                                                 <div className="flex items-center justify-between">
@@ -372,7 +372,7 @@ export default function AppointmentsPage() {
                                                 value={reason}
                                                 onChange={(e) => setReason(e.target.value)}
                                                 placeholder="Describe your symptoms or reason for consultation..."
-                                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                                className="w-full px-4 py-3 border border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none bg-white/50 backdrop-blur-sm transition-all"
                                                 rows={4}
                                             />
                                         </div>
@@ -380,7 +380,7 @@ export default function AppointmentsPage() {
                                         <button
                                             onClick={handleBookAppointment}
                                             disabled={!selectedSlot || booking}
-                                            className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            className="w-full py-4 bg-[#00BCD4] text-white rounded-xl font-bold hover:bg-[#00ACC1] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                                         >
                                             {booking ? (
                                                 <>
