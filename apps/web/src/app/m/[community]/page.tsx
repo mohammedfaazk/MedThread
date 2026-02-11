@@ -31,7 +31,7 @@ export default function CommunityPage({ params }: { params: { community: string 
       <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
         <Sidebar />
         <main className="flex-1 max-w-[640px]">
-          <PostFeed />
+          <PostFeed community={params.community} />
         </main>
         <RightSidebar />
       </div>

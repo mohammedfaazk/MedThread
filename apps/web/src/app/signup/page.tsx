@@ -48,6 +48,8 @@ const AUTHORITIES = [
 // API Base URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
+import { Stethoscope, UserRound } from 'lucide-react'
+
 export default function SignupPage() {
   const router = useRouter()
   const [userType, setUserType] = useState<'patient' | 'doctor'>('patient')
@@ -311,8 +313,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4 py-8">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-3xl border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center p-4 py-8">
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 w-full max-w-3xl border border-white/20">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Create Account</h1>
           <p className="text-gray-600">Join the MedThread Community</p>
@@ -349,7 +351,7 @@ export default function SignupPage() {
             }`}
           >
             <div className="flex items-center justify-center gap-2">
-              <span className="text-2xl">👨‍⚕️</span>
+              <Stethoscope className="w-6 h-6" />
               <span>Doctor</span>
             </div>
           </button>

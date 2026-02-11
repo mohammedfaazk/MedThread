@@ -62,48 +62,36 @@ export default function ChatPage() {
   if (userLoading || !user) return <div className="p-8">Loading...</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-[#9DD4D3] via-[#C8E3D4] to-[#F5E6D3]">
+    <div className="min-h-screen">
       <Navbar />
       <div className="flex max-w-[1400px] mx-auto">
         <Sidebar />
         <div className="flex-1 px-6 py-8">
-          {/* Header with Tabs */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-3xl font-bold text-gray-900">
-              {userRole === 'VERIFIED_DOCTOR' ? 'Patient Communications' : 'Doctor Communications'}
-            </h1>
-            <p className="text-gray-600 mt-2">
-              {userRole === 'VERIFIED_DOCTOR' 
-                ? 'Manage your patient consultations and appointments' 
-                : 'Connect with verified doctors and manage your appointments'}
-            </p>
-          </div>
-          
           {/* Tab Navigation */}
-          <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('messages')}
-              className={`px-6 py-4 font-medium transition ${
-                activeTab === 'messages'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Messages
-            </button>
-            <button
-              onClick={() => setActiveTab('appointments')}
-              className={`px-6 py-4 font-medium transition ${
-                activeTab === 'appointments'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Appointments
-            </button>
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/20 mb-6">
+            <div className="flex border-b border-white/20">
+              <button
+                onClick={() => setActiveTab('messages')}
+                className={`px-6 py-4 font-medium transition ${
+                  activeTab === 'messages'
+                    ? 'border-b-2 border-cyan-500 text-cyan-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Messages
+              </button>
+              <button
+                onClick={() => setActiveTab('appointments')}
+                className={`px-6 py-4 font-medium transition ${
+                  activeTab === 'appointments'
+                    ? 'border-b-2 border-cyan-500 text-cyan-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Appointments
+              </button>
+            </div>
           </div>
-        </div>
 
         {/* Tab Content */}
         {activeTab === 'messages' && (
@@ -126,7 +114,7 @@ export default function ChatPage() {
                   otherUser={selectedConversation.participants.find((p: any) => p.id !== effectiveUserId)}
                 />
               ) : (
-                <div className="bg-white rounded-lg shadow h-full flex items-center justify-center text-gray-500">
+                <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg h-full flex items-center justify-center text-gray-500 border border-white/20">
                   Select a conversation to start chatting
                 </div>
               )}
@@ -135,7 +123,7 @@ export default function ChatPage() {
         )}
 
         {activeTab === 'appointments' && (
-          <div className="bg-white rounded border border-gray-300 p-8">
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg hover:shadow-xl transition-all">
             <h2 className="text-2xl font-bold mb-6">
               {userRole === 'VERIFIED_DOCTOR' ? 'Appointment Requests' : 'My Appointments'}
             </h2>

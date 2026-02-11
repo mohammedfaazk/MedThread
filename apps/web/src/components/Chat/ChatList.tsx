@@ -91,9 +91,9 @@ export const ChatList: React.FC<ChatListProps> = ({
     }
 
     return (
-        <div className="bg-white rounded-lg shadow h-full overflow-y-auto">
+        <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg h-full overflow-y-auto border border-white/20">
             {/* Tab Buttons */}
-            <div className="p-4 flex gap-3">
+            {/* <div className="p-4 flex gap-3">
                 <button
                     onClick={() => onTabChange?.('appointments')}
                     className={`flex-1 py-3 px-6 rounded-full font-semibold transition-all ${
@@ -114,9 +114,9 @@ export const ChatList: React.FC<ChatListProps> = ({
                 >
                     Chat
                 </button>
-            </div>
+            </div> */}
 
-            <div className="px-4 pb-4 border-b flex justify-between items-center">
+            <div className="px-4 pb-4 pt-4 border-b flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Messages</h2>
                 <button
                     onClick={loadConversations}

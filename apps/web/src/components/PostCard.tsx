@@ -2,6 +2,7 @@
 
 import { useStore } from '@/store/useStore'
 import Link from 'next/link'
+import { UserRound, Stethoscope, Pin } from 'lucide-react'
 
 interface PostCardProps {
   id: string
@@ -84,14 +85,14 @@ export function PostCard({
   return (
     <div 
       onClick={handleCardClick}
-      className="bg-white rounded border border-gray-300 hover:border-gray-400 transition-colors cursor-pointer"
+      className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-lg hover:shadow-xl"
     >
         <div className="flex">
           {/* Vote Section */}
-          <div className="w-10 bg-gray-50 flex flex-col items-center py-2 rounded-l">
+          <div className="w-10 bg-neutral-300/10 backdrop-blur-sm flex flex-col items-center py-2 rounded-l-2xl border-r border-neutral-400/20">
             <button
               onClick={(e) => handleVote(e, 1)}
-              className={`p-1 hover:bg-gray-200 rounded ${userVote === 1 ? 'text-[#FF4500]' : 'text-gray-400'
+              className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${userVote === 1 ? 'text-[#FF4500]' : 'text-gray-400'
                 }`}
             >
               <svg className="w-5 h-5" fill={userVote === 1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +105,7 @@ export function PostCard({
             </span>
             <button
               onClick={(e) => handleVote(e, -1)}
-              className={`p-1 hover:bg-gray-200 rounded ${userVote === -1 ? 'text-[#7193ff]' : 'text-gray-400'
+              className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${userVote === -1 ? 'text-[#7193ff]' : 'text-gray-400'
                 }`}
             >
               <svg className="w-5 h-5" fill={userVote === -1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -118,17 +119,19 @@ export function PostCard({
             {/* Header */}
             <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
               {isPinned && (
-                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-semibold">
-                  📌 Pinned
+                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-semibold flex items-center gap-1">
+                  <Pin className="w-3 h-3" />
+                  Pinned
                 </span>
               )}
-              <Link href={`/r/${community}`} className="font-semibold hover:underline" onClick={(e) => e.stopPropagation()}>
-                r/{community}
+              <Link href={`/m/${community}`} className="font-semibold hover:underline" onClick={(e) => e.stopPropagation()}>
+                m/{community}
               </Link>
               <span className="text-gray-400">•</span>
               <span className="text-gray-500">Posted by</span>
-              <Link href={`/u/${author}`} className="font-semibold hover:underline" onClick={(e) => e.stopPropagation()}>
-                {authorType === 'doctor' ? '👨‍⚕️' : '👤'} u/{author}
+              <Link href={`/u/${author}`} className="font-semibold hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                {authorType === 'doctor' ? <Stethoscope className="w-3 h-3" /> : <UserRound className="w-3 h-3" />}
+                u/{author}
               </Link>
               {verified && (
                 <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-semibold flex items-center gap-1">
@@ -172,20 +175,25 @@ export function PostCard({
 
             {/* Actions */}
             <div className="flex items-center gap-4 text-xs text-gray-600">
-              <button className="flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded" onClick={(e) => e.stopPropagation()}>
+              <Link 
+                href={`/post/${id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 <span className="font-semibold">{comments} Comments</span>
-              </button>
+              </Link>
               {doctorReplies > 0 && (
                 <span className="flex items-center gap-1 text-blue-600 font-semibold">
-                  👨‍⚕️ {doctorReplies} Doctor {doctorReplies === 1 ? 'Reply' : 'Replies'}
+                  <Stethoscope className="w-4 h-4" />
+                  {doctorReplies} Doctor {doctorReplies === 1 ? 'Reply' : 'Replies'}
                 </span>
               )}
               <button
                 onClick={handleShare}
-                className="flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded"
+                className="flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -194,7 +202,7 @@ export function PostCard({
               </button>
               <button
                 onClick={handleSave}
-                className={`flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded ${isSaved ? 'text-[#FF4500] font-semibold' : ''
+                className={`flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all ${isSaved ? 'text-[#FF4500] font-semibold' : ''
                   }`}
               >
                 <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -204,15 +212,12 @@ export function PostCard({
               </button>
               <button
                 onClick={handleHide}
-                className="flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded"
+                className="flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                 </svg>
                 <span>Hide</span>
-              </button>
-              <button className="flex items-center gap-1 hover:bg-gray-100 px-2 py-1 rounded" onClick={(e) => e.stopPropagation()}>
-                <span>⋯</span>
               </button>
             </div>
           </div>

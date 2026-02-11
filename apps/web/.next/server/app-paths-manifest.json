@@ -1,0 +1,8 @@
+{
+  "/page": "app/page.js",
+  "/doctors/page": "app/doctors/page.js",
+  "/terms/page": "app/terms/page.js",
+  "/u/[username]/page": "app/u/[username]/page.js",
+  "/trending/page": "app/trending/page.js",
+  "/search/page": "app/search/page.js"
+}

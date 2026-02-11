@@ -33,7 +33,7 @@ export function NavbarJWT() {
   }
 
   return (
-    <nav className="bg-white border-b border-gray-300 sticky top-0 z-50">
+    <nav className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50 shadow-sm">
       <div className="max-w-[1400px] mx-auto px-6 h-12 flex items-center gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 mr-6 hover:opacity-80 transition group">

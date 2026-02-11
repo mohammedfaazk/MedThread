@@ -5,7 +5,11 @@ import { PostCard } from './PostCard'
 import { useEffect } from 'react'
 import { Flame, Sparkles, ArrowUp, TrendingUp } from 'lucide-react'
 
-export function PostFeed() {
+interface PostFeedProps {
+  community?: string
+}
+
+export function PostFeed({ community }: PostFeedProps = {}) {
   const { posts, setPosts, sortBy, setSortBy } = useStore()
 
   useEffect(() => {
@@ -114,7 +118,40 @@ export function PostFeed() {
     ])
   }, [])
 
-  const visiblePosts = posts.filter(post => !post.isHidden)
+  // Filter posts by community if specified
+  const filteredPosts = community 
+    ? posts.filter(post => post.community === community && !post.isHidden)
+    : posts.filter(post => !post.isHidden)
+
+  // Sort posts based on sortBy state
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    switch (sortBy) {
+      case 'hot':
+        // Hot algorithm: score / (time_hours + 2)^1.5
+        const aHours = parseTimeAgo(a.timeAgo)
+        const bHours = parseTimeAgo(b.timeAgo)
+        const aHot = a.score / Math.pow(aHours + 2, 1.5)
+        const bHot = b.score / Math.pow(bHours + 2, 1.5)
+        return bHot - aHot
+      
+      case 'new':
+        // Sort by time (newest first)
+        return parseTimeAgo(a.timeAgo) - parseTimeAgo(b.timeAgo)
+      
+      case 'top':
+        // Sort by score (highest first)
+        return b.score - a.score
+      
+      case 'rising':
+        // Rising: recent posts with good engagement
+        const aRising = a.score / (parseTimeAgo(a.timeAgo) + 1)
+        const bRising = b.score / (parseTimeAgo(b.timeAgo) + 1)
+        return bRising - aRising
+      
+      default:
+        return 0
+    }
+  })
 
   return (
     <div className="space-y-3">
@@ -159,9 +196,34 @@ export function PostFeed() {
       </div>
 
       {/* Posts */}
-      {visiblePosts.map((post) => (
-        <PostCard key={post.id} {...post} />
-      ))}
+      {sortedPosts.length === 0 ? (
+        <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 p-8 text-center">
+          <p className="text-gray-500">No posts found in this community yet.</p>
+        </div>
+      ) : (
+        sortedPosts.map((post) => (
+          <PostCard key={post.id} {...post} />
+        ))
+      )}
     </div>
   )
+}
+
+// Helper function to parse timeAgo string to hours
+function parseTimeAgo(timeAgo: string): number {
+  const match = timeAgo.match(/(\d+)\s*(hour|minute|day|week|month|year)/)
+  if (!match) return 0
+  
+  const value = parseInt(match[1])
+  const unit = match[2]
+  
+  switch (unit) {
+    case 'minute': return value / 60
+    case 'hour': return value
+    case 'day': return value * 24
+    case 'week': return value * 24 * 7
+    case 'month': return value * 24 * 30
+    case 'year': return value * 24 * 365
+    default: return 0
+  }
 }

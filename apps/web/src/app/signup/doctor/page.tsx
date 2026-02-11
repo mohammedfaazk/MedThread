@@ -254,8 +254,8 @@ export default function DoctorSignupPage() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-r from-[#9DD4D3] via-[#C8E3D4] to-[#F5E6D3] p-4">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
+    <div className="min-h-screen w-full flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row border border-white/20">
         {/* Left Panel - Progress */}
         <div className="md:w-1/3 bg-blue-600 p-8 text-white hidden md:flex flex-col justify-between">
           <div>

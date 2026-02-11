@@ -237,7 +237,7 @@ export default function AppointmentsPage() {
                                                     {doctor.avatar ? (
                                                         <img src={doctor.avatar} className="w-full h-full object-cover rounded-2xl" alt={doctor.username} />
                                                     ) : (
-                                                        '👨‍⚕️'
+                                                        <Stethoscope className="w-8 h-8 text-blue-600" />
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">

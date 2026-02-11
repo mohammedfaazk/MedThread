@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useStore } from '@/store/useStore'
 import { useRouter } from 'next/navigation'
+import { FileText, Image, Link2, BarChart3, Bold, Italic, List } from 'lucide-react'
 
 interface CreatePostModalProps {
   isOpen: boolean
@@ -87,11 +88,11 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
               onChange={(e) => setCommunity(e.target.value)}
               className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-yellow-200 bg-white/50 backdrop-blur-sm transition"
             >
-              <option value="general">r/general - General Health</option>
-              <option value="cardiology">r/cardiology - Cardiology</option>
-              <option value="neurology">r/neurology - Neurology</option>
-              <option value="pediatrics">r/pediatrics - Pediatrics</option>
-              <option value="mental-health">r/mental-health - Mental Health</option>
+              <option value="general">m/general - General Health</option>
+              <option value="cardiology">m/cardiology - Cardiology</option>
+              <option value="neurology">m/neurology - Neurology</option>
+              <option value="pediatrics">m/pediatrics - Pediatrics</option>
+              <option value="mental-health">m/mental-health - Mental Health</option>
             </select>
           </div>
 
@@ -99,43 +100,47 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
           <div className="flex gap-2 mb-4 border-b border-gray-200/50">
             <button
               onClick={() => setPostType('text')}
-              className={`px-4 py-2 font-medium rounded-t-xl transition ${
+              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${
                 postType === 'text'
                   ? 'bg-yellow-100 text-charcoal'
                   : 'text-gray-600 hover:bg-cream-50/50'
               }`}
             >
-              📝 Text
+              <FileText className="w-4 h-4" />
+              Text
             </button>
             <button
               onClick={() => setPostType('image')}
-              className={`px-4 py-2 font-medium rounded-t-xl transition ${
+              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${
                 postType === 'image'
                   ? 'bg-yellow-100 text-charcoal'
                   : 'text-gray-600 hover:bg-cream-50/50'
               }`}
             >
-              🖼️ Image
+              <Image className="w-4 h-4" />
+              Image
             </button>
             <button
               onClick={() => setPostType('link')}
-              className={`px-4 py-2 font-medium rounded-t-xl transition ${
+              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${
                 postType === 'link'
                   ? 'bg-yellow-100 text-charcoal'
                   : 'text-gray-600 hover:bg-cream-50/50'
               }`}
             >
-              🔗 Link
+              <Link2 className="w-4 h-4" />
+              Link
             </button>
             <button
               onClick={() => setPostType('poll')}
-              className={`px-4 py-2 font-medium rounded-t-xl transition ${
+              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${
                 postType === 'poll'
                   ? 'bg-yellow-100 text-charcoal'
                   : 'text-gray-600 hover:bg-cream-50/50'
               }`}
             >
-              📊 Poll
+              <BarChart3 className="w-4 h-4" />
+              Poll
             </button>
           </div>
 
@@ -164,16 +169,16 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
               />
               <div className="flex gap-2 mt-2">
                 <button className="p-2 hover:bg-cream-50/50 rounded-lg transition" title="Bold">
-                  <strong>B</strong>
+                  <Bold className="w-4 h-4" />
                 </button>
                 <button className="p-2 hover:bg-cream-50/50 rounded-lg transition" title="Italic">
-                  <em>I</em>
+                  <Italic className="w-4 h-4" />
                 </button>
                 <button className="p-2 hover:bg-cream-50/50 rounded-lg transition" title="Link">
-                  🔗
+                  <Link2 className="w-4 h-4" />
                 </button>
                 <button className="p-2 hover:bg-cream-50/50 rounded-lg transition" title="List">
-                  ≡
+                  <List className="w-4 h-4" />
                 </button>
               </div>
             </div>

@@ -29,8 +29,8 @@ export function Navbar() {
   }
 
   return (
-    <nav className="bg-white border-b border-gray-300 sticky top-0 z-50">
-      <div className="max-w-[1400px] mx-auto px-6 h-12 flex items-center gap-4">
+    <nav className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50 shadow-sm">
+      <div className="max-w-[1400px] mx-auto px-6 h-[65px] flex items-center gap-4">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 mr-6 hover:opacity-80 transition group">
           <div className="w-10 h-10 bg-gradient-to-br from-[#5CB8B2] to-[#4DA9A3] rounded-xl flex items-center justify-center shadow-lg shadow-[#9DD4D3] group-hover:scale-105 transition-transform">
@@ -51,7 +51,7 @@ export function Navbar() {
               placeholder={role === 'VERIFIED_DOCTOR' ? "Search patients, cases, medical records..." : "Search doctors, symptoms, medications..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-2 bg-slate-100 border border-transparent rounded-2xl text-sm focus:outline-none focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all"
+              className="w-full pl-11 pr-4 py-2 bg-neutral-300/20 hover:bg-neutral-300/30 backdrop-blur-[1px] border border-neutral-400/20 rounded-2xl text-sm focus:outline-none focus:border-blue-400/40 focus:bg-white/50 focus:ring-4 focus:ring-blue-100/50 transition-all"
             />
           </div>
         </form>
@@ -64,7 +64,7 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 hover:bg-gray-100 rounded relative"
+                  className="p-2 hover:bg-neutral-300/20 backdrop-blur-[1px] border border-neutral-400/20 rounded-xl relative transition-all"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -73,12 +73,12 @@ export function Navbar() {
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 top-12 w-80 bg-white border border-gray-300 rounded shadow-lg overflow-hidden">
-                    <div className="p-4 border-b border-gray-200 bg-gray-50">
+                  <div className="absolute right-0 top-12 w-80 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
+                    <div className="p-4 border-b border-neutral-400/20 bg-neutral-300/10">
                       <h3 className="font-semibold text-sm">Notifications</h3>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
-                      <div className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
+                      <div className="p-4 hover:bg-neutral-300/20 cursor-pointer border-b border-neutral-400/10 transition-all">
                         <p className="text-sm"><span className="font-semibold">Dr_Sarah_Johnson</span> replied to your post</p>
                         <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
                       </div>
@@ -91,7 +91,7 @@ export function Navbar() {
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-3 px-2 py-1.5 hover:bg-slate-50 rounded-2xl transition-all group"
+                  className="flex items-center gap-3 px-2 py-1.5 hover:bg-neutral-300/20 backdrop-blur-[1px] border border-neutral-400/20 rounded-2xl transition-all group"
                 >
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-700 font-bold border border-blue-200 group-hover:shadow-md transition-all">
                     {user.email?.charAt(0).toUpperCase()}
@@ -107,22 +107,22 @@ export function Navbar() {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 top-12 w-56 bg-white border border-gray-300 rounded shadow-lg overflow-hidden">
-                    <Link href="/profile" className="block px-4 py-3 hover:bg-gray-50 border-b border-gray-200">
+                  <div className="absolute right-0 top-12 w-56 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
+                    <Link href="/profile" className="block px-4 py-3 hover:bg-neutral-300/20 border-b border-neutral-400/20 transition-all">
                       <p className="font-semibold text-sm">My Profile</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </Link>
                     {role === 'VERIFIED_DOCTOR' ? (
-                      <Link href="/dashboard/doctor" className="block px-4 py-2 hover:bg-gray-50 text-sm font-semibold text-blue-600">Doctor Dashboard</Link>
+                      <Link href="/dashboard/doctor" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Doctor Dashboard</Link>
                     ) : (
-                      <Link href="/dashboard/patient" className="block px-4 py-2 hover:bg-gray-50 text-sm font-semibold text-blue-600">Patient Dashboard</Link>
+                      <Link href="/dashboard/patient" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Patient Dashboard</Link>
                     )}
-                    <Link href="/settings" className="block px-4 py-2 hover:bg-gray-50 text-sm">Settings</Link>
-                    <Link href="/saved" className="block px-4 py-2 hover:bg-gray-50 text-sm">Saved Posts</Link>
-                    <div className="border-t border-gray-200">
+                    <Link href="/settings" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Settings</Link>
+                    <Link href="/saved" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Saved Posts</Link>
+                    <div className="border-t border-neutral-400/20">
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600 font-medium"
+                        className="w-full text-left px-4 py-2 hover:bg-neutral-300/20 text-sm text-red-600 font-medium transition-all"
                       >
                         Log Out
                       </button>

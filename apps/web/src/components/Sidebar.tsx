@@ -5,6 +5,16 @@ import { CreatePostModal } from './CreatePostModal'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 import { useUser } from '@/context/UserContext'
+import { 
+  LayoutDashboard, 
+  Stethoscope, 
+  Calendar, 
+  MessageSquare, 
+  Pill, 
+  User, 
+  Settings, 
+  PenSquare 
+} from 'lucide-react'
 
 export function Sidebar() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -17,31 +27,31 @@ export function Sidebar() {
 
   interface NavItem {
     name: string;
-    icon: string;
+    icon: any;
     href: string;
     isExternal?: boolean;
     active?: boolean;
   }
 
   const commonCategories: NavItem[] = [
-    { name: 'Dashboard', icon: '📊', href: '/dashboard/patient' },
-    { name: 'Symptom Checker', icon: '🩺', href: '/symptom-checker' },
-    { name: 'Book Appointment', icon: '📅', href: '/appointments' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/patient' },
+    { name: 'Symptom Checker', icon: Stethoscope, href: '/symptom-checker' },
+    { name: 'Book Appointment', icon: Calendar, href: '/appointments' },
   ]
 
   const doctorNav: NavItem[] = [
-    { name: 'Dashboard', icon: '📊', href: '/dashboard/doctor' },
-    { name: 'Chat with Patients', icon: '💬', href: '/chat' },
-    { name: 'Discussion Threads', icon: '✍️', href: '#' }, // Triggers modal (Create Post)
-    { name: 'Profile', icon: '👤', href: '/profile' },
-    { name: 'Settings', icon: '⚙️', href: '/settings' },
+    { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/doctor' },
+    { name: 'Chat with Patients', icon: MessageSquare, href: '/chat' },
+    { name: 'Discussion Threads', icon: PenSquare, href: '#' }, // Triggers modal (Create Post)
+    { name: 'Profile', icon: User, href: '/profile' },
+    { name: 'Settings', icon: Settings, href: '/settings' },
   ]
 
   const patientNav: NavItem[] = [
-    { name: 'Chat with Doctors', icon: '💬', href: '/chat' },
-    { name: 'Medication Reminder', icon: '💊', href: '/medications' },
-    { name: 'Health Profile', icon: '👤', href: '/profile' },
-    { name: 'Settings', icon: '⚙️', href: '/settings' },
+    { name: 'Chat with Doctors', icon: MessageSquare, href: '/chat' },
+    { name: 'Medication Reminder', icon: Pill, href: '/medications' },
+    { name: 'Health Profile', icon: User, href: '/profile' },
+    { name: 'Settings', icon: Settings, href: '/settings' },
   ]
 
 
@@ -80,7 +90,7 @@ export function Sidebar() {
       <aside className="hidden lg:block w-[260px] shrink-0">
         <div className="sticky top-[68px] p-4">
           {/* Main Navigation */}
-          <div className="bg-white rounded border border-gray-300 mb-4 overflow-hidden">
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 mb-4 overflow-hidden shadow-lg">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
 
@@ -89,9 +99,9 @@ export function Sidebar() {
                   <button
                     key={item.name}
                     onClick={() => handleExternalNav(item.href)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 text-left transition"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-neutral-300/20 text-left transition-all"
                   >
-                    <span className="text-lg">{item.icon}</span>
+                    <item.icon className="w-5 h-5" />
                     <span>{item.name}</span>
                   </button>
                 )
@@ -107,10 +117,10 @@ export function Sidebar() {
                       setIsCreateModalOpen(true);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition ${isActive ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-gray-600'
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${isActive ? 'bg-blue-500/10 text-blue-600 font-semibold backdrop-blur-xl' : 'text-gray-600'
                     }`}
                 >
-                  <span className="text-lg">{item.icon}</span>
+                  <item.icon className="w-5 h-5" />
                   <span>{item.name}</span>
                 </Link>
               )
@@ -118,19 +128,19 @@ export function Sidebar() {
           </div>
 
           {/* Specialties */}
-          <div className="bg-white rounded border border-gray-300 mb-4">
-            <div className="px-4 py-3 border-b border-gray-300 flex items-center justify-between">
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 mb-4 shadow-lg">
+            <div className="px-4 py-3 border-b border-neutral-400/20 flex items-center justify-between">
               <h3 className="text-xs font-bold text-gray-500 uppercase">Medical Specialties</h3>
             </div>
             <div className="max-h-[300px] overflow-y-auto">
               {specialties.map((specialty) => (
                 <Link
                   key={specialty.slug}
-                  href={`/r/${specialty.slug}`}
-                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                  href={`/m/${specialty.slug}`}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 transition-all"
                 >
                   <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  <span>r/{specialty.slug}</span>
+                  <span>m/{specialty.slug}</span>
                 </Link>
               ))}
             </div>

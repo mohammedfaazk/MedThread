@@ -13,7 +13,7 @@ export default function ProfilePage() {
   if (userLoading || !user) return <div className="p-8">Loading...</div>
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-[#9DD4D3] via-[#C8E3D4] to-[#F5E6D3]">
+    <div className="min-h-screen">
       <Navbar />
       <div className="flex max-w-[1400px] mx-auto">
         <Sidebar />
@@ -22,7 +22,7 @@ export default function ProfilePage() {
           {userRole === 'VERIFIED_DOCTOR' ? (
             <DoctorProfile />
           ) : (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 hover:shadow-xl transition-all">
               <h2 className="text-2xl font-bold mb-4">Patient Profile</h2>
               <p className="text-gray-600">Patient profile view coming soon...</p>
             </div>

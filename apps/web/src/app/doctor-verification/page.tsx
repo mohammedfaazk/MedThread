@@ -75,7 +75,7 @@ export default function DoctorVerificationPage() {
 
     if (!user || user.role !== 'DOCTOR') {
         return (
-            <div className="min-h-screen bg-gradient-to-r from-[#9DD4D3] via-[#C8E3D4] to-[#F5E6D3]">
+            <div className="min-h-screen">
                 <Navbar />
                 <div className="max-w-2xl mx-auto px-6 py-16 text-center">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
@@ -86,10 +86,10 @@ export default function DoctorVerificationPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-r from-[#9DD4D3] via-[#C8E3D4] to-[#F5E6D3]">
+        <div className="min-h-screen">
             <Navbar />
             <div className="max-w-4xl mx-auto px-6 py-8">
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+                <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 hover:shadow-xl transition-all">
                     <div className="flex items-center gap-3 mb-6">
                         <Shield className="w-8 h-8 text-blue-600" />
                         <h1 className="text-3xl font-bold text-gray-900">Doctor Verification</h1>

@@ -14,7 +14,8 @@ import {
     Utensils,
     Clock,
     Star,
-    CheckCircle2
+    CheckCircle2,
+    UserRound
 } from 'lucide-react'
 
 interface Appointment {
@@ -65,36 +66,40 @@ export default function PatientDashboard() {
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
             console.log('[Patient Dashboard] Fetching verified doctors from API...')
-            const response = await axios.get(`${API_URL}/api/v1/doctor-verification/verified`)
             
-            console.log('[Patient Dashboard] API Response:', response.data)
-            // API returns { success: true, data: { doctors: [...], pagination: {...} } }
-            const doctorsList = response.data?.data?.doctors || response.data?.doctors || []
-            console.log(`[Patient Dashboard] Found ${doctorsList.length} verified doctors`)
-            
-            if (doctorsList.length > 0) {
-                setDoctors(doctorsList.slice(0, 4))
-            } else {
-                // Fallback to doctor_data.json
-                console.log('[Patient Dashboard] No verified doctors, falling back to doctor_data.json')
-                const jsonResponse = await fetch('/doctor_data.json');
-                if (jsonResponse.ok) {
-                    const doctorData = await jsonResponse.json();
-                    setDoctors(doctorData.slice(0, 4));
+            try {
+                const response = await axios.get(`${API_URL}/api/v1/doctor-verification/verified`)
+                console.log('[Patient Dashboard] API Response:', response.data)
+                
+                // API returns { success: true, data: { doctors: [...], pagination: {...} } }
+                const doctorsList = response.data?.data?.doctors || response.data?.doctors || []
+                console.log(`[Patient Dashboard] Found ${doctorsList.length} verified doctors`)
+                
+                if (doctorsList.length > 0) {
+                    // Sort by totalKarma/reputation_score (same as RightSidebar) and take top 4
+                    const sortedDoctors = doctorsList
+                        .sort((a: any, b: any) => (b.totalKarma || b.reputation_score || 0) - (a.totalKarma || a.reputation_score || 0))
+                        .slice(0, 4)
+                    setDoctors(sortedDoctors)
+                    return
                 }
+            } catch (apiError) {
+                console.warn('[Patient Dashboard] API fetch failed, falling back to JSON:', apiError)
+            }
+            
+            // Fallback to doctor_data.json
+            console.log('[Patient Dashboard] Loading doctors from doctor_data.json')
+            const jsonResponse = await fetch('/doctor_data.json');
+            if (jsonResponse.ok) {
+                const doctorData = await jsonResponse.json();
+                // Sort by reputation_score and take top 4
+                const sortedDoctors = doctorData
+                    .sort((a: any, b: any) => (b.reputation_score || 0) - (a.reputation_score || 0))
+                    .slice(0, 4);
+                setDoctors(sortedDoctors);
             }
         } catch (error) {
             console.error('[Patient Dashboard] Error loading doctors:', error);
-            // Fallback to doctor_data.json on error
-            try {
-                const jsonResponse = await fetch('/doctor_data.json');
-                if (jsonResponse.ok) {
-                    const doctorData = await jsonResponse.json();
-                    setDoctors(doctorData.slice(0, 4));
-                }
-            } catch (fallbackError) {
-                console.error('[Patient Dashboard] Fallback also failed:', fallbackError);
-            }
         }
     }
 
@@ -110,7 +115,7 @@ export default function PatientDashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-r from-[#9DD4D3] via-[#C8E3D4] to-[#F5E6D3]">
+        <div className="min-h-screen">
             <Navbar />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
@@ -133,7 +138,7 @@ export default function PatientDashboard() {
                             {/* Top Tools Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Diet Planner Card */}
-                                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden"
+                                <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
                                 >
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -154,14 +159,14 @@ export default function PatientDashboard() {
                                     </div>
                                     <button
                                         onClick={() => router.push('/diet')}
-                                        className="w-full py-3 bg-[#5CB8B2] text-white rounded-xl font-semibold hover:bg-[#4DA9A3] transition"
+                                        className="w-full py-3 bg-[#00BCD4] text-white rounded-xl font-semibold hover:bg-[#00ACC1] transition shadow-lg"
                                     >
                                         Track Diet
                                     </button>
                                 </div>
 
                                 {/* Symptom Checker Card */}
-                                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col"
+                                <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col"
                                 >
                                     <div className="flex items-start justify-between mb-4">
                                         <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -192,7 +197,7 @@ export default function PatientDashboard() {
                             </div>
 
                             {/* Upcoming Appointments - Full Width */}
-                            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden"
+                            <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col overflow-hidden"
                             >
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
@@ -225,7 +230,7 @@ export default function PatientDashboard() {
                                         <p className="text-sm text-gray-500 mb-4">No upcoming appointments</p>
                                         <button
                                             onClick={() => router.push('/doctors')}
-                                            className="px-6 py-2 bg-[#5CB8B2] text-white rounded-xl font-semibold hover:bg-[#4DA9A3] transition"
+                                            className="px-6 py-2 bg-[#00BCD4] text-white rounded-xl font-semibold hover:bg-[#00ACC1] transition shadow-lg"
                                         >
                                             Book Appointment
                                         </button>
@@ -279,7 +284,7 @@ export default function PatientDashboard() {
                         <div className="lg:col-span-1 space-y-6">
 
                             {/* Medication Reminder Card */}
-                            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm relative overflow-hidden"
+                            <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
                             >
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -312,53 +317,51 @@ export default function PatientDashboard() {
 
                                 <button
                                     onClick={() => router.push('/medications')}
-                                    className="w-full mt-6 py-3 bg-[#5CB8B2] text-white rounded-xl font-semibold hover:bg-[#4DA9A3] transition"
+                                    className="w-full mt-6 py-3 bg-[#00BCD4] text-white rounded-xl font-semibold hover:bg-[#00ACC1] transition shadow-lg"
                                 >
                                     Track Medications
                                 </button>
                             </div>
 
-                            {/* Recommended Doctors section */}
-                            <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm"
-                            >
+                            {/* Top Doctors section */}
+                            <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-gray-900">Top Doctors</h3>
+                                    <h3 className="text-lg font-bold text-gray-900">Top Doctors This Week</h3>
                                     <button onClick={() => router.push('/doctors')} className="text-blue-600 text-xs font-semibold hover:underline">
                                         View All
                                     </button>
                                 </div>
-                                <div className="space-y-3">
-                                    {doctors.slice(0, 4).map((doctor) => (
-                                        <div
-                                            key={doctor.id}
-                                            onClick={() => router.push(`/u/${doctor.user_id || doctor.id}`)}
-                                            className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition border border-transparent hover:border-gray-100"
-                                        >
-                                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                <span className="text-lg">👨‍⚕️</span>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="font-bold text-gray-900 text-sm truncate">{doctor.name || doctor.full_name}</h4>
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-[10px] text-gray-500 uppercase font-semibold">{doctor.specialization || 'Specialist'}</p>
-                                                    <div className="flex items-center gap-1">
-                                                        <Star className="w-2.5 h-2.5 text-orange-400 fill-orange-400" />
-                                                        <span className="text-[10px] font-semibold text-gray-700">{doctor.reputation_score || 0}</span>
+                                <div className="space-y-2">
+                                    {doctors.length === 0 ? (
+                                        <p className="text-xs text-center text-gray-500 py-4">No doctors found</p>
+                                    ) : (
+                                        doctors.map((doctor, idx) => {
+                                            const displayUsername = doctor.username || doctor.id;
+                                            const displayName = doctor.full_name || doctor.name || `Dr. ${displayUsername}`;
+                                            const reputation = doctor.reputation_score || doctor.reputation || 0;
+
+                                            return (
+                                                <div
+                                                    key={doctor.id}
+                                                    onClick={() => router.push(`/u/${doctor.id}`)}
+                                                    className="flex items-center gap-3 py-2 hover:bg-neutral-300/20 rounded-xl px-2 cursor-pointer transition-all"
+                                                >
+                                                    <span className="text-sm font-bold text-gray-500 w-4">{idx + 1}</span>
+                                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <UserRound className="w-4 h-4 text-blue-600" />
                                                     </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-semibold truncate">{displayName}</p>
+                                                        <p className="text-xs text-gray-500 truncate">{doctor.specialization || doctor.specialty || 'Verified Doctor'}</p>
+                                                    </div>
+                                                    <span className="text-xs text-[#FF4500] font-semibold flex items-center gap-1">
+                                                        <Star className="w-3 h-3 fill-[#FF4500]" />
+                                                        {reputation}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    router.push(`/chat?doctorId=${doctor.user_id || doctor.id}`)
-                                                }}
-                                                className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center hover:bg-blue-600 hover:text-white transition text-blue-600"
-                                                title="Chat with Doctor"
-                                            >
-                                                <MessageSquare className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))}
+                                            )
+                                        })
+                                    )}
                                 </div>
                             </div>
 

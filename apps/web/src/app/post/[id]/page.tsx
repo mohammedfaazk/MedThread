@@ -7,7 +7,7 @@ import { CommentSection } from '@/components/CommentSection'
 
 export default function PostPage({ params }: { params: { id: string } }) {
   return (
-    <div className="min-h-screen bg-[#DAE0E6]">
+    <div className="min-h-screen">
       <Navbar />
       <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
         <Sidebar />

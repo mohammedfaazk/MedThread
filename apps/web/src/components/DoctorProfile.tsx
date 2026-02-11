@@ -172,7 +172,7 @@ export function DoctorProfile() {
     if (loading) {
         return (
             <div className="max-w-4xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8">
                     <p className="text-center text-gray-600">Loading profile...</p>
                 </div>
             </div>
@@ -182,7 +182,7 @@ export function DoctorProfile() {
     return (
         <div className="max-w-4xl mx-auto">
             {/* Header Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
+            <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 mb-6 hover:shadow-xl transition-all">
                 <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-6">
                         <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
@@ -257,7 +257,7 @@ export function DoctorProfile() {
             </div>
 
             {/* Professional Information */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
+            <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 mb-6 hover:shadow-xl transition-all">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Professional Information</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -360,7 +360,7 @@ export function DoctorProfile() {
             </div>
 
             {/* Contact Information */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+            <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 hover:shadow-xl transition-all">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Contact Information</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

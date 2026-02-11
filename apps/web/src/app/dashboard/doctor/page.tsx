@@ -105,7 +105,7 @@ export default function DoctorDashboard() {
     const loadMessagesCount = async () => {
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            const res = await axios.get(`${API_URL}/api/v1/chat/conversations?userId=${effectiveUserId}`)
+            const res = await axios.get(`${API_URL}/api/chat/conversations?userId=${effectiveUserId}`)
             if (res.data && Array.isArray(res.data)) {
                 const unreadCount = res.data.reduce((total: number, conv: any) => {
                     return total + (conv.unreadCount || 0)
@@ -122,7 +122,8 @@ export default function DoctorDashboard() {
         setLoadingChats(true)
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            const res = await axios.get(`${API_URL}/api/v1/chat/conversations?userId=${effectiveUserId}`)
+            const res = await axios.get(`${API_URL}/api/chat/conversations?userId=${effectiveUserId}`)
+            console.log('[Doctor Dashboard] Loaded conversations:', res.data)
             if (res.data && Array.isArray(res.data)) {
                 const sortedConvs = res.data
                     .sort((a: any, b: any) => {
@@ -131,6 +132,7 @@ export default function DoctorDashboard() {
                         return new Date(bTime).getTime() - new Date(aTime).getTime()
                     })
                     .slice(0, 5)
+                console.log('[Doctor Dashboard] Sorted conversations:', sortedConvs)
                 setConversations(sortedConvs)
             }
         } catch (error) {
@@ -199,7 +201,7 @@ export default function DoctorDashboard() {
     const pendingAppointments = appointments.filter(apt => apt.status === 'PENDING')
 
     return (
-        <div className="min-h-screen bg-gradient-to-r from-[#9DD4D3] via-[#C8E3D4] to-[#F5E6D3]">
+        <div className="min-h-screen">
             <Navbar />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
@@ -267,8 +269,8 @@ export default function DoctorDashboard() {
 
                         {/* Left Column - Pending Appointments */}
                         <div className="lg:col-span-1">
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-[550px] flex flex-col">
-                                <div className="p-6 border-b border-gray-100">
+                            <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden h-[550px] flex flex-col hover:shadow-xl transition-all">
+                                <div className="p-6 border-b border-neutral-400/20">
                                     <div className="flex items-center justify-between">
                                         <h2 className="text-xl font-bold text-gray-900">Pending Appointments</h2>
                                         <span className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 font-bold text-sm">
@@ -347,8 +349,8 @@ export default function DoctorDashboard() {
 
                         {/* Middle Column - Schedule Availability */}
                         <div className="lg:col-span-1">
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-[550px] flex flex-col">
-                                <div className="p-6 border-b border-gray-100">
+                            <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden h-[550px] flex flex-col hover:shadow-xl transition-all">
+                                <div className="p-6 border-b border-neutral-400/20">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -404,7 +406,7 @@ export default function DoctorDashboard() {
                                     <button
                                         onClick={addSlot}
                                         disabled={addingSlot}
-                                        className="w-full px-6 py-3 bg-[#5CB8B2] text-white rounded-xl hover:bg-[#4DA9A3] font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full px-6 py-3 bg-[#00BCD4] text-white rounded-xl hover:bg-[#00ACC1] font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
                                     >
                                         {addingSlot ? (
                                             <>
@@ -457,12 +459,12 @@ export default function DoctorDashboard() {
 
                         {/* Right Column - Recent Chats */}
                         <div className="lg:col-span-1">
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-[550px] flex flex-col">
-                                <div className="p-6 border-b border-gray-100">
+                            <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden h-[550px] flex flex-col hover:shadow-xl transition-all">
+                                <div className="p-6 border-b border-neutral-400/20">
                                     <div className="flex items-center justify-between">
                                         <h2 className="text-lg font-bold text-gray-900">Recent Chats</h2>
                                         <button 
-                                            onClick={() => router.push('/profile?tab=consultation')}
+                                            onClick={() => router.push('/chat')}
                                             className="text-sm text-blue-600 hover:text-blue-700 font-semibold"
                                         >
                                             View all
@@ -492,8 +494,8 @@ export default function DoctorDashboard() {
                                             return (
                                                 <div 
                                                     key={conv.id}
-                                                    onClick={() => router.push(`/profile?tab=consultation&conversationId=${conv.id}`)}
-                                                    className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition"
+                                                    onClick={() => router.push(`/chat?conversationId=${conv.id}`)}
+                                                    className="flex items-center gap-3 p-3 hover:bg-neutral-300/20 rounded-xl cursor-pointer transition-all"
                                                 >
                                                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold flex-shrink-0">
                                                         {patient?.username?.charAt(0).toUpperCase() || 'P'}

@@ -28,8 +28,8 @@ export default function CreateCommunityPage() {
     }
 
     // Create community (demo)
-    alert(`Community r/${name} created successfully!`)
-    router.push(`/r/${name}`)
+    alert(`Community m/${name} created successfully!`)
+    router.push(`/m/${name}`)
   }
 
   return (
@@ -53,7 +53,7 @@ export default function CreateCommunityPage() {
               </p>
               <div className="flex items-center">
                 <span className="px-3 py-2 bg-cream-50 border border-r-0 border-gray-200 rounded-l text-gray-600">
-                  r/
+                  m/
                 </span>
                 <input
                   type="text"

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Header } from '@/components/Header'
+import { Navbar } from '@/components/Navbar'
 import { SymptomForm } from '@/components/SymptomForm'
 import { AIAnalysisPanel } from '@/components/AIAnalysisPanel'
 
@@ -11,7 +11,7 @@ export default function CreatePost() {
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <Navbar />
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Share Your Medical Concern</h1>
