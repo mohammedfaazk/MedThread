@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '@medthread/database';
 import { config } from '../config';
-import { ConflictError, UnauthorizedError, ValidationError } from '../utils/errors';
+import { ConflictError, UnauthorizedError } from '../utils/errors';
 
 interface RegisterInput {
   email: string;
@@ -74,7 +74,13 @@ export class AuthService {
 
     return {
       token,
-      user,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        doctorVerificationStatus: user.doctorVerificationStatus || undefined,
+      },
     };
   }
 
@@ -154,7 +160,7 @@ export class AuthService {
     return jwt.sign(
       { userId, role },
       config.jwtSecret,
-      { expiresIn: config.jwtExpiresIn }
+      { expiresIn: config.jwtExpiresIn } as jwt.SignOptions
     );
   }
 }

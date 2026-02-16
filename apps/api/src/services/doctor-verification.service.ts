@@ -66,7 +66,7 @@ export class DoctorVerificationService {
         yearsOfExperience: data.yearsOfExperience,
         hospitalAffiliation: data.hospitalAffiliation,
         clinicAddress: data.clinicAddress,
-        kycDocuments: documents,
+        kycDocuments: documents as any,
         verificationDocuments: {},
         updatedAt: new Date(),
       },

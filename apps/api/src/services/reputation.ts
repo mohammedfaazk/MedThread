@@ -23,22 +23,27 @@ export class ReputationService {
         break;
     }
 
+    // Update total karma instead of reputationScore
     await prisma.user.update({
       where: { id: doctorId },
-      data: { reputationScore: user.reputationScore + scoreChange }
+      data: { totalKarma: user.totalKarma + scoreChange }
     });
   }
 
   static async getDoctorLeaderboard(limit: number = 10) {
     return await prisma.user.findMany({
-      where: { role: 'VERIFIED_DOCTOR' },
-      orderBy: { reputationScore: 'desc' },
+      where: { 
+        role: 'DOCTOR',
+        doctorVerificationStatus: 'APPROVED'
+      },
+      orderBy: { totalKarma: 'desc' },
       take: limit,
       select: {
         id: true,
         username: true,
-        reputationScore: true,
-        verificationStatus: true
+        totalKarma: true,
+        doctorVerificationStatus: true,
+        specialty: true,
       }
     });
   }

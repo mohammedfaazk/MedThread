@@ -83,4 +83,50 @@ export function NavbarJWT() {
 
               {showUserMenu && (
                 <div className="absolute right-0 top-12 w-56 bg-white border border-gray-300 rounded shadow-lg overflow-hidden">
-                  <Link href="/pr
+                  <Link href="/profile" className="block px-4 py-3 hover:bg-gray-50 border-b border-gray-200">
+                    <p className="font-semibold text-sm">{displayName}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </Link>
+                  {isDoctorVerified ? (
+                    <Link href="/dashboard/doctor" className="block px-4 py-2 hover:bg-gray-50 text-sm font-semibold text-blue-600">
+                      Doctor Dashboard
+                    </Link>
+                  ) : role === 'DOCTOR' ? (
+                    <Link href="/doctor-verification" className="block px-4 py-2 hover:bg-gray-50 text-sm font-semibold text-orange-600">
+                      Complete Verification
+                    </Link>
+                  ) : (
+                    <Link href="/dashboard/patient" className="block px-4 py-2 hover:bg-gray-50 text-sm font-semibold text-blue-600">
+                      Patient Dashboard
+                    </Link>
+                  )}
+                  <Link href="/settings" className="block px-4 py-2 hover:bg-gray-50 text-sm">
+                    Settings
+                  </Link>
+                  <Link href="/saved" className="block px-4 py-2 hover:bg-gray-50 text-sm">
+                    Saved Posts
+                  </Link>
+                  <div className="border-t border-gray-200">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600 font-medium"
+                    >
+                      Log Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : !loading && (
+            <Link
+              href="/login"
+              className="px-6 py-1.5 bg-[#FF4500] text-white rounded-full text-sm font-semibold hover:bg-[#ff5722] transition shadow-sm"
+            >
+              Log In
+            </Link>
+          )}
+        </div>
+      </div>
+    </nav>
+  )
+}

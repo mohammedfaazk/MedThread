@@ -12,6 +12,10 @@ import { appointmentRouter } from './routes/appointments';
 import { chatRouter } from './routes/chat';
 import { chatHandler } from './handlers/chat.handler';
 import { doctorVerificationRouter } from './routes/doctor-verification.routes';
+import { doctorProfileEnhancedRouter } from './routes/doctor-profile-enhanced.routes';
+import { consultationFunnelRouter } from './routes/consultation-funnel.routes';
+import { cmeCreditsRouter } from './routes/cme-credits.routes';
+import { healthInsightsRouter } from './routes/health-insights.routes';
 
 dotenv.config();
 
@@ -45,6 +49,12 @@ app.use('/api/timeline', timelineRouter);
 app.use('/api/appointments', appointmentRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/v1/doctor-verification', doctorVerificationRouter);
+
+// Strategic Feature Routes
+app.use('/api/doctor-profile', doctorProfileEnhancedRouter);
+app.use('/api/consultation-funnel', consultationFunnelRouter);
+app.use('/api/cme-credits', cmeCreditsRouter);
+app.use('/api/health-insights', healthInsightsRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

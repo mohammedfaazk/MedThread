@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
-import { Shield, Clock, CheckCircle, XCircle, Eye, FileText, User, Calendar, Award } from 'lucide-react'
+import { Shield, Clock, CheckCircle, XCircle, Eye, FileText, User, Calendar, Award, X } from 'lucide-react'
 
 interface PendingDoctor {
   id: string

@@ -1,0 +1,408 @@
+// STRATEGIC SCHEMA UPDATES FOR MEDTHREAD TRANSFORMATION
+// This extends the existing schema with 4 key pillars:
+// 1. Digital CV System
+// 2. Patient Funnel & Conversion
+// 3. CME Credits System
+// 4. Research & Clinical Insights
+
+// Add to existing User model:
+// PILLAR 1: DIGITAL CV FIELDS
+/*
+  // Professional Identity Enhancement
+  registrationNumber       String?    // Medical council registration
+  languagesSpoken          String[]   @default([])
+  consultationFee          Int?       // For paid consultations
+  clinicName               String?
+  clinicWebsite            String?
+  professionalBio          String?    @db.Text
+  education                Json?      // Array of degrees
+  certifications           Json?      // Array of certifications
+  publications             Json?      // Research papers
+  awards                   Json?      // Professional awards
+  
+  // Performance Metrics (Auto-calculated)
+  caseResolutionRate       Float      @default(0)
+  averagePatientSatisfaction Float    @default(0)
+  responseAccuracyRating   Float      @default(0)
+  specializationDepthScore Float      @default(0)
+  averageResponseTime      Int        @default(0) // in minutes
+  
+  // Contribution Stats
+  totalCasesHandled        Int        @default(0)
+  emergencyFlagsDetected   Int        @default(0)
+  monthlyContributionStreak Int       @default(0)
+  lastContributionDate     DateTime?
+  
+  // Badges & Recognition
+  isFoundingDoctor         Boolean    @default(false)
+  isFeaturedDoctor         Boolean    @default(false)
+  badges                   Json?      // Array of earned badges
+  
+  // CME Credits (PILLAR 3)
+  cmeCreditsEarned         Float      @default(0)
+  cmeCreditsThisYear       Float      @default(0)
+  lastCmeEarnedAt          DateTime?
+*/
+
+// PILLAR 2: PATIENT FUNNEL & CONVERSION TRACKING
+
+enum ConsultationStatus {
+  INQUIRY_SENT
+  DOCTOR_RESPONDED
+  APPOINTMENT_REQUESTED
+  APPOINTMENT_SCHEDULED
+  CONSULTATION_COMPLETED
+  FOLLOW_UP_SCHEDULED
+  CANCELLED
+}
+
+enum ConsultationType {
+  FREE_THREAD_RESPONSE
+  PAID_CONSULTATION
+  FOLLOW_UP
+  EMERGENCY
+}
+
+model ConsultationFunnel {
+  id                String              @id @default(cuid())
+  
+  // Patient Info
+  patientId         String
+  patient           User                @relation("PatientConsultations", fields: [patientId], references: [id])
+  
+  // Doctor Info
+  doctorId          String
+  doctor            User                @relation("DoctorConsultations", fields: [doctorId], references: [id])
+  
+  // Source Tracking
+  sourceThreadId    String?             // Which thread led to this
+  sourceThread      MedicalThread?      @relation(fields: [sourceThreadId], references: [id])
+  sourceReplyId     String?             // Which reply converted them
+  
+  // Funnel Stages
+  status            ConsultationStatus  @default(INQUIRY_SENT)
+  consultationType  ConsultationType    @default(FREE_THREAD_RESPONSE)
+  
+  // Conversion Tracking
+  inquirySentAt     DateTime            @default(now())
+  doctorRespondedAt DateTime?
+  appointmentRequestedAt DateTime?
+  appointmentScheduledAt DateTime?
+  consultationCompletedAt DateTime?
+  
+  // Financial
+  consultationFee   Int?
+  isPaid            Boolean             @default(false)
+  paidAt            DateTime?
+  
+  // Context
+  caseContext       Json?               // Auto-attached case details
+  patientNotes      String?             @db.Text
+  doctorNotes       String?             @db.Text
+  
+  // Appointment Link
+  appointmentId     String?             @unique
+  appointment       Appointment?        @relation(fields: [appointmentId], references: [id])
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+  @@index([sourceThreadId])
+  @@index([createdAt])
+}
+
+// PILLAR 3: CME CREDITS SYSTEM
+
+enum CmeActivityType {
+  QUALITY_ANSWER
+  PEER_REVIEWED_ANSWER
+  CASE_DISCUSSION
+  EDUCATIONAL_THREAD
+  EXPERT_PANEL
+  RESEARCH_CONTRIBUTION
+  MENTORSHIP
+  WEBINAR_PARTICIPATION
+}
+
+enum CmeVerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model CmeCredit {
+  id                String                 @id @default(cuid())
+  
+  // Doctor Info
+  doctorId          String
+  doctor            User                   @relation("DoctorCmeCredits", fields: [doctorId], references: [id])
+  
+  // Activity Details
+  activityType      CmeActivityType
+  activityTitle     String
+  activityDescription String?              @db.Text
+  
+  // Credit Value
+  creditsEarned     Float                  // e.g., 0.5, 1.0, 2.0
+  
+  // Source Tracking
+  sourceThreadId    String?
+  sourceReplyId     String?
+  sourceUrl         String?
+  
+  // Verification
+  verificationStatus CmeVerificationStatus @default(PENDING)
+  verifiedBy        String?                // Admin/Peer reviewer ID
+  verifiedAt        DateTime?
+  verificationNotes String?
+  
+  // Accreditation
+  accreditingBody   String?                // e.g., "Medical Council of India"
+  certificateUrl    String?
+  certificateNumber String?
+  
+  // Quality Metrics
+  qualityScore      Float?                 // Peer review score
+  peerReviewCount   Int                    @default(0)
+  
+  earnedAt          DateTime               @default(now())
+  expiresAt         DateTime?              // Some credits expire
+  
+  @@index([doctorId])
+  @@index([activityType])
+  @@index([verificationStatus])
+  @@index([earnedAt])
+}
+
+// PILLAR 4: RESEARCH & CLINICAL INSIGHTS
+
+model HealthInsight {
+  id                String              @id @default(cuid())
+  
+  // Insight Type
+  insightType       String              // "trending_symptom", "regional_outbreak", "medication_pattern"
+  title             String
+  description       String              @db.Text
+  
+  // Data Points
+  dataPoints        Json                // Aggregated statistics
+  affectedRegions   String[]
+  timeframe         String              // "last_7_days", "last_30_days"
+  
+  // Metrics
+  caseCount         Int
+  growthRate        Float?              // Percentage increase
+  severity          String?             // "low", "medium", "high", "critical"
+  
+  // Categorization
+  tags              String[]
+  relatedConditions String[]
+  ageGroups         String[]
+  
+  // Visibility
+  isPublic          Boolean             @default(false)
+  isPublished       Boolean             @default(false)
+  publishedAt       DateTime?
+  
+  // Research Value
+  researchPotential String?             // "high", "medium", "low"
+  dataQuality       Float               @default(0)
+  
+  generatedAt       DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  @@index([insightType])
+  @@index([generatedAt])
+  @@index([isPublished])
+}
+
+// Track symptom patterns for research
+model SymptomPattern {
+  id                String              @id @default(cuid())
+  
+  // Symptom Details
+  primarySymptom    String
+  secondarySymptoms String[]
+  duration          String              // "acute", "chronic", "recurring"
+  severity          Int                 // 1-10 scale
+  
+  // Demographics
+  ageGroup          String
+  gender            String?
+  region            String?
+  
+  // Associated Data
+  medications       String[]
+  diagnoses         String[]
+  outcomes          String[]
+  
+  // Frequency
+  occurrenceCount   Int                 @default(1)
+  lastReported      DateTime            @default(now())
+  
+  // Source
+  threadIds         String[]            // Which threads reported this
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  @@index([primarySymptom])
+  @@index([region])
+  @@index([lastReported])
+}
+
+// Track medication mentions and side effects
+model MedicationInsight {
+  id                String              @id @default(cuid())
+  
+  medicationName    String
+  genericName       String?
+  
+  // Usage Patterns
+  prescriptionCount Int                 @default(0)
+  mentionCount      Int                 @default(0)
+  
+  // Side Effects Reported
+  sideEffects       Json                // Array of {effect, frequency, severity}
+  
+  // Efficacy Data
+  positiveReports   Int                 @default(0)
+  negativeReports   Int                 @default(0)
+  neutralReports    Int                 @default(0)
+  
+  // Context
+  commonConditions  String[]
+  ageGroups         String[]
+  regions           String[]
+  
+  lastUpdated       DateTime            @default(now())
+  
+  @@unique([medicationName])
+  @@index([medicationName])
+  @@index([lastUpdated])
+}
+
+// Doctor Performance Analytics
+model DoctorAnalytics {
+  id                String              @id @default(cuid())
+  doctorId          String              @unique
+  doctor            User                @relation("DoctorAnalytics", fields: [doctorId], references: [id])
+  
+  // Weekly Stats
+  weeklyThreadsAnswered    Int          @default(0)
+  weeklyAppointments       Int          @default(0)
+  weeklyPatientSatisfaction Float       @default(0)
+  weeklyResponseTime       Int          @default(0)
+  
+  // Monthly Stats
+  monthlyThreadsAnswered   Int          @default(0)
+  monthlyAppointments      Int          @default(0)
+  monthlyRevenue           Int          @default(0)
+  monthlyNewPatients       Int          @default(0)
+  
+  // All-Time Stats
+  totalThreadsAnswered     Int          @default(0)
+  totalAppointments        Int          @default(0)
+  totalRevenue             Int          @default(0)
+  totalPatients            Int          @default(0)
+  
+  // Conversion Metrics
+  threadToAppointmentRate  Float        @default(0)
+  appointmentCompletionRate Float       @default(0)
+  patientRetentionRate     Float        @default(0)
+  
+  // Quality Metrics
+  averageRating            Float        @default(0)
+  totalReviews             Int          @default(0)
+  helpfulAnswersCount      Int          @default(0)
+  bestAnswersCount         Int          @default(0)
+  
+  // Engagement
+  profileViews             Int          @default(0)
+  profileViewsThisMonth    Int          @default(0)
+  
+  lastCalculated           DateTime     @default(now())
+  
+  @@index([doctorId])
+}
+
+// Peer Endorsements (LinkedIn-style)
+model PeerEndorsement {
+  id                String              @id @default(cuid())
+  
+  endorsedDoctorId  String
+  endorsedDoctor    User                @relation("EndorsedDoctor", fields: [endorsedDoctorId], references: [id])
+  
+  endorserDoctorId  String
+  endorserDoctor    User                @relation("EndorserDoctor", fields: [endorserDoctorId], references: [id])
+  
+  skill             String              // e.g., "Cardiology", "Patient Communication"
+  message           String?             @db.Text
+  
+  isVerified        Boolean             @default(false)
+  
+  createdAt         DateTime            @default(now())
+  
+  @@unique([endorsedDoctorId, endorserDoctorId, skill])
+  @@index([endorsedDoctorId])
+  @@index([endorserDoctorId])
+}
+
+// Patient Reviews (for conversion funnel)
+model PatientReview {
+  id                String              @id @default(cuid())
+  
+  patientId         String
+  patient           User                @relation("PatientReviews", fields: [patientId], references: [id])
+  
+  doctorId          String
+  doctor            User                @relation("DoctorReviews", fields: [doctorId], references: [id])
+  
+  appointmentId     String?
+  appointment       Appointment?        @relation(fields: [appointmentId], references: [id])
+  
+  // Ratings (1-5 scale)
+  overallRating     Int
+  communicationRating Int?
+  knowledgeRating   Int?
+  empathyRating     Int?
+  
+  // Review
+  reviewText        String?             @db.Text
+  
+  // Helpful votes
+  helpfulCount      Int                 @default(0)
+  
+  // Verification
+  isVerified        Boolean             @default(false)
+  
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([createdAt])
+}
+
+// Add these relations to existing models:
+/*
+User model additions:
+  consultationsAsPatient   ConsultationFunnel[]  @relation("PatientConsultations")
+  consultationsAsDoctor    ConsultationFunnel[]  @relation("DoctorConsultations")
+  cmeCredits               CmeCredit[]           @relation("DoctorCmeCredits")
+  analytics                DoctorAnalytics?      @relation("DoctorAnalytics")
+  endorsementsReceived     PeerEndorsement[]     @relation("EndorsedDoctor")
+  endorsementsGiven        PeerEndorsement[]     @relation("EndorserDoctor")
+  reviewsReceived          PatientReview[]       @relation("DoctorReviews")
+  reviewsGiven             PatientReview[]       @relation("PatientReviews")
+
+MedicalThread model additions:
+  consultationFunnels      ConsultationFunnel[]
+
+Appointment model additions:
+  consultationFunnel       ConsultationFunnel?
+  reviews                  PatientReview[]
+*/
