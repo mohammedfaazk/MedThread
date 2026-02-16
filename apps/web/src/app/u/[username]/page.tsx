@@ -1,5 +1,5 @@
 'use client'
-import { Navbar } from '@/components/Navbar'
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import Link from 'next/link'
 import { AppointmentCalendar } from '@/components/Board/AppointmentCalendar'
 import { useUser } from '@/context/UserContext'
@@ -113,14 +113,22 @@ export default function UserProfilePage({ params }: { params: { username: string
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <NavbarEnhanced />
 
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg hover:shadow-xl transition-all">
           <div className="flex items-start gap-6">
-            <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold">
-              {(profileUser.username || profileUser.full_name || profileUser.name || params.username)[0].toUpperCase()}
-            </div>
+            {profileUser.avatar ? (
+              <img
+                src={profileUser.avatar}
+                alt={profileUser.username || profileUser.name}
+                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+              />
+            ) : (
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+                {(profileUser.username || profileUser.full_name || profileUser.name || params.username)[0].toUpperCase()}
+              </div>
+            )}
             <div className="flex-1">
               <h1 className="text-3xl font-bold mb-2">
                 {profileUser.role === 'VERIFIED_DOCTOR' 

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@medthread/database';
+import { authenticate } from '../middleware/auth';
+import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -155,8 +157,8 @@ router.get('/conversations/:id/messages', async (req, res) => {
     }
 });
 
-// Send a message (also handled via Socket.io)
-router.post('/messages', async (req, res) => {
+// Send a message (also handled via Socket.io) - requires verified doctor
+router.post('/messages', authenticate, requireVerifiedDoctor, async (req, res) => {
     try {
         const { conversationId, senderId, content, type = 'TEXT', attachment } = req.body;
 

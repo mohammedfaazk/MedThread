@@ -1,12 +1,12 @@
 'use client'
 
-import { Navbar } from '@/components/Navbar'
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import Link from 'next/link'
 
 export default function ModPolicyPage() {
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <NavbarEnhanced />
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 shadow-soft">
           <h1 className="text-4xl font-bold mb-6 text-charcoal">Moderator Policy</h1>

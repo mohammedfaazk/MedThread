@@ -1,6 +1,6 @@
 'use client'
 
-import { Navbar } from '@/components/Navbar'
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { ChatList } from '@/components/Chat/ChatList'
 import { ChatWindow } from '@/components/Chat/ChatWindow'
@@ -63,7 +63,7 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <NavbarEnhanced />
       <div className="flex max-w-[1400px] mx-auto">
         <Sidebar />
         <div className="flex-1 px-6 py-8">

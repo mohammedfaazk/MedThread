@@ -1,8 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Comment } from './Comment'
-import { useUser } from '@/context/UserContext'
+import { useJWTAuth } from '@/context/JWTAuthContext'
+import { useStore } from '@/store/useStore'
+import axios from 'axios'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 interface CommentData {
   id: string
@@ -28,121 +32,98 @@ interface CommentSectionProps {
 export function CommentSection({ postId }: CommentSectionProps) {
   const [sortBy, setSortBy] = useState<'best' | 'top' | 'new' | 'controversial'>('best')
   const [commentText, setCommentText] = useState('')
+  const [comments, setComments] = useState<CommentData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   
-  // Initialize with mock data
-  const [comments, setComments] = useState<CommentData[]>([
-    {
-      id: '1',
-      postId,
-      author: 'Dr_Sarah_Johnson',
-      authorType: 'doctor' as const,
-      verified: true,
-      content: 'Based on your symptoms, this could be tension headaches or migraines. I recommend keeping a headache diary to track triggers. If they persist or worsen, definitely see your doctor for a proper evaluation.',
-      upvotes: 45,
-      downvotes: 2,
-      score: 43,
-      depth: 0,
-      replies: [
+  const { user, role, loading: userLoading } = useJWTAuth()
+  const { fetchComments: fetchCommentsFromStore, comments: storeComments } = useStore()
+
+  // Fetch comments on mount
+  useEffect(() => {
+    const loadComments = async () => {
+      setIsLoading(true)
+      try {
+        await fetchCommentsFromStore(postId)
+      } catch (error) {
+        console.error('Failed to load comments:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadComments()
+  }, [postId, fetchCommentsFromStore])
+
+  // Update local comments when store changes
+  useEffect(() => {
+    const postComments = storeComments[postId] || []
+    setComments(postComments as CommentData[])
+  }, [storeComments, postId])
+
+  const handleComment = async () => {
+    if (!commentText.trim() || !user) return
+
+    setIsSubmitting(true)
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      
+      const response = await axios.post(
+        `${API_URL}/api/v1/comments`,
         {
-          id: '2',
-          postId,
-          parentId: '1',
-          author: 'patient_anonymous',
-          authorType: 'patient' as const,
-          content: 'Thank you so much! I\'ll start tracking them. Should I be concerned about the evening pattern?',
-          upvotes: 12,
-          downvotes: 0,
-          score: 12,
-          depth: 1,
-          replies: [],
-          timeAgo: '1 hour ago'
+          content: commentText,
+          postId
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-      ],
-      timeAgo: '2 hours ago'
-    },
-    {
-      id: '3',
-      postId,
-      author: 'health_enthusiast',
-      authorType: 'patient' as const,
-      content: 'I had similar symptoms last year. Turned out to be dehydration and eye strain from too much screen time. Make sure you\'re drinking enough water!',
-      upvotes: 23,
-      downvotes: 1,
-      score: 22,
-      depth: 0,
-      replies: [],
-      timeAgo: '3 hours ago'
+      )
+
+      // Refresh comments
+      await fetchCommentsFromStore(postId)
+      setCommentText('')
+    } catch (error: any) {
+      console.error('Failed to create comment:', error)
+      alert(error.response?.data?.message || 'Failed to create comment. Please try again.')
+    } finally {
+      setIsSubmitting(false)
     }
-  ])
-
-  const { user, role, loading: userLoading } = useUser()
-
-  const handleComment = () => {
-    if (!commentText.trim()) return
-
-    // Create new comment
-    const newComment: CommentData = {
-      id: `comment-${Date.now()}`,
-      postId,
-      author: user?.username || user?.email?.split('@')[0] || 'Anonymous',
-      authorType: role === 'VERIFIED_DOCTOR' ? 'doctor' : 'patient',
-      verified: role === 'VERIFIED_DOCTOR',
-      content: commentText,
-      upvotes: 0,
-      downvotes: 0,
-      score: 0,
-      depth: 0,
-      replies: [],
-      timeAgo: 'Just now'
-    }
-
-    // Add comment to the list
-    setComments([newComment, ...comments])
-    setCommentText('')
   }
 
-  const handleAddReply = (parentId: string, replyContent: string) => {
+  const handleAddReply = async (parentId: string, replyContent: string) => {
     if (!replyContent.trim() || !user) return
 
-    const newReply: CommentData = {
-      id: `reply-${Date.now()}`,
-      postId,
-      parentId,
-      author: user?.username || user?.email?.split('@')[0] || 'Anonymous',
-      authorType: role === 'VERIFIED_DOCTOR' ? 'doctor' : 'patient',
-      verified: role === 'VERIFIED_DOCTOR',
-      content: replyContent,
-      upvotes: 0,
-      downvotes: 0,
-      score: 0,
-      depth: 0,
-      replies: [],
-      timeAgo: 'Just now'
-    }
-
-    // Recursively add reply to the correct parent comment
-    const addReplyToComment = (comments: CommentData[]): CommentData[] => {
-      return comments.map(comment => {
-        if (comment.id === parentId) {
-          return {
-            ...comment,
-            replies: [...comment.replies, { ...newReply, depth: comment.depth + 1 }]
+    try {
+      const token = localStorage.getItem('auth_token')
+      
+      await axios.post(
+        `${API_URL}/api/v1/comments`,
+        {
+          content: replyContent,
+          postId,
+          parentId
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
         }
-        if (comment.replies.length > 0) {
-          return {
-            ...comment,
-            replies: addReplyToComment(comment.replies)
-          }
-        }
-        return comment
-      })
-    }
+      )
 
-    setComments(addReplyToComment(comments))
+      // Refresh comments
+      await fetchCommentsFromStore(postId)
+    } catch (error: any) {
+      console.error('Failed to create reply:', error)
+      alert(error.response?.data?.message || 'Failed to create reply. Please try again.')
+    }
   }
 
-  if (userLoading) return <div className="p-4 text-gray-500">Loading comments...</div>
+  if (userLoading || isLoading) return <div className="p-4 text-gray-500">Loading comments...</div>
 
   return (
     <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all">
@@ -173,10 +154,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
             </button>
             <button
               onClick={handleComment}
-              disabled={!commentText.trim()}
+              disabled={!commentText.trim() || isSubmitting}
               className="px-4 py-1.5 text-sm font-semibold bg-[#00BCD4] text-white rounded-full hover:bg-[#00ACC1] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all"
             >
-              Comment
+              {isSubmitting ? 'Posting...' : 'Comment'}
             </button>
           </div>
         </div>

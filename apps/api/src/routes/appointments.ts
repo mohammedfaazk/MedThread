@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@medthread/database';
+import { authenticate } from '../middleware/auth';
+import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -394,8 +396,8 @@ router.post('/appointments/:id/reschedule', async (req, res) => {
     }
 });
 
-// Doctor approves/rejects appointment
-router.put('/appointments/:id', async (req, res) => {
+// Doctor approves/rejects appointment - requires verified doctor
+router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req, res) => {
     try {
         const { id } = req.params;
         const { status, doctorId } = req.body; // APPROVED or REJECTED

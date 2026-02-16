@@ -1,6 +1,6 @@
 'use client'
 
-import { Navbar } from '@/components/Navbar'
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
@@ -116,7 +116,7 @@ export default function PatientDashboard() {
 
     return (
         <div className="min-h-screen">
-            <Navbar />
+            <NavbarEnhanced />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
                 <Sidebar />

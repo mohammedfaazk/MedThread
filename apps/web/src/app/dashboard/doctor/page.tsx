@@ -1,6 +1,6 @@
 'use client'
 
-import { Navbar } from '@/components/Navbar'
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
@@ -202,7 +202,7 @@ export default function DoctorDashboard() {
 
     return (
         <div className="min-h-screen">
-            <Navbar />
+            <NavbarEnhanced />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
                 <Sidebar />
@@ -211,22 +211,57 @@ export default function DoctorDashboard() {
 
                     {/* Pending Verification Banner */}
                     {isDoctorPending && (
-                        <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-xl">
+                        <div className="mb-6 bg-red-50 border-2 border-red-300 p-6 rounded-xl shadow-lg">
                             <div className="flex items-start gap-4">
                                 <div className="flex-shrink-0">
-                                    <Clock className="w-8 h-8 text-yellow-600" />
+                                    <Shield className="w-8 h-8 text-red-600" />
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-lg font-bold text-yellow-900 mb-2">
-                                        Verification Pending
+                                    <h3 className="text-xl font-bold text-red-900 mb-2">
+                                        ⚠️ Account Verification Required
                                     </h3>
-                                    <p className="text-yellow-800 mb-3">
-                                        Your doctor account is currently under review. You can view your dashboard, but posting and messaging features are disabled until your account is verified by our admin team.
+                                    <p className="text-red-800 mb-3 font-semibold">
+                                        Your doctor account is currently under review. You have READ-ONLY access until verified.
                                     </p>
-                                    <div className="flex items-center gap-2 text-sm text-yellow-700">
-                                        <Shield className="w-4 h-4" />
-                                        <span>Typically takes 24-48 hours for verification</span>
+                                    
+                                    <div className="bg-white/60 rounded-lg p-4 mb-3">
+                                        <p className="text-sm font-semibold text-red-900 mb-2">What you CANNOT do:</p>
+                                        <ul className="text-sm text-red-800 space-y-1 ml-4 list-disc">
+                                            <li>Create posts or comments</li>
+                                            <li>Vote on posts or comments</li>
+                                            <li>Create or join communities</li>
+                                            <li>Set availability or manage appointments</li>
+                                            <li>Initiate or send chat messages</li>
+                                            <li>Give awards to posts or comments</li>
+                                            <li>Save or hide posts</li>
+                                        </ul>
                                     </div>
+
+                                    <div className="bg-green-50 rounded-lg p-4 mb-3">
+                                        <p className="text-sm font-semibold text-green-900 mb-2">What you CAN do:</p>
+                                        <ul className="text-sm text-green-800 space-y-1 ml-4 list-disc">
+                                            <li>Browse all posts and comments</li>
+                                            <li>View user profiles and communities</li>
+                                            <li>Search content</li>
+                                            <li>View your dashboard and appointments</li>
+                                            <li>View existing chats (read-only)</li>
+                                        </ul>
+                                        <p className="text-xs text-green-700 mt-2 italic">
+                                            Note: You won't be discoverable by patients until verified
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2 text-sm text-red-700 bg-red-100 p-3 rounded-lg">
+                                        <Clock className="w-4 h-4" />
+                                        <span className="font-semibold">Verification typically takes 24-48 hours</span>
+                                    </div>
+
+                                    <button
+                                        onClick={() => router.push('/doctor-verification')}
+                                        className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
+                                    >
+                                        Check Verification Status
+                                    </button>
                                 </div>
                             </div>
                         </div>

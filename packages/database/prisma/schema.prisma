@@ -79,6 +79,7 @@ model User {
   postKarma         Int       @default(0)
   commentKarma      Int       @default(0)
   totalKarma        Int       @default(0)
+  coins             Int       @default(0)  // Virtual currency for awards
   isPremium         Boolean   @default(false)
   isNSFW            Boolean   @default(false)
   isSuspended       Boolean   @default(false)
@@ -94,7 +95,6 @@ model User {
   savedPosts        SavedPost[]
   savedComments     SavedComment[]
   hiddenPosts       HiddenPost[]
-  awards            Award[]
   givenAwards       AwardGiven[]
   communities       CommunityMember[]
   moderating        CommunityModerator[]
@@ -172,11 +172,13 @@ model Post {
   isLocked          Boolean       @default(false)
   isArchived        Boolean       @default(false)
   isRemoved         Boolean       @default(false)
+  isDraft           Boolean       @default(false)
   commentsDisabled  Boolean       @default(false)
   contestMode       Boolean       @default(false)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   editedAt          DateTime?
+  publishedAt       DateTime?
   
   comments          Comment[]
   votes             Vote[]
@@ -189,6 +191,7 @@ model Post {
   @@index([communityId])
   @@index([score])
   @@index([createdAt])
+  @@index([isDraft])
 }
 
 model Comment {
@@ -257,17 +260,18 @@ model Flair {
 
 model Award {
   id          String       @id @default(cuid())
-  name        String
+  name        String       @unique
   description String?
   icon        String
-  cost        Int
-  tier        Int          @default(1)
+  cost        Int          // Cost in coins
+  tier        Int          @default(1)  // 1=Bronze, 2=Silver, 3=Gold, 4=Platinum
+  color       String       @default("#gray")
+  createdAt   DateTime     @default(now())
   
-  userId      String
-  user        User         @relation(fields: [userId], references: [id])
   given       AwardGiven[]
   
-  @@index([userId])
+  @@index([tier])
+  @@index([cost])
 }
 
 model AwardGiven {
