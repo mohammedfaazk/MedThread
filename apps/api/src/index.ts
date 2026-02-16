@@ -16,6 +16,8 @@ import { doctorProfileEnhancedRouter } from './routes/doctor-profile-enhanced.ro
 import { consultationFunnelRouter } from './routes/consultation-funnel.routes';
 import { cmeCreditsRouter } from './routes/cme-credits.routes';
 import { healthInsightsRouter } from './routes/health-insights.routes';
+import { paymentRouter } from './routes/payment.routes';
+import { fileUploadRouter } from './routes/file-upload.routes';
 import postsRouter from './routes/posts';
 import commentsRouter from './routes/comments';
 import communitiesRouter from './routes/communities';
@@ -62,6 +64,8 @@ app.use('/api/doctor-profile', doctorProfileEnhancedRouter);
 app.use('/api/consultation-funnel', consultationFunnelRouter);
 app.use('/api/cme-credits', cmeCreditsRouter);
 app.use('/api/health-insights', healthInsightsRouter);
+app.use('/api/payment', paymentRouter);
+app.use('/api/upload', fileUploadRouter);
 
 // Posts & Comments System
 app.use('/api/v1/posts', postsRouter);
