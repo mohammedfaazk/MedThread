@@ -1,5 +1,6 @@
 import { prisma } from '@medthread/database';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
+import { emailService } from './email.service';
 
 interface DoctorRegistrationData {
   medicalLicenseNumber: string;
@@ -272,7 +273,12 @@ export class DoctorVerificationService {
       }
     });
 
-    // TODO: Send notification/email to doctor
+    // Send notification/email to doctor
+    try {
+      await emailService.sendVerificationApprovedEmail(updatedUser.email, updatedUser.username);
+    } catch (emailError) {
+      console.error('Failed to send approval email:', emailError);
+    }
 
     return {
       message: 'Doctor verification approved successfully',
@@ -318,7 +324,12 @@ export class DoctorVerificationService {
       }
     });
 
-    // TODO: Send notification/email to doctor with rejection reason
+    // Send notification/email to doctor with rejection reason
+    try {
+      await emailService.sendVerificationRejectedEmail(updatedUser.email, updatedUser.username, reason);
+    } catch (emailError) {
+      console.error('Failed to send rejection email:', emailError);
+    }
 
     return {
       message: 'Doctor verification rejected',

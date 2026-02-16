@@ -251,6 +251,149 @@ router.post('/book', async (req, res) => {
     }
 });
 
+// Cancel appointment
+router.post('/appointments/:id/cancel', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { userId, reason } = req.body;
+        console.log(`[API] Cancel appointment: id=${id}, userId=${userId}`);
+
+        const appointment = await prisma.appointment.findUnique({
+            where: { id },
+            include: {
+                patient: { select: { email: true, username: true } },
+                doctor: { select: { email: true, username: true } }
+            }
+        });
+
+        if (!appointment) {
+            return res.status(404).json({ error: 'Appointment not found' });
+        }
+
+        // Check if user is authorized to cancel
+        if (appointment.patientId !== userId && appointment.doctorId !== userId) {
+            return res.status(403).json({ error: 'Not authorized to cancel this appointment' });
+        }
+
+        // Update appointment status
+        const updated = await prisma.appointment.update({
+            where: { id },
+            data: {
+                status: 'CANCELLED',
+                reason: `${appointment.reason}\n\nCancellation reason: ${reason}`
+            }
+        });
+
+        // Send notifications
+        const cancelledBy = appointment.patientId === userId ? 'patient' : 'doctor';
+        const notifyUser = cancelledBy === 'patient' ? appointment.doctorId : appointment.patientId;
+        const notifyEmail = cancelledBy === 'patient' ? appointment.doctor.email : appointment.patient.email;
+
+        await prisma.notification.create({
+            data: {
+                userId: notifyUser,
+                type: 'APPOINTMENT_CANCELLED',
+                content: `Appointment cancelled by ${cancelledBy}. Reason: ${reason}`,
+                link: `/appointments/${id}`
+            }
+        });
+
+        // Send email notification
+        const { emailService } = require('../services/email.service');
+        await emailService.sendEmail({
+            to: notifyEmail,
+            subject: 'Appointment Cancelled - MedThread',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #dc2626;">Appointment Cancelled</h2>
+                    <p>Your appointment scheduled for ${new Date(appointment.startTime).toLocaleString()} has been cancelled.</p>
+                    <p><strong>Reason:</strong> ${reason}</p>
+                    <p>You can book a new appointment anytime.</p>
+                </div>
+            `,
+            text: `Appointment cancelled. Reason: ${reason}`
+        });
+
+        res.json(updated);
+    } catch (error) {
+        console.error('[API] Cancel error:', error);
+        res.status(500).json({ error: 'Failed to cancel appointment' });
+    }
+});
+
+// Reschedule appointment
+router.post('/appointments/:id/reschedule', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { userId, newStartTime, newEndTime, reason } = req.body;
+        console.log(`[API] Reschedule appointment: id=${id}`);
+
+        const appointment = await prisma.appointment.findUnique({
+            where: { id },
+            include: {
+                patient: { select: { email: true, username: true } },
+                doctor: { select: { email: true, username: true } }
+            }
+        });
+
+        if (!appointment) {
+            return res.status(404).json({ error: 'Appointment not found' });
+        }
+
+        // Check if user is authorized
+        if (appointment.patientId !== userId && appointment.doctorId !== userId) {
+            return res.status(403).json({ error: 'Not authorized to reschedule this appointment' });
+        }
+
+        // Update appointment
+        const updated = await prisma.appointment.update({
+            where: { id },
+            data: {
+                startTime: new Date(newStartTime),
+                endTime: new Date(newEndTime),
+                status: 'PENDING', // Reset to pending for approval
+                reason: `${appointment.reason}\n\nRescheduled: ${reason}`
+            }
+        });
+
+        // Send notifications
+        const rescheduledBy = appointment.patientId === userId ? 'patient' : 'doctor';
+        const notifyUser = rescheduledBy === 'patient' ? appointment.doctorId : appointment.patientId;
+        const notifyEmail = rescheduledBy === 'patient' ? appointment.doctor.email : appointment.patient.email;
+
+        await prisma.notification.create({
+            data: {
+                userId: notifyUser,
+                type: 'APPOINTMENT_RESCHEDULED',
+                content: `Appointment rescheduled to ${new Date(newStartTime).toLocaleString()}`,
+                link: `/appointments/${id}`
+            }
+        });
+
+        // Send email
+        const { emailService } = require('../services/email.service');
+        await emailService.sendEmail({
+            to: notifyEmail,
+            subject: 'Appointment Rescheduled - MedThread',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #2563eb;">Appointment Rescheduled</h2>
+                    <p>Your appointment has been rescheduled.</p>
+                    <p><strong>New Date & Time:</strong> ${new Date(newStartTime).toLocaleString()}</p>
+                    <p><strong>Reason:</strong> ${reason}</p>
+                    <p>Please confirm the new time.</p>
+                </div>
+            `,
+            text: `Appointment rescheduled to ${new Date(newStartTime).toLocaleString()}`
+        });
+
+        res.json(updated);
+    } catch (error) {
+        console.error('[API] Reschedule error:', error);
+        res.status(500).json({ error: 'Failed to reschedule appointment' });
+    }
+});
+
 // Doctor approves/rejects appointment
 router.put('/appointments/:id', async (req, res) => {
     try {
