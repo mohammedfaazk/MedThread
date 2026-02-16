@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Navbar } from '@/components/Navbar'
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -76,7 +76,7 @@ export default function DoctorVerificationPage() {
     if (!user || user.role !== 'DOCTOR') {
         return (
             <div className="min-h-screen">
-                <Navbar />
+                <NavbarEnhanced />
                 <div className="max-w-2xl mx-auto px-6 py-16 text-center">
                     <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
                     <p className="text-gray-600">Only users with DOCTOR role can access this page.</p>
@@ -87,7 +87,7 @@ export default function DoctorVerificationPage() {
 
     return (
         <div className="min-h-screen">
-            <Navbar />
+            <NavbarEnhanced />
             <div className="max-w-4xl mx-auto px-6 py-8">
                 <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 hover:shadow-xl transition-all">
                     <div className="flex items-center gap-3 mb-6">

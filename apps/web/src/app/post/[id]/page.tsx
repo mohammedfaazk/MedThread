@@ -1,6 +1,6 @@
 'use client'
 
-import { Navbar } from '@/components/Navbar'
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { PostDetail } from '@/components/PostDetail'
 import { CommentSection } from '@/components/CommentSection'
@@ -8,7 +8,7 @@ import { CommentSection } from '@/components/CommentSection'
 export default function PostPage({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <NavbarEnhanced />
       <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
         <Sidebar />
         <main className="flex-1 max-w-[640px]">

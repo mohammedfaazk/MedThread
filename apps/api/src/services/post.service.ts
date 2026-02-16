@@ -1,58 +1,41 @@
 import { prisma } from '@medthread/database';
-import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
+import { PostType } from '@prisma/client';
 
 interface CreatePostInput {
   title: string;
   content?: string;
-  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'POLL' | 'GALLERY';
-  communityId: string;
-  authorId: string;
+  type?: PostType;
   url?: string;
   mediaUrls?: string[];
+  authorId: string;
+  communityId: string;
   flairId?: string;
   isNSFW?: boolean;
   isSpoiler?: boolean;
+  isDraft?: boolean;
 }
 
-interface UpdatePostInput {
-  title?: string;
-  content?: string;
-  isNSFW?: boolean;
-  isSpoiler?: boolean;
+interface GetPostsOptions {
+  community?: string;
+  sort?: 'hot' | 'new' | 'top' | 'rising';
+  limit?: number;
+  offset?: number;
+  authorId?: string;
+  tags?: string[];
+  specialty?: string;
+  authorType?: 'doctor' | 'patient' | 'all';
+  dateFrom?: Date;
+  dateTo?: Date;
+  postType?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'POLL';
 }
 
-export class PostService {
+export const postService = {
   async createPost(data: CreatePostInput) {
-    // Verify community exists
-    const community = await prisma.community.findUnique({
-      where: { id: data.communityId }
-    });
-
-    if (!community) {
-      throw new NotFoundError('Community not found');
-    }
-
-    // Check if user is member of private community
-    if (community.isPrivate) {
-      const membership = await prisma.communityMember.findUnique({
-        where: {
-          userId_communityId: {
-            userId: data.authorId,
-            communityId: data.communityId
-          }
-        }
-      });
-
-      if (!membership) {
-        throw new ForbiddenError('Must be a member to post in this community');
-      }
-    }
-
     const post = await prisma.post.create({
       data: {
-        type: data.type,
         title: data.title,
         content: data.content,
+        type: data.type || 'TEXT',
         url: data.url,
         mediaUrls: data.mediaUrls || [],
         authorId: data.authorId,
@@ -60,6 +43,8 @@ export class PostService {
         flairId: data.flairId,
         isNSFW: data.isNSFW || false,
         isSpoiler: data.isSpoiler || false,
+        isDraft: data.isDraft || false,
+        publishedAt: data.isDraft ? null : new Date(),
       },
       include: {
         author: {
@@ -67,8 +52,9 @@ export class PostService {
             id: true,
             username: true,
             role: true,
-            verified: true,
             avatar: true,
+            totalKarma: true,
+            doctorVerificationStatus: true,
           }
         },
         community: {
@@ -80,17 +66,159 @@ export class PostService {
           }
         },
         flair: true,
+        _count: {
+          select: {
+            comments: true,
+            votes: true,
+          }
+        }
       }
     });
 
-    // Update community member count
-    await prisma.community.update({
-      where: { id: data.communityId },
-      data: { memberCount: { increment: 0 } } // Trigger update
+    return post;
+  },
+
+  async getPosts(options: GetPostsOptions) {
+    const { 
+      community, 
+      sort = 'hot', 
+      limit = 20, 
+      offset = 0, 
+      authorId, 
+      tags,
+      specialty,
+      authorType,
+      dateFrom,
+      dateTo,
+      postType
+    } = options;
+
+    let orderBy: any;
+    
+    switch (sort) {
+      case 'new':
+        orderBy = { createdAt: 'desc' };
+        break;
+      case 'top':
+        orderBy = { score: 'desc' };
+        break;
+      case 'hot':
+      case 'rising':
+        // For hot/rising, we'll sort by createdAt and apply algorithm in memory
+        orderBy = { createdAt: 'desc' };
+        break;
+      default:
+        orderBy = { createdAt: 'desc' };
+    }
+
+    const where: any = {
+      isRemoved: false,
+      isArchived: false,
+      isDraft: false,
+    };
+
+    // Filter by community
+    if (community) {
+      where.community = { name: community };
+    }
+
+    // Filter by author
+    if (authorId) {
+      where.authorId = authorId;
+    }
+
+    // Filter by specialty (medical)
+    if (specialty) {
+      where.author = {
+        specialty: { contains: specialty, mode: 'insensitive' }
+      };
+    }
+
+    // Filter by author type (doctor/patient)
+    if (authorType && authorType !== 'all') {
+      if (authorType === 'doctor') {
+        where.author = {
+          ...where.author,
+          OR: [
+            { role: 'VERIFIED_DOCTOR' },
+            { 
+              AND: [
+                { role: 'DOCTOR' },
+                { doctorVerificationStatus: 'APPROVED' }
+              ]
+            }
+          ]
+        };
+      } else if (authorType === 'patient') {
+        where.author = {
+          ...where.author,
+          role: { not: 'VERIFIED_DOCTOR' },
+          OR: [
+            { role: { not: 'DOCTOR' } },
+            { doctorVerificationStatus: { not: 'APPROVED' } }
+          ]
+        };
+      }
+    }
+
+    // Filter by date range
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        where.createdAt.gte = dateFrom;
+      }
+      if (dateTo) {
+        where.createdAt.lte = dateTo;
+      }
+    }
+
+    // Filter by post type
+    if (postType) {
+      where.type = postType;
+    }
+
+    const posts = await prisma.post.findMany({
+      where,
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+            avatar: true,
+            totalKarma: true,
+            specialty: true,
+            doctorVerificationStatus: true,
+          }
+        },
+        community: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            icon: true,
+          }
+        },
+        flair: true,
+        _count: {
+          select: {
+            comments: true,
+            votes: true,
+          }
+        }
+      },
+      orderBy,
+      take: limit,
+      skip: offset
     });
 
-    return post;
-  }
+    // Apply hot/rising algorithm if needed
+    if (sort === 'hot' || sort === 'rising') {
+      return this.applyRankingAlgorithm(posts, sort);
+    }
+
+    return posts;
+  },
 
   async getPostById(postId: string, userId?: string) {
     const post = await prisma.post.findUnique({
@@ -101,9 +229,10 @@ export class PostService {
             id: true,
             username: true,
             role: true,
-            verified: true,
             avatar: true,
+            totalKarma: true,
             specialty: true,
+            doctorVerificationStatus: true,
           }
         },
         community: {
@@ -112,7 +241,7 @@ export class PostService {
             name: true,
             displayName: true,
             icon: true,
-            isNSFW: true,
+            description: true,
           }
         },
         flair: true,
@@ -126,15 +255,14 @@ export class PostService {
     });
 
     if (!post) {
-      throw new NotFoundError('Post not found');
+      throw new Error('Post not found');
     }
 
-    if (post.isRemoved && !userId) {
-      throw new NotFoundError('Post not found');
-    }
-
-    // Get user's vote if authenticated
+    // Get user's vote if userId provided
     let userVote = null;
+    let isSaved = false;
+    let isHidden = false;
+
     if (userId) {
       const vote = await prisma.vote.findUnique({
         where: {
@@ -145,140 +273,52 @@ export class PostService {
         }
       });
       userVote = vote?.value || null;
+
+      const saved = await prisma.savedPost.findUnique({
+        where: {
+          userId_postId: {
+            userId,
+            postId
+          }
+        }
+      });
+      isSaved = !!saved;
+
+      const hidden = await prisma.hiddenPost.findUnique({
+        where: {
+          userId_postId: {
+            userId,
+            postId
+          }
+        }
+      });
+      isHidden = !!hidden;
     }
 
     return {
       ...post,
-      userVote
+      userVote,
+      isSaved,
+      isHidden,
     };
-  }
+  },
 
-  async getPosts(filters: {
-    communityId?: string;
-    authorId?: string;
-    sortBy?: 'hot' | 'new' | 'top' | 'rising';
-    page?: number;
-    limit?: number;
-    userId?: string;
-  }) {
-    const {
-      communityId,
-      authorId,
-      sortBy = 'hot',
-      page = 1,
-      limit = 20,
-      userId
-    } = filters;
-
-    const skip = (page - 1) * limit;
-
-    const where: any = {
-      isRemoved: false,
-    };
-
-    if (communityId) where.communityId = communityId;
-    if (authorId) where.authorId = authorId;
-
-    let orderBy: any = {};
-    switch (sortBy) {
-      case 'new':
-        orderBy = { createdAt: 'desc' };
-        break;
-      case 'top':
-        orderBy = { score: 'desc' };
-        break;
-      case 'rising':
-        orderBy = [{ score: 'desc' }, { createdAt: 'desc' }];
-        break;
-      case 'hot':
-      default:
-        // Hot algorithm: score / (hours_since_post + 2)^1.5
-        orderBy = { score: 'desc' };
-        break;
-    }
-
-    const [posts, total] = await Promise.all([
-      prisma.post.findMany({
-        where,
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              role: true,
-              verified: true,
-              avatar: true,
-            }
-          },
-          community: {
-            select: {
-              id: true,
-              name: true,
-              displayName: true,
-              icon: true,
-            }
-          },
-          flair: true,
-          _count: {
-            select: {
-              comments: true,
-            }
-          }
-        },
-        orderBy,
-        skip,
-        take: limit,
-      }),
-      prisma.post.count({ where })
-    ]);
-
-    // Get user votes if authenticated
-    let userVotes: Record<string, number> = {};
-    if (userId) {
-      const votes = await prisma.vote.findMany({
-        where: {
-          userId,
-          postId: { in: posts.map(p => p.id) }
-        }
-      });
-      userVotes = votes.reduce((acc, vote) => {
-        acc[vote.postId!] = vote.value;
-        return acc;
-      }, {} as Record<string, number>);
-    }
-
-    return {
-      posts: posts.map(post => ({
-        ...post,
-        userVote: userVotes[post.id] || null
-      })),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
-    };
-  }
-
-  async updatePost(postId: string, userId: string, data: UpdatePostInput) {
+  async updatePost(postId: string, userId: string, data: Partial<CreatePostInput>) {
+    // Verify ownership
     const post = await prisma.post.findUnique({
-      where: { id: postId }
+      where: { id: postId },
+      select: { authorId: true }
     });
 
     if (!post) {
-      throw new NotFoundError('Post not found');
+      throw new Error('Post not found');
     }
 
     if (post.authorId !== userId) {
-      throw new ForbiddenError('Not authorized to update this post');
+      throw new Error('Unauthorized');
     }
 
-    if (post.isLocked) {
-      throw new ForbiddenError('Post is locked and cannot be edited');
-    }
-
-    const updatedPost = await prisma.post.update({
+    return await prisma.post.update({
       where: { id: postId },
       data: {
         ...data,
@@ -290,69 +330,47 @@ export class PostService {
             id: true,
             username: true,
             role: true,
-            verified: true,
+            avatar: true,
+            doctorVerificationStatus: true,
           }
         },
-        community: {
-          select: {
-            id: true,
-            name: true,
-            displayName: true,
-          }
-        }
+        community: true,
+        flair: true,
       }
     });
+  },
 
-    return updatedPost;
-  }
-
-  async deletePost(postId: string, userId: string, userRole: string) {
+  async deletePost(postId: string, userId: string) {
+    // Verify ownership
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: {
-        community: {
-          include: {
-            moderators: {
-              where: { userId }
-            }
-          }
-        }
+      select: { authorId: true }
+    });
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    if (post.authorId !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    // Soft delete
+    return await prisma.post.update({
+      where: { id: postId },
+      data: {
+        isRemoved: true,
+        content: '[deleted]',
       }
     });
+  },
 
-    if (!post) {
-      throw new NotFoundError('Post not found');
+  async votePost(postId: string, userId: string, value: number) {
+    if (value !== 1 && value !== -1) {
+      throw new Error('Vote value must be 1 or -1');
     }
 
-    const isAuthor = post.authorId === userId;
-    const isModerator = post.community.moderators.length > 0;
-    const isAdmin = userRole === 'ADMIN';
-
-    if (!isAuthor && !isModerator && !isAdmin) {
-      throw new ForbiddenError('Not authorized to delete this post');
-    }
-
-    await prisma.post.delete({
-      where: { id: postId }
-    });
-
-    return { message: 'Post deleted successfully' };
-  }
-
-  async votePost(postId: string, userId: string, value: 1 | -1) {
-    const post = await prisma.post.findUnique({
-      where: { id: postId }
-    });
-
-    if (!post) {
-      throw new NotFoundError('Post not found');
-    }
-
-    if (post.isArchived) {
-      throw new ForbiddenError('Cannot vote on archived post');
-    }
-
-    // Check existing vote
+    // Check if vote exists
     const existingVote = await prisma.vote.findUnique({
       where: {
         userId_postId: {
@@ -362,90 +380,63 @@ export class PostService {
       }
     });
 
-    let scoreDelta = 0;
-    let upvoteDelta = 0;
-    let downvoteDelta = 0;
+    let voteChange = 0;
 
     if (existingVote) {
       if (existingVote.value === value) {
-        // Remove vote
+        // Remove vote (toggle off)
         await prisma.vote.delete({
-          where: {
-            userId_postId: {
-              userId,
-              postId
-            }
-          }
+          where: { id: existingVote.id }
         });
-        scoreDelta = -value;
-        if (value === 1) upvoteDelta = -1;
-        else downvoteDelta = -1;
+        voteChange = -value;
       } else {
-        // Change vote
+        // Update vote
         await prisma.vote.update({
-          where: {
-            userId_postId: {
-              userId,
-              postId
-            }
-          },
+          where: { id: existingVote.id },
           data: { value }
         });
-        scoreDelta = value * 2; // From -1 to 1 or vice versa
-        if (value === 1) {
-          upvoteDelta = 1;
-          downvoteDelta = -1;
-        } else {
-          upvoteDelta = -1;
-          downvoteDelta = 1;
-        }
+        voteChange = value - existingVote.value;
       }
     } else {
       // Create new vote
       await prisma.vote.create({
-        data: {
-          userId,
-          postId,
-          value
-        }
+        data: { userId, postId, value }
       });
-      scoreDelta = value;
-      if (value === 1) upvoteDelta = 1;
-      else downvoteDelta = 1;
+      voteChange = value;
     }
 
     // Update post score
-    const updatedPost = await prisma.post.update({
+    const post = await prisma.post.update({
       where: { id: postId },
       data: {
-        score: { increment: scoreDelta },
-        upvotes: { increment: upvoteDelta },
-        downvotes: { increment: downvoteDelta }
+        upvotes: value === 1 ? { increment: voteChange > 0 ? 1 : -1 } : undefined,
+        downvotes: value === -1 ? { increment: voteChange < 0 ? 1 : -1 } : undefined,
+        score: { increment: voteChange }
+      },
+      select: {
+        score: true,
+        upvotes: true,
+        downvotes: true,
       }
     });
 
     // Update author karma
-    await prisma.user.update({
-      where: { id: post.authorId },
-      data: {
-        postKarma: { increment: scoreDelta },
-        totalKarma: { increment: scoreDelta }
-      }
+    const postAuthor = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true }
     });
 
-    return updatedPost;
-  }
-
-  async savePost(postId: string, userId: string) {
-    const post = await prisma.post.findUnique({
-      where: { id: postId }
-    });
-
-    if (!post) {
-      throw new NotFoundError('Post not found');
+    if (postAuthor) {
+      // Use centralized karma service
+      const { karmaService } = await import('./karma.service');
+      await karmaService.updateUserKarma(postAuthor.authorId);
     }
 
-    const existingSave = await prisma.savedPost.findUnique({
+    return post;
+  },
+
+  async savePost(postId: string, userId: string) {
+    const existing = await prisma.savedPost.findUnique({
       where: {
         userId_postId: {
           userId,
@@ -454,37 +445,23 @@ export class PostService {
       }
     });
 
-    if (existingSave) {
+    if (existing) {
+      // Unsave
       await prisma.savedPost.delete({
-        where: {
-          userId_postId: {
-            userId,
-            postId
-          }
-        }
+        where: { id: existing.id }
       });
       return { saved: false };
     } else {
+      // Save
       await prisma.savedPost.create({
-        data: {
-          userId,
-          postId
-        }
+        data: { userId, postId }
       });
       return { saved: true };
     }
-  }
+  },
 
   async hidePost(postId: string, userId: string) {
-    const post = await prisma.post.findUnique({
-      where: { id: postId }
-    });
-
-    if (!post) {
-      throw new NotFoundError('Post not found');
-    }
-
-    const existingHide = await prisma.hiddenPost.findUnique({
+    const existing = await prisma.hiddenPost.findUnique({
       where: {
         userId_postId: {
           userId,
@@ -493,26 +470,199 @@ export class PostService {
       }
     });
 
-    if (existingHide) {
+    if (existing) {
+      // Unhide
       await prisma.hiddenPost.delete({
-        where: {
-          userId_postId: {
-            userId,
-            postId
-          }
-        }
+        where: { id: existing.id }
       });
       return { hidden: false };
     } else {
+      // Hide
       await prisma.hiddenPost.create({
-        data: {
-          userId,
-          postId
-        }
+        data: { userId, postId }
       });
       return { hidden: true };
     }
-  }
-}
+  },
 
-export const postService = new PostService();
+  applyRankingAlgorithm(posts: any[], algorithm: 'hot' | 'rising') {
+    const now = new Date().getTime();
+
+    const rankedPosts = posts.map(post => {
+      const createdAt = new Date(post.createdAt).getTime();
+      const hoursOld = (now - createdAt) / (1000 * 60 * 60);
+
+      let rankScore = 0;
+
+      if (algorithm === 'hot') {
+        // Hot algorithm: score / (hours + 2)^1.5
+        rankScore = post.score / Math.pow(hoursOld + 2, 1.5);
+      } else if (algorithm === 'rising') {
+        // Rising algorithm: score / (hours + 1)
+        rankScore = post.score / (hoursOld + 1);
+      }
+
+      return {
+        ...post,
+        rankScore
+      };
+    });
+
+    // Sort by rank score
+    return rankedPosts.sort((a, b) => b.rankScore - a.rankScore);
+  },
+
+  async getDrafts(userId: string) {
+    return await prisma.post.findMany({
+      where: {
+        authorId: userId,
+        isDraft: true,
+        isRemoved: false,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+            avatar: true,
+            doctorVerificationStatus: true,
+          }
+        },
+        community: {
+          select: {
+            id: true,
+            name: true,
+            displayName: true,
+            icon: true,
+          }
+        },
+        flair: true,
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+  },
+
+  async publishDraft(postId: string, userId: string) {
+    // Verify ownership
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true, isDraft: true }
+    });
+
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    if (post.authorId !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    if (!post.isDraft) {
+      throw new Error('Post is not a draft');
+    }
+
+    return await prisma.post.update({
+      where: { id: postId },
+      data: {
+        isDraft: false,
+        publishedAt: new Date(),
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+            avatar: true,
+            doctorVerificationStatus: true,
+          }
+        },
+        community: true,
+        flair: true,
+      }
+    });
+  },
+
+  async getSavedPosts(userId: string, limit = 20, offset = 0) {
+    const savedPosts = await prisma.savedPost.findMany({
+      where: { userId },
+      include: {
+        post: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                role: true,
+                avatar: true,
+                doctorVerificationStatus: true,
+              }
+            },
+            community: {
+              select: {
+                id: true,
+                name: true,
+                displayName: true,
+                icon: true,
+              }
+            },
+            flair: true,
+            _count: {
+              select: {
+                comments: true,
+                votes: true,
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset
+    });
+
+    return savedPosts.map(sp => sp.post);
+  },
+
+  async getHiddenPosts(userId: string, limit = 20, offset = 0) {
+    const hiddenPosts = await prisma.hiddenPost.findMany({
+      where: { userId },
+      include: {
+        post: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                role: true,
+                avatar: true,
+                doctorVerificationStatus: true,
+              }
+            },
+            community: {
+              select: {
+                id: true,
+                name: true,
+                displayName: true,
+                icon: true,
+              }
+            },
+            flair: true,
+            _count: {
+              select: {
+                comments: true,
+                votes: true,
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset
+    });
+
+    return hiddenPosts.map(hp => hp.post);
+  },
+};

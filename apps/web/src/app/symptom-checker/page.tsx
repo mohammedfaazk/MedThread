@@ -1,141 +1,124 @@
 'use client'
 
-import { Navbar } from '@/components/Navbar'
 import { Sidebar } from '@/components/Sidebar'
-import { useJWTAuth } from '@/context/JWTAuthContext'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { Activity, Brain, Stethoscope, AlertCircle, Sparkles, ArrowRight } from 'lucide-react'
+import { Activity, AlertCircle, Heart, Thermometer } from 'lucide-react'
 
 export default function SymptomCheckerPage() {
-  const { user, loading } = useJWTAuth()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login')
-    }
-  }, [user, loading, router])
-
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-500 font-medium">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <div className="flex max-w-[1400px] mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-white to-blue-50">
+      <div className="flex">
         <Sidebar />
-        <div className="flex-1 px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <Activity className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">AI Symptom Checker</h1>
-                <p className="text-sm text-gray-500">Powered by advanced medical AI</p>
+        
+        <main className="flex-1 ml-64 p-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold text-charcoal mb-2">Symptom Checker</h1>
+              <p className="text-gray-600">
+                Describe your symptoms and get preliminary health insights
+              </p>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-yellow-800 mb-1">Medical Disclaimer</h3>
+                  <p className="text-sm text-yellow-700">
+                    This tool provides general information only and is not a substitute for professional medical advice. 
+                    Always consult with a qualified healthcare provider for proper diagnosis and treatment.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Medical Disclaimer */}
-          <div className="bg-amber-50/80 backdrop-blur-xl border border-amber-200/50 rounded-2xl p-6 mb-8 shadow-lg">
-            <div className="flex gap-4">
-              <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-bold text-amber-900 mb-2">Important Medical Disclaimer</h3>
-                <p className="text-sm text-amber-800 leading-relaxed">
-                  This AI symptom checker is for informational purposes only and does not constitute medical advice. 
-                  Always consult with a qualified healthcare professional for proper diagnosis and treatment. 
-                  In case of emergency, call your local emergency services immediately.
+            {/* Symptom Input Card */}
+            <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6 mb-6">
+              <h2 className="text-xl font-semibold text-charcoal mb-4">Describe Your Symptoms</h2>
+              
+              <textarea
+                placeholder="Example: I have a headache, fever, and sore throat for 2 days..."
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50 resize-none bg-white/50 backdrop-blur-sm transition-all"
+                rows={6}
+              />
+
+              <div className="mt-4 flex gap-3">
+                <button className="flex-1 px-6 py-3 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition shadow-lg hover:shadow-xl">
+                  Analyze Symptoms
+                </button>
+                <button className="px-6 py-3 border-2 border-gray-200 text-charcoal rounded-full font-semibold hover:bg-cream-50/50 transition">
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Symptom Categories */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-red-100 rounded-full">
+                    <Thermometer className="w-6 h-6 text-red-600" />
+                  </div>
+                  <h3 className="font-semibold text-charcoal">Fever & Infection</h3>
+                </div>
+                <p className="text-sm text-gray-600">
+                  High temperature, chills, sweating, body aches
+                </p>
+              </div>
+
+              <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-blue-100 rounded-full">
+                    <Heart className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="font-semibold text-charcoal">Heart & Circulation</h3>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Chest pain, palpitations, shortness of breath
+                </p>
+              </div>
+
+              <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-purple-100 rounded-full">
+                    <Activity className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h3 className="font-semibold text-charcoal">Pain & Discomfort</h3>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Headaches, muscle pain, joint pain, abdominal pain
+                </p>
+              </div>
+
+              <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6 hover:shadow-xl transition-all cursor-pointer">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-3 bg-green-100 rounded-full">
+                    <AlertCircle className="w-6 h-6 text-green-600" />
+                  </div>
+                  <h3 className="font-semibold text-charcoal">Digestive Issues</h3>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Nausea, vomiting, diarrhea, constipation, bloating
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Feature Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg hover:shadow-xl transition-all">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                <Brain className="w-6 h-6 text-blue-600" />
+            {/* Coming Soon Notice */}
+            <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-8 text-center">
+              <div className="inline-block p-4 bg-blue-100 rounded-full mb-4">
+                <Activity className="w-12 h-12 text-blue-600" />
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">Quick Assessment</h3>
-              <p className="text-sm text-gray-600">
-                Describe your symptoms and get instant AI-powered insights based on medical knowledge.
+              <h2 className="text-2xl font-bold text-charcoal mb-2">Feature Coming Soon</h2>
+              <p className="text-gray-600 mb-4">
+                We're working on an advanced AI-powered symptom checker that will help you understand your symptoms better.
               </p>
-            </div>
-
-            <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg hover:shadow-xl transition-all">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4">
-                <Stethoscope className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="font-bold text-gray-900 mb-2">Doctor Recommendations</h3>
-              <p className="text-sm text-gray-600">
-                Get suggestions for which type of specialist you should consult based on your symptoms.
-              </p>
-            </div>
-
-            <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg hover:shadow-xl transition-all">
-              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                <AlertCircle className="w-6 h-6 text-purple-600" />
-              </div>
-              <h3 className="font-bold text-gray-900 mb-2">Emergency Guidance</h3>
-              <p className="text-sm text-gray-600">
-                Identify urgent symptoms that require immediate medical attention or emergency care.
+              <p className="text-sm text-gray-500">
+                In the meantime, you can ask questions in our community forums or consult with verified doctors.
               </p>
             </div>
           </div>
-
-          {/* Coming Soon Section */}
-          <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-12 hover:shadow-xl transition-all text-center">
-            <div className="max-w-2xl mx-auto">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-                <Sparkles className="w-10 h-10 text-white" />
-              </div>
-              
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Coming Soon
-              </h2>
-              
-              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                We're building an advanced AI-powered symptom checker that will help you understand your health better. 
-                This feature will analyze your symptoms, provide detailed insights, and recommend the right healthcare professionals.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button
-                  onClick={() => router.push('/doctors')}
-                  className="px-8 py-4 bg-[#00BCD4] text-white rounded-xl font-semibold hover:bg-[#00ACC1] transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                >
-                  <Stethoscope className="w-5 h-5" />
-                  Browse Doctors
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-                
-                <button
-                  onClick={() => router.push('/appointments')}
-                  className="px-8 py-4 bg-white/60 backdrop-blur-sm text-gray-900 rounded-xl font-semibold hover:bg-white/80 transition-all shadow-lg hover:shadow-xl border border-white/40 flex items-center justify-center gap-2"
-                >
-                  Book Appointment
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-
-              <p className="text-sm text-gray-500 mt-8">
-                In the meantime, you can consult with our verified doctors directly
-              </p>
-            </div>
-          </div>
-        </div>
+        </main>
       </div>
     </div>
   )

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { PrismaClient } from '@medthread/database';
+import { authenticate } from '../middleware/auth';
+import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -126,8 +128,8 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
     }
 });
 
-// Doctor sets availability
-router.post('/availability', async (req, res) => {
+// Doctor sets availability - requires verified doctor
+router.post('/availability', authenticate, requireVerifiedDoctor, async (req, res) => {
     try {
         const { doctorId, dayOfWeek, startTime, endTime } = req.body;
         console.log('[API] Creating availability:', { doctorId, dayOfWeek, startTime, endTime });
@@ -173,8 +175,8 @@ router.post('/availability', async (req, res) => {
     }
 });
 
-// Patient books an appointment
-router.post('/book', async (req, res) => {
+// Patient books an appointment - requires verified doctor
+router.post('/book', authenticate, requireVerifiedDoctor, async (req, res) => {
     try {
         const { patientId, doctorId, startTime, endTime, reason } = req.body;
         console.log(`[API] Booking attempt: patient=${patientId}, doctor=${doctorId}`);
@@ -251,8 +253,8 @@ router.post('/book', async (req, res) => {
     }
 });
 
-// Doctor approves/rejects appointment
-router.put('/appointments/:id', async (req, res) => {
+// Doctor approves/rejects appointment - requires verified doctor
+router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req, res) => {
     try {
         const { id } = req.params;
         const { status, doctorId } = req.body; // APPROVED or REJECTED

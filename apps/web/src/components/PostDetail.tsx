@@ -1,127 +1,128 @@
 'use client'
 
 import { useStore } from '@/store/useStore'
-import { User, Stethoscope, CheckCircle } from 'lucide-react'
-import { useEffect } from 'react'
+import { useJWTAuth } from '@/context/JWTAuthContext'
+import { User, Stethoscope, CheckCircle, Edit2, Trash2, MoreHorizontal } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import axios from 'axios'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 interface PostDetailProps {
   postId: string
 }
 
-export function PostDetail({ postId }: PostDetailProps) {
-  const { posts, votePost, savePost, setPosts } = useStore()
-  
-  // Initialize posts if empty (for direct navigation/refresh)
-  useEffect(() => {
-    if (posts.length === 0) {
-      setPosts([
-        {
-          id: '1',
-          type: 'text',
-          author: 'patient_anonymous',
-          authorType: 'patient',
-          community: 'general',
-          timeAgo: '2 hours ago',
-          title: 'Persistent headaches for 3 days - should I be concerned?',
-          content: 'I\'ve been experiencing severe headaches for the past 3 days. They seem to get worse in the evening. I\'m 32F, no prior medical conditions. Taking ibuprofen helps temporarily but the pain returns. Should I see a doctor?',
-          tags: ['Headache', 'Pain', 'General Health'],
-          upvotes: 24,
-          downvotes: 2,
-          score: 22,
-          comments: 12,
-          doctorReplies: 3,
-          userVote: null,
-          isSaved: false,
-          isHidden: false
-        },
-        {
-          id: '2',
-          type: 'text',
-          author: 'Dr_Sarah_Johnson',
-          authorType: 'doctor',
-          verified: true,
-          specialty: 'Cardiology',
-          community: 'cardiology',
-          timeAgo: '4 hours ago',
-          title: 'Understanding Blood Pressure Readings - A Doctor\'s Guide',
-          content: 'Many patients ask me about blood pressure numbers. Here\'s what you need to know: Normal BP is below 120/80. Elevated is 120-129/<80. Stage 1 hypertension is 130-139/80-89. Let me know if you have questions!',
-          tags: ['Cardiology', 'Education', 'Blood Pressure'],
-          upvotes: 156,
-          downvotes: 8,
-          score: 148,
-          comments: 45,
-          doctorReplies: 8,
-          isPinned: true,
-          userVote: null,
-          isSaved: false,
-          isHidden: false
-        },
-        {
-          id: '3',
-          type: 'text',
-          author: 'concerned_parent',
-          authorType: 'patient',
-          community: 'pediatrics',
-          timeAgo: '6 hours ago',
-          title: 'My 5-year-old has a fever of 102°F - when should I go to ER?',
-          content: 'My daughter has had a fever since this morning. It\'s currently 102°F. She\'s drinking fluids and somewhat active. No other symptoms. Is this ER-worthy or can I wait for pediatrician tomorrow?',
-          tags: ['Pediatrics', 'Fever', 'Emergency'],
-          upvotes: 67,
-          downvotes: 3,
-          score: 64,
-          comments: 34,
-          doctorReplies: 5,
-          userVote: null,
-          isSaved: false,
-          isHidden: false
-        },
-        {
-          id: '4',
-          type: 'text',
-          author: 'fitness_enthusiast',
-          authorType: 'patient',
-          community: 'orthopedics',
-          timeAgo: '8 hours ago',
-          title: 'Knee pain after running - is this normal?',
-          content: 'Started running 3 weeks ago. Now experiencing pain on the outside of my right knee. It hurts when going down stairs. Should I stop running? Any exercises that might help?',
-          tags: ['Orthopedics', 'Sports Medicine', 'Knee Pain'],
-          upvotes: 42,
-          downvotes: 1,
-          score: 41,
-          comments: 28,
-          doctorReplies: 4,
-          userVote: null,
-          isSaved: false,
-          isHidden: false
-        },
-        {
-          id: '5',
-          type: 'text',
-          author: 'Dr_Michael_Chen',
-          authorType: 'doctor',
-          verified: true,
-          specialty: 'Dermatology',
-          community: 'dermatology',
-          timeAgo: '10 hours ago',
-          title: 'Skin Cancer Awareness: What to Look For',
-          content: 'Remember the ABCDE rule for melanoma: Asymmetry, Border irregularity, Color variation, Diameter >6mm, Evolving. Check your skin monthly and see a dermatologist annually if you have risk factors.',
-          tags: ['Dermatology', 'Prevention', 'Cancer Screening'],
-          upvotes: 234,
-          downvotes: 12,
-          score: 222,
-          comments: 56,
-          doctorReplies: 12,
-          userVote: null,
-          isSaved: false,
-          isHidden: false
-        }
-      ])
-    }
-  }, [posts.length, setPosts])
-  
-  const post = posts.find(p => p.id === postId)
+interface Post {
+  id: string
+  type: 'text' | 'image' | 'video' | 'link' | 'poll' | 'gallery'
+  title: string
+  content?: string
+  url?: string
+  mediaUrls?: string[]
+  author: string
+  authorType: 'patient' | 'doctor'
+  verified?: boolean
+  specialty?: string
+  community: string
+  timeAgo: string
+  upvotes: number
+  downvotes: number
+  score: number
+  comments: number
+  doctorReplies: number
+  tags: string[]
+  flair?: string
+  isPinned?: boolean
+  isNSFW?: boolean
+  isSpoiler?: boolean
+  isLocked?: boolean
+  isArchived?: boolean
+  userVote?: 1 | -1 | null
+  isSaved?: boolean
+  isHidden?: boolean
+}
 
-  if (!post) {
+export function PostDetail({ postId }: PostDetailProps) {
+  const [post, setPost] = useState<Post | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [showMenu, setShowMenu] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editContent, setEditContent] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const { votePost, savePost } = useStore()
+  const { user } = useJWTAuth()
+  const router = useRouter()
+  
+  const isAuthor = user?.username === post?.author
+  
+  // Fetch post from API
+  useEffect(() => {
+    const fetchPost = async () => {
+      setLoading(true)
+      try {
+        const response = await axios.get(`${API_URL}/api/v1/posts/${postId}`)
+        const apiPost = response.data
+        
+        // Transform API post to match our Post interface
+        const transformedPost: Post = {
+          id: apiPost.id,
+          type: apiPost.type?.toLowerCase() || 'text',
+          title: apiPost.title,
+          content: apiPost.content,
+          url: apiPost.url,
+          mediaUrls: apiPost.mediaUrls || [],
+          author: apiPost.author?.username || 'Unknown',
+          authorType: (apiPost.author?.role === 'VERIFIED_DOCTOR' || apiPost.author?.role === 'DOCTOR') ? 'doctor' : 'patient',
+          verified: apiPost.author?.role === 'VERIFIED_DOCTOR' || (apiPost.author?.role === 'DOCTOR' && apiPost.author?.doctorVerificationStatus === 'APPROVED'),
+          specialty: apiPost.author?.specialty,
+          community: apiPost.community?.name || 'general',
+          timeAgo: getTimeAgo(apiPost.createdAt),
+          upvotes: apiPost.upvotes || 0,
+          downvotes: apiPost.downvotes || 0,
+          score: apiPost.score || 0,
+          comments: apiPost.commentCount || 0,
+          doctorReplies: 0,
+          tags: [],
+          flair: apiPost.flair?.text,
+          isPinned: apiPost.isPinned,
+          isNSFW: apiPost.isNSFW,
+          isSpoiler: apiPost.isSpoiler,
+          isLocked: apiPost.isLocked,
+          isArchived: apiPost.isArchived,
+          userVote: apiPost.userVote || null,
+          isSaved: apiPost.isSaved || false,
+          isHidden: apiPost.isHidden || false,
+        }
+        
+        setPost(transformedPost)
+        setEditTitle(transformedPost.title)
+        setEditContent(transformedPost.content || '')
+      } catch (error) {
+        console.error('Failed to fetch post:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPost()
+  }, [postId])
+
+  const getTimeAgo = (date: Date | string): string => {
+    const now = new Date()
+    const past = new Date(date)
+    const diffMs = now.getTime() - past.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+    
+    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`
+    return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`
+  }
+
+  if (loading || !post) {
     return (
       <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center shadow-lg">
         <p className="text-gray-500">Loading post...</p>
@@ -129,8 +130,100 @@ export function PostDetail({ postId }: PostDetailProps) {
     )
   }
 
-  const handleVote = (value: 1 | -1) => {
-    votePost(postId, value)
+  const handleVote = async (value: 1 | -1) => {
+    const token = localStorage.getItem('auth_token')
+    await votePost(postId, value, token)
+    
+    // Update local state optimistically
+    setPost(prev => {
+      if (!prev) return prev
+      const oldVote = prev.userVote || 0
+      const newVote = prev.userVote === value ? 0 : value
+      const scoreDiff = newVote - oldVote
+      
+      return {
+        ...prev,
+        userVote: newVote === 0 ? null : newVote,
+        score: prev.score + scoreDiff,
+        upvotes: newVote === 1 ? prev.upvotes + 1 : prev.upvotes - (oldVote === 1 ? 1 : 0),
+        downvotes: newVote === -1 ? prev.downvotes + 1 : prev.downvotes - (oldVote === -1 ? 1 : 0)
+      }
+    })
+  }
+
+  const handleSave = async () => {
+    const token = localStorage.getItem('auth_token')
+    await savePost(postId, token)
+    
+    // Update local state
+    setPost(prev => prev ? { ...prev, isSaved: !prev.isSaved } : prev)
+  }
+
+  const handleEdit = async () => {
+    if (!editTitle.trim()) {
+      alert('Title cannot be empty')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please login to edit posts')
+        return
+      }
+
+      await axios.put(
+        `${API_URL}/api/v1/posts/${postId}`,
+        {
+          title: editTitle,
+          content: editContent
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      )
+
+      alert('Post updated successfully!')
+      setIsEditing(false)
+      // Refresh post data
+      window.location.reload()
+    } catch (error: any) {
+      console.error('Failed to edit post:', error)
+      alert(error.response?.data?.error || 'Failed to edit post')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please login to delete posts')
+        return
+      }
+
+      await axios.delete(`${API_URL}/api/v1/posts/${postId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      alert('Post deleted successfully!')
+      router.push('/')
+    } catch (error: any) {
+      console.error('Failed to delete post:', error)
+      alert(error.response?.data?.error || 'Failed to delete post')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditTitle(post?.title || '')
+    setEditContent(post?.content || '')
   }
 
   return (
@@ -168,27 +261,207 @@ export function PostDetail({ postId }: PostDetailProps) {
         {/* Content */}
         <div className="flex-1 p-4">
           {/* Header */}
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-            <span className="font-semibold hover:underline cursor-pointer flex items-center gap-1">
-              {post.authorType === 'doctor' ? <Stethoscope className="w-4 h-4" /> : <User className="w-4 h-4" />}
-              {post.author}
-            </span>
-            {post.verified && (
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold flex items-center gap-1">
-                <CheckCircle className="w-3 h-3" />
-                Verified
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="font-semibold hover:underline cursor-pointer flex items-center gap-1">
+                {post.authorType === 'doctor' ? <Stethoscope className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                {post.author}
               </span>
+              {post.verified && (
+                <span className="px-2 py-0.5 bg-blue-600 text-white rounded-full text-xs font-bold flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Verified Doctor
+                </span>
+              )}
+              <span className="text-gray-500">• {post.timeAgo}</span>
+            </div>
+
+            {/* Author Actions Menu */}
+            {isAuthor && !isEditing && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className="p-1 hover:bg-gray-100 rounded-full transition"
+                >
+                  <MoreHorizontal className="w-5 h-5 text-gray-600" />
+                </button>
+                
+                {showMenu && (
+                  <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[120px]">
+                    <button
+                      onClick={() => {
+                        setIsEditing(true)
+                        setShowMenu(false)
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      Edit
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
-            <span className="text-gray-500">• {post.timeAgo}</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+          {isEditing ? (
+            <div className="mb-4">
+              <input
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-2xl font-bold focus:outline-none focus:border-blue-400"
+                placeholder="Post title"
+              />
+            </div>
+          ) : (
+            <h1 className="text-2xl font-bold mb-4">{post.title}</h1>
+          )}
 
-          {/* Content */}
-          <div className="prose max-w-none mb-4">
-            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-          </div>
+          {/* Text Content */}
+          {post.type === 'text' && (
+            <>
+              {isEditing ? (
+                <div className="mb-4">
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-base focus:outline-none focus:border-blue-400 resize-none"
+                    rows={8}
+                    placeholder="Post content (optional)"
+                  />
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button
+                      onClick={handleCancelEdit}
+                      className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleEdit}
+                      className="px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </div>
+              ) : post.content ? (
+                <div className="prose max-w-none mb-4">
+                  <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                </div>
+              ) : null}
+            </>
+          )}
+
+          {/* Image Content */}
+          {post.type === 'image' && post.mediaUrls && post.mediaUrls.length > 0 && (
+            <div className="mb-4">
+              <div className={`grid gap-3 ${post.mediaUrls.length === 1 ? 'grid-cols-1' : post.mediaUrls.length === 2 ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-3'}`}>
+                {post.mediaUrls.map((url, index) => (
+                  <img
+                    key={index}
+                    src={url}
+                    alt={`Image ${index + 1}`}
+                    className="w-full h-auto object-cover rounded-lg cursor-pointer hover:opacity-90 transition"
+                    onClick={() => window.open(url, '_blank')}
+                  />
+                ))}
+              </div>
+              {post.content && (
+                <div className="prose max-w-none mt-4">
+                  <p className="text-gray-800 leading-relaxed">{post.content}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Video Content */}
+          {post.type === 'video' && post.mediaUrls && post.mediaUrls.length > 0 && (
+            <div className="mb-4">
+              <video
+                src={post.mediaUrls[0]}
+                controls
+                className="w-full rounded-lg"
+                style={{ maxHeight: '500px' }}
+              />
+              {post.content && (
+                <div className="prose max-w-none mt-4">
+                  <p className="text-gray-800 leading-relaxed">{post.content}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Link Content */}
+          {post.type === 'link' && post.url && (
+            <div className="mb-4">
+              <a
+                href={post.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block p-4 border-2 border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50/50 transition"
+              >
+                <div className="flex items-center gap-2 text-blue-600 font-medium mb-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  <span className="text-lg">{new URL(post.url).hostname}</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">{post.url}</p>
+                {post.content && (
+                  <p className="text-gray-800">{post.content}</p>
+                )}
+              </a>
+            </div>
+          )}
+
+          {/* Poll Content */}
+          {post.type === 'poll' && post.content && (
+            <div className="mb-4">
+              {(() => {
+                try {
+                  const pollData = JSON.parse(post.content)
+                  return (
+                    <div className="space-y-3">
+                      {pollData.options?.map((option: string, index: number) => (
+                        <div
+                          key={index}
+                          className="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50/50 transition cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded-full border-2 border-gray-400"></div>
+                            <span className="text-gray-800 font-medium">{option}</span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex items-center gap-4 text-sm text-gray-600 pt-2">
+                        <span className="font-semibold">{pollData.totalVotes || 0} votes</span>
+                        <span>•</span>
+                        <span>{pollData.duration} days remaining</span>
+                      </div>
+                    </div>
+                  )
+                } catch {
+                  return (
+                    <div className="prose max-w-none">
+                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                    </div>
+                  )
+                }
+              })()}
+            </div>
+          )}
 
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-4">
@@ -217,7 +490,7 @@ export function PostDetail({ postId }: PostDetailProps) {
               <span>Share</span>
             </button>
             <button
-              onClick={() => savePost(postId)}
+              onClick={handleSave}
               className={`flex items-center gap-2 hover:bg-neutral-300/20 px-3 py-2 rounded-xl transition-all ${
                 post.isSaved ? 'text-[#FF4500] font-semibold' : ''
               }`}

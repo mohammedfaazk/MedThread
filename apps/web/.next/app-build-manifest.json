@@ -11,10 +11,100 @@
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
+    "/search/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/search/page.js"
+    ],
+    "/m/[community]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/m/[community]/page.js"
+    ],
+    "/post/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/post/[id]/page.js"
+    ],
+    "/doctors/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/doctors/page.js"
+    ],
+    "/profile/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/profile/page.js"
+    ],
     "/u/[username]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/u/[username]/page.js"
+    ],
+    "/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/login/page.js"
+    ],
+    "/dashboard/patient/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/patient/page.js"
+    ],
+    "/leaderboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/leaderboard/page.js"
+    ],
+    "/settings/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/settings/page.js"
+    ],
+    "/shop/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/shop/page.js"
+    ],
+    "/admin/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/page.js"
+    ],
+    "/signup/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/signup/page.js"
+    ],
+    "/signup/doctor/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/signup/doctor/page.js"
+    ],
+    "/doctor-verification/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/doctor-verification/page.js"
+    ],
+    "/communities/create/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/communities/create/page.js"
+    ],
+    "/chat/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/chat/page.js"
+    ],
+    "/dashboard/doctor/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/doctor/page.js"
+    ],
+    "/m/[community]/settings/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/m/[community]/settings/page.js"
     ]
   }
 }

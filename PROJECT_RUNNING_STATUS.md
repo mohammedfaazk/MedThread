@@ -1,283 +1,219 @@
-# 🚀 MedThread Project - Running Status Report
+# MedThread Project - Running Status ✅
 
-**Generated**: February 11, 2026, 7:53 PM  
-**Status**: ✅ RUNNING
+## Servers Running
 
----
-
-## 🎯 Application Status
-
-### ✅ Web Application (Frontend)
-- **Status**: ✅ RUNNING & READY
-- **URL**: http://localhost:3000
-- **Framework**: Next.js 14.1.0
-- **Build Time**: 13 seconds
-- **Environment**: Development mode with hot reload
-
-### ✅ AI Service
-- **Status**: ✅ RUNNING
-- **Port**: 3002
-- **Message**: "🤖 AI Service running on port 3002"
-
-### ⚠️ API Service (Backend)
-- **Status**: ⚠️ NEEDS RESTART
+### API Server
+- **Status**: ✅ Running
 - **Port**: 3001
-- **Issue**: Prisma client initialization error
-- **Solution**: The database package was rebuilt. Restart the dev server to pick up changes.
+- **URL**: http://localhost:3001
+- **Process ID**: 9
 
-### ✅ TypeScript Compilation
-- **@medthread/types**: ✅ 0 errors
-- **@medthread/ui**: ✅ 0 errors  
-- **@medthread/database**: ✅ 0 errors
-
----
-
-## 📦 Services Running
-
-| Service | Port | Status | URL |
-|---------|------|--------|-----|
-| Web App | 3000 | ✅ Running | http://localhost:3000 |
-| API | 3001 | ⚠️ Error | http://localhost:3001 |
-| AI Service | 3002 | ✅ Running | http://localhost:3002 |
+### Web Server
+- **Status**: ✅ Running
+- **Port**: 3000
+- **URL**: http://localhost:3000
+- **Process ID**: 4
 
 ---
 
-## 🎨 Design Features Active
+## Recent Changes Applied
 
-All Crextio-inspired design features are implemented and active:
+### Database Migration
+✅ Schema updated with:
+- `isDraft` field added to Post model
+- `publishedAt` field added to Post model
+- Index on `isDraft` added
+- Prisma Client regenerated
 
-- ✅ **Background**: Warm cream/beige gradient (`#F5F1E8` to `#EDE7DB`)
-- ✅ **Components**: Frosted glass effect with `bg-white/80 backdrop-blur-md`
-- ✅ **Icons**: Lucide React icons throughout
-- ✅ **Buttons**: Cyan (#06B6D4) and Blue (#3B82F6) colors
-- ✅ **Community Prefix**: m/ (MedThread-specific)
-- ✅ **Typography**: Clean, modern design
-- ✅ **Responsive**: Mobile-friendly layout
+### Backend Updates
+✅ Post Service enhanced with:
+- Draft creation and management
+- Publish draft functionality
+- Get saved posts endpoint
+- Get hidden posts endpoint
+- Get drafts endpoint
 
----
+✅ API Routes added:
+- `GET /api/v1/posts/drafts` - Get user's drafts
+- `POST /api/v1/posts/:id/publish` - Publish a draft
+- `GET /api/v1/posts/saved` - Get saved posts
+- `GET /api/v1/posts/hidden` - Get hidden posts
 
-## 🔧 Configuration Status
-
-### Environment Variables
-- ✅ Root `.env` configured with Supabase credentials
-- ✅ Web app `.env` configured
-- ✅ Database URL configured
-- ✅ JWT secrets configured
-- ✅ CORS settings configured
-
-### Database
-- ✅ Prisma schema with medical models
-- ✅ Prisma client generated (v6.13.0)
-- ✅ Models: MedicalThread, ThreadReply, CaseTimelineEvent
-- ⚠️ API needs restart to use updated client
-
-### Dependencies
-- ✅ All npm packages installed (620 packages)
-- ✅ Turbo monorepo tool active
-- ✅ TypeScript compilation working
+### Frontend Updates
+✅ Components updated:
+- PostCard shows "edited" indicator
+- Saved page fetches from API
+- Hidden page fetches from API
+- Store includes editedAt field
 
 ---
 
-## 📱 How to Access the Application
+## Available Features
 
-### 1. Open Your Browser
-Navigate to: **http://localhost:3000**
+### Posts System (Task 2 - COMPLETE)
+- ✅ Create posts (text, image, video, link, poll)
+- ✅ Edit posts (with "edited" indicator)
+- ✅ Delete posts (soft delete)
+- ✅ Vote on posts (upvote/downvote with toggle)
+- ✅ Save posts
+- ✅ Hide posts
+- ✅ Draft posts (save and publish later)
+- ✅ View saved posts
+- ✅ View hidden posts
+- ✅ Unhide posts
 
-### 2. Available Pages
+### Comments System
+- ✅ Create comments
+- ✅ Reply to comments (nested up to 10 levels)
+- ✅ Vote on comments
+- ✅ Collapse/expand comment threads
+- ✅ Verified doctor badge on comments
 
-#### Public Pages
-- `/` - Home page with post feed
-- `/login` - User login
-- `/signup` - User registration
-- `/signup/doctor` - Doctor registration
-- `/doctors` - Browse verified doctors
-- `/emergency` - Emergency resources
-- `/about` - About MedThread
-- `/help` - Help center
-
-#### Community Pages
-- `/m/cardiology` - Cardiology community
-- `/m/pediatrics` - Pediatrics community
-- `/m/[any-specialty]` - Any medical specialty
-
-#### User Pages (after login)
-- `/profile` - User profile
-- `/dashboard/patient` - Patient dashboard
-- `/dashboard/doctor` - Doctor dashboard
-- `/appointments` - Appointment management
-- `/chat` - Chat with doctors
-- `/history` - Medical history
-- `/settings` - Account settings
-
-#### Admin Pages
-- `/admin` - Admin dashboard (requires admin role)
-- `/doctor-verification` - Doctor verification system
-
----
-
-## 🎮 Testing the Application
-
-### Quick Test Steps
-
-1. **Homepage Test**
-   ```
-   Open: http://localhost:3000
-   Expected: See MedThread homepage with gradient background
-   ```
-
-2. **Navigation Test**
-   ```
-   Click: Doctors link in navbar
-   Expected: See list of verified doctors
-   ```
-
-3. **Community Test**
-   ```
-   Open: http://localhost:3000/m/cardiology
-   Expected: See cardiology community page
-   ```
-
-4. **Design Test**
-   ```
-   Check: All components have frosted glass effect
-   Check: Buttons are cyan/blue (not black)
-   Check: Icons are from Lucide React
-   ```
-
----
-
-## 🔄 To Restart API Service
-
-The API service needs to be restarted to pick up the Prisma client changes:
-
-### Option 1: Restart All Services
-```bash
-# Stop current process (Ctrl+C in terminal)
-# Then run:
-npm run dev
-```
-
-### Option 2: Restart Just the API
-```bash
-# In a new terminal:
-cd apps/api
-npm run dev
-```
-
----
-
-## 📊 Build Information
-
-### Packages Built
-- ✅ @medthread/types - Type definitions
-- ✅ @medthread/database - Prisma database layer
-- ✅ @medthread/ui - Shared UI components
-- ✅ @medthread/ai - AI service
-- ⚠️ @medthread/api - Backend API (needs restart)
-- ✅ @medthread/web - Next.js frontend
-
-### TypeScript Compilation
-- **Types**: 0 errors, watching for changes
-- **UI**: 0 errors, watching for changes
-- **Database**: 0 errors, watching for changes
-
----
-
-## 🌟 Key Features Available
+### Emergency Services
+- ✅ Emergency page with 108 button
+- ✅ Interactive map with hospital locator
+- ✅ First aid guide
 
 ### Authentication
-- ✅ User signup/login (mock mode)
+- ✅ User login/signup
 - ✅ Doctor verification system
-- ✅ Role-based access control
 - ✅ JWT authentication
-
-### Medical Features
-- ✅ Medical thread creation
-- ✅ Doctor-patient communication
-- ✅ Appointment booking system
-- ✅ Case timeline tracking
-- ✅ Symptom reporting
-
-### UI/UX Features
-- ✅ Responsive design
-- ✅ Real-time updates
-- ✅ Search functionality
-- ✅ Community pages
-- ✅ User profiles
-- ✅ Doctor profiles
+- ✅ Role-based access control
 
 ---
 
-## 📝 Current Limitations
+## Testing the Application
 
-### API Service
-- ⚠️ API service crashed due to Prisma client issue
-- ✅ **Solution**: Restart the dev server
-- ℹ️ Web app works with mock data in the meantime
+### 1. Access the Application
+Open your browser and navigate to:
+```
+http://localhost:3000
+```
 
-### Database
-- ℹ️ Using Supabase PostgreSQL
-- ℹ️ Schema is defined but API needs restart to connect
-- ✅ All models are properly defined
+### 2. Test Posts Features
+1. **Create a Post**
+   - Click "Create Post" button
+   - Fill in title and content
+   - Select community
+   - Choose post type (text, image, video, link, poll)
+   - Click "Post" or "Save as Draft"
 
----
+2. **Vote on Posts**
+   - Click upvote/downvote arrows
+   - Click again to remove vote
 
-## 🎯 Next Steps
+3. **Save Posts**
+   - Click "Save" button on any post
+   - View saved posts at `/saved`
 
-### Immediate Actions
-1. ✅ Web app is accessible at http://localhost:3000
-2. ⚠️ Restart dev server to fix API service
-3. ✅ Test all pages and features
-4. ✅ Verify design system implementation
+4. **Hide Posts**
+   - Click "Hide" button on any post
+   - View hidden posts at `/hidden`
+   - Click "Unhide" to restore
 
-### Optional Enhancements
-- Set up database migrations
-- Configure production environment
-- Add more test data
-- Set up CI/CD pipeline
-- Deploy to production
+5. **Edit Posts**
+   - Click on your own post
+   - Click "Edit" button
+   - Make changes and save
+   - Notice "edited" indicator appears
 
----
+### 3. Test Comments
+1. Click on any post to view details
+2. Add a comment in the text area
+3. Reply to existing comments
+4. Vote on comments
+5. Collapse/expand comment threads
 
-## 🔗 Quick Links
-
-- **Web App**: http://localhost:3000
-- **API Docs**: `docs/api.md`
-- **Design System**: `docs/design-system.md`
-- **Setup Guide**: `HOW_TO_RUN.md`
-- **Quick Start**: `QUICK_START.md`
-
----
-
-## 📞 Support
-
-### Documentation
-- `HOW_TO_RUN.md` - Complete setup guide
-- `QUICK_START.md` - Quick reference
-- `docs/` - Comprehensive documentation
-
-### Common Issues
-- **Port in use**: Kill process or change port
-- **Prisma errors**: Run `npm run db:generate`
-- **Build errors**: Run `npm install` and `npm run build`
-- **TypeScript errors**: Check `tsconfig.json` files
+### 4. Test Verified Doctor Badge
+1. Login as a verified doctor
+2. Create a post or comment
+3. Notice the blue "Verified Doctor" badge appears
 
 ---
 
-## ✨ Summary
+## API Endpoints Available
 
-**The MedThread application is successfully running!**
+### Authentication
+```
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET  /api/v1/auth/me
+```
 
-- ✅ Web application accessible at http://localhost:3000
-- ✅ Beautiful Crextio-inspired design active
-- ✅ All UI components working
-- ✅ TypeScript compilation successful
-- ✅ AI service running
-- ⚠️ API service needs restart (simple fix)
+### Posts
+```
+POST   /api/v1/posts              - Create post
+GET    /api/v1/posts              - List posts
+GET    /api/v1/posts/:id          - Get single post
+PUT    /api/v1/posts/:id          - Update post
+DELETE /api/v1/posts/:id          - Delete post
+POST   /api/v1/posts/:id/vote     - Vote on post
+POST   /api/v1/posts/:id/save     - Save/unsave post
+POST   /api/v1/posts/:id/hide     - Hide/unhide post
+GET    /api/v1/posts/drafts       - Get user's drafts
+POST   /api/v1/posts/:id/publish  - Publish draft
+GET    /api/v1/posts/saved        - Get saved posts
+GET    /api/v1/posts/hidden       - Get hidden posts
+```
 
-**You can start using the application right now by opening http://localhost:3000 in your browser!** 🎉
+### Comments
+```
+POST   /api/v1/comments           - Create comment
+GET    /api/v1/comments           - List comments
+PUT    /api/v1/comments/:id       - Update comment
+DELETE /api/v1/comments/:id       - Delete comment
+POST   /api/v1/comments/:id/vote  - Vote on comment
+```
+
+### Communities
+```
+GET    /api/v1/communities        - List communities
+POST   /api/v1/communities        - Create community
+```
 
 ---
 
-**Status**: Ready for development and testing  
-**Last Updated**: February 11, 2026, 7:53 PM
+## Known Issues
+
+### None Currently
+All features are working as expected after the recent fixes.
+
+---
+
+## Next Steps
+
+### Recommended Testing
+1. ✅ Test post creation with all types
+2. ✅ Test voting system
+3. ✅ Test save/hide functionality
+4. ✅ Test draft system
+5. ✅ Test comments with verified doctor badge
+6. ✅ Test edit functionality and "edited" indicator
+
+### Future Enhancements
+- Task 3: Communities System (partially done)
+- Task 16: Search & Discovery
+- Task 17: Filtering & Sorting (algorithms done, UI needed)
+- Task 21: Karma System (backend done, UI needed)
+- Task 22: Awards System
+
+---
+
+## Stopping the Servers
+
+If you need to stop the servers, use these commands:
+
+```bash
+# Stop API server
+# Process ID: 9
+
+# Stop Web server
+# Process ID: 4
+```
+
+Or press `Ctrl+C` in the terminal where the servers are running.
+
+---
+
+**Last Updated**: February 16, 2026
+**Status**: ✅ All systems operational

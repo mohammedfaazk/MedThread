@@ -27,7 +27,6 @@ export function DoctorProfile() {
     
     const [profileData, setProfileData] = useState({
         username: '',
-        full_name: '',
         email: '',
         specialty: '',
         subSpecialty: '',
@@ -63,7 +62,6 @@ export function DoctorProfile() {
                     console.log('[DoctorProfile] User data from API:', userData)
                     setProfileData({
                         username: userData.username || '',
-                        full_name: userData.full_name || userData.username || '',
                         email: userData.email || '',
                         specialty: userData.specialty || '',
                         subSpecialty: userData.subSpecialty || '',
@@ -87,7 +85,6 @@ export function DoctorProfile() {
                     console.log('[DoctorProfile] Using fallback from context:', user)
                     setProfileData({
                         username: user.username || '',
-                        full_name: (user as any)?.full_name || user.username || '',
                         email: user.email || '',
                         specialty: (user as any)?.specialty || '',
                         subSpecialty: (user as any)?.subSpecialty || '',
@@ -145,7 +142,6 @@ export function DoctorProfile() {
                     const userData = response.data.data
                     setProfileData({
                         username: userData.username || '',
-                        full_name: userData.full_name || userData.username || '',
                         email: userData.email || '',
                         specialty: userData.specialty || '',
                         subSpecialty: userData.subSpecialty || '',
@@ -194,7 +190,7 @@ export function DoctorProfile() {
                         </div>
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                Dr. {profileData.full_name || profileData.username}
+                                Dr. {profileData.username}
                             </h1>
                             <div className="flex items-center gap-2 mb-2">
                                 <Shield className="w-4 h-4 text-green-600" />

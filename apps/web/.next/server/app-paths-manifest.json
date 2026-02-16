@@ -1,4 +1,8 @@
 {
   "/page": "app/page.js",
-  "/u/[username]/page": "app/u/[username]/page.js"
+  "/dashboard/doctor/page": "app/dashboard/doctor/page.js",
+  "/communities/create/page": "app/communities/create/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/m/[community]/page": "app/m/[community]/page.js",
+  "/m/[community]/settings/page": "app/m/[community]/settings/page.js"
 }

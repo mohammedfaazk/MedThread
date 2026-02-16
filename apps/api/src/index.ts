@@ -16,6 +16,13 @@ import { doctorProfileEnhancedRouter } from './routes/doctor-profile-enhanced.ro
 import { consultationFunnelRouter } from './routes/consultation-funnel.routes';
 import { cmeCreditsRouter } from './routes/cme-credits.routes';
 import { healthInsightsRouter } from './routes/health-insights.routes';
+import postsRouter from './routes/posts';
+import commentsRouter from './routes/comments';
+import communitiesRouter from './routes/communities';
+import searchRouter from './routes/search';
+import karmaRouter from './routes/karma';
+import awardsRouter from './routes/awards';
+import accountRouter from './routes/account';
 
 dotenv.config();
 
@@ -55,6 +62,15 @@ app.use('/api/doctor-profile', doctorProfileEnhancedRouter);
 app.use('/api/consultation-funnel', consultationFunnelRouter);
 app.use('/api/cme-credits', cmeCreditsRouter);
 app.use('/api/health-insights', healthInsightsRouter);
+
+// Posts & Comments System
+app.use('/api/v1/posts', postsRouter);
+app.use('/api/v1/comments', commentsRouter);
+app.use('/api/v1/communities', communitiesRouter);
+app.use('/api/v1/search', searchRouter);
+app.use('/api/v1/karma', karmaRouter);
+app.use('/api/v1/awards', awardsRouter);
+app.use('/api/v1/account', accountRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -1,53 +1,26 @@
 import { prisma } from '@medthread/database';
-import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 
 interface CreateCommentInput {
-  postId: string;
-  authorId: string;
   content: string;
+  authorId: string;
+  postId: string;
   parentId?: string;
 }
 
-export class CommentService {
+export const commentService = {
   async createComment(data: CreateCommentInput) {
-    const post = await prisma.post.findUnique({
-      where: { id: data.postId }
-    });
-
-    if (!post) {
-      throw new NotFoundError('Post not found');
-    }
-
-    if (post.isLocked) {
-      throw new ForbiddenError('Post is locked, cannot add comments');
-    }
-
-    if (post.commentsDisabled) {
-      throw new ForbiddenError('Comments are disabled for this post');
-    }
-
-    if (post.isArchived) {
-      throw new ForbiddenError('Cannot comment on archived post');
-    }
-
+    // Calculate depth if it's a reply
     let depth = 0;
     if (data.parentId) {
-      const parentComment = await prisma.comment.findUnique({
-        where: { id: data.parentId }
+      const parent = await prisma.comment.findUnique({
+        where: { id: data.parentId },
+        select: { depth: true }
       });
+      depth = (parent?.depth || 0) + 1;
 
-      if (!parentComment) {
-        throw new NotFoundError('Parent comment not found');
-      }
-
-      if (parentComment.postId !== data.postId) {
-        throw new ValidationError('Parent comment does not belong to this post');
-      }
-
-      depth = parentComment.depth + 1;
-
+      // Limit nesting to 10 levels
       if (depth > 10) {
-        throw new ValidationError('Maximum comment depth exceeded');
+        throw new Error('Maximum comment nesting depth reached');
       }
     }
 
@@ -65,8 +38,15 @@ export class CommentService {
             id: true,
             username: true,
             role: true,
-            verified: true,
             avatar: true,
+            totalKarma: true,
+            doctorVerificationStatus: true,
+          }
+        },
+        _count: {
+          select: {
+            replies: true,
+            votes: true,
           }
         }
       }
@@ -81,39 +61,12 @@ export class CommentService {
     });
 
     return comment;
-  }
+  },
 
-  async getCommentsByPostId(postId: string, userId?: string, sortBy: 'best' | 'new' | 'top' | 'controversial' = 'best') {
-    const post = await prisma.post.findUnique({
-      where: { id: postId }
-    });
-
-    if (!post) {
-      throw new NotFoundError('Post not found');
-    }
-
-    let orderBy: any = {};
-    switch (sortBy) {
-      case 'new':
-        orderBy = { createdAt: 'desc' };
-        break;
-      case 'top':
-        orderBy = { score: 'desc' };
-        break;
-      case 'controversial':
-        // Comments with similar upvotes and downvotes
-        orderBy = { score: 'asc' };
-        break;
-      case 'best':
-      default:
-        orderBy = [{ score: 'desc' }, { createdAt: 'desc' }];
-        break;
-    }
-
+  async getCommentsByPost(postId: string, userId?: string) {
     const comments = await prisma.comment.findMany({
       where: {
         postId,
-        parentId: null, // Only top-level comments
         isRemoved: false,
       },
       include: {
@@ -122,151 +75,88 @@ export class CommentService {
             id: true,
             username: true,
             role: true,
-            verified: true,
             avatar: true,
+            totalKarma: true,
             specialty: true,
-          }
-        },
-        replies: {
-          include: {
-            author: {
-              select: {
-                id: true,
-                username: true,
-                role: true,
-                verified: true,
-                avatar: true,
-                specialty: true,
-              }
-            },
-            _count: {
-              select: {
-                replies: true,
-              }
-            }
-          },
-          orderBy: { score: 'desc' },
-          take: 3, // Load first 3 replies
-        },
-        _count: {
-          select: {
-            replies: true,
-          }
-        }
-      },
-      orderBy,
-    });
-
-    // Get user votes if authenticated
-    let userVotes: Record<string, number> = {};
-    if (userId) {
-      const allCommentIds = comments.flatMap(c => [c.id, ...c.replies.map(r => r.id)]);
-      const votes = await prisma.vote.findMany({
-        where: {
-          userId,
-          commentId: { in: allCommentIds }
-        }
-      });
-      userVotes = votes.reduce((acc, vote) => {
-        if (vote.commentId) {
-          acc[vote.commentId] = vote.value;
-        }
-        return acc;
-      }, {} as Record<string, number>);
-    }
-
-    return comments.map(comment => ({
-      ...comment,
-      userVote: userVotes[comment.id] || null,
-      replies: comment.replies.map(reply => ({
-        ...reply,
-        userVote: userVotes[reply.id] || null,
-      }))
-    }));
-  }
-
-  async getCommentReplies(commentId: string, userId?: string) {
-    const comment = await prisma.comment.findUnique({
-      where: { id: commentId }
-    });
-
-    if (!comment) {
-      throw new NotFoundError('Comment not found');
-    }
-
-    const replies = await prisma.comment.findMany({
-      where: {
-        parentId: commentId,
-        isRemoved: false,
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            role: true,
-            verified: true,
-            avatar: true,
-            specialty: true,
+            doctorVerificationStatus: true,
           }
         },
         _count: {
           select: {
             replies: true,
+            votes: true,
           }
         }
       },
-      orderBy: { score: 'desc' },
-    });
-
-    // Get user votes if authenticated
-    let userVotes: Record<string, number> = {};
-    if (userId) {
-      const votes = await prisma.vote.findMany({
-        where: {
-          userId,
-          commentId: { in: replies.map(r => r.id) }
-        }
-      });
-      userVotes = votes.reduce((acc, vote) => {
-        if (vote.commentId) {
-          acc[vote.commentId] = vote.value;
-        }
-        return acc;
-      }, {} as Record<string, number>);
-    }
-
-    return replies.map(reply => ({
-      ...reply,
-      userVote: userVotes[reply.id] || null,
-    }));
-  }
-
-  async updateComment(commentId: string, userId: string, content: string) {
-    const comment = await prisma.comment.findUnique({
-      where: { id: commentId },
-      include: {
-        post: true,
+      orderBy: {
+        createdAt: 'asc'
       }
     });
 
+    // Get user votes if userId provided
+    let userVotes: Record<string, number> = {};
+    if (userId) {
+      const votes = await prisma.vote.findMany({
+        where: {
+          userId,
+          commentId: { in: comments.map(c => c.id) }
+        }
+      });
+      userVotes = votes.reduce((acc, vote) => {
+        acc[vote.commentId!] = vote.value;
+        return acc;
+      }, {} as Record<string, number>);
+    }
+
+    // Build comment tree
+    return this.buildCommentTree(comments, userVotes);
+  },
+
+  buildCommentTree(comments: any[], userVotes: Record<string, number> = {}) {
+    const commentMap = new Map();
+    const rootComments: any[] = [];
+
+    // First pass: create map
+    comments.forEach(comment => {
+      commentMap.set(comment.id, {
+        ...comment,
+        replies: [],
+        userVote: userVotes[comment.id] || null,
+      });
+    });
+
+    // Second pass: build tree
+    comments.forEach(comment => {
+      const commentNode = commentMap.get(comment.id);
+      if (comment.parentId) {
+        const parent = commentMap.get(comment.parentId);
+        if (parent) {
+          parent.replies.push(commentNode);
+        }
+      } else {
+        rootComments.push(commentNode);
+      }
+    });
+
+    return rootComments;
+  },
+
+  async updateComment(commentId: string, userId: string, content: string) {
+    // Verify ownership
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      select: { authorId: true }
+    });
+
     if (!comment) {
-      throw new NotFoundError('Comment not found');
+      throw new Error('Comment not found');
     }
 
     if (comment.authorId !== userId) {
-      throw new ForbiddenError('Not authorized to update this comment');
+      throw new Error('Unauthorized');
     }
 
-    if (comment.isLocked) {
-      throw new ForbiddenError('Comment is locked and cannot be edited');
-    }
-
-    if (comment.post.isArchived) {
-      throw new ForbiddenError('Cannot edit comment on archived post');
-    }
-
-    const updatedComment = await prisma.comment.update({
+    return await prisma.comment.update({
       where: { id: commentId },
       data: {
         content,
@@ -278,47 +168,36 @@ export class CommentService {
             id: true,
             username: true,
             role: true,
-            verified: true,
+            avatar: true,
+            doctorVerificationStatus: true,
           }
         }
       }
     });
+  },
 
-    return updatedComment;
-  }
-
-  async deleteComment(commentId: string, userId: string, userRole: string) {
+  async deleteComment(commentId: string, userId: string) {
+    // Verify ownership
     const comment = await prisma.comment.findUnique({
       where: { id: commentId },
-      include: {
-        post: {
-          include: {
-            community: {
-              include: {
-                moderators: {
-                  where: { userId }
-                }
-              }
-            }
-          }
-        }
-      }
+      select: { authorId: true, postId: true }
     });
 
     if (!comment) {
-      throw new NotFoundError('Comment not found');
+      throw new Error('Comment not found');
     }
 
-    const isAuthor = comment.authorId === userId;
-    const isModerator = comment.post.community.moderators.length > 0;
-    const isAdmin = userRole === 'ADMIN';
-
-    if (!isAuthor && !isModerator && !isAdmin) {
-      throw new ForbiddenError('Not authorized to delete this comment');
+    if (comment.authorId !== userId) {
+      throw new Error('Unauthorized');
     }
 
-    await prisma.comment.delete({
-      where: { id: commentId }
+    // Soft delete
+    const deleted = await prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        isRemoved: true,
+        content: '[deleted]',
+      }
     });
 
     // Update post comment count
@@ -329,26 +208,15 @@ export class CommentService {
       }
     });
 
-    return { message: 'Comment deleted successfully' };
-  }
+    return deleted;
+  },
 
-  async voteComment(commentId: string, userId: string, value: 1 | -1) {
-    const comment = await prisma.comment.findUnique({
-      where: { id: commentId },
-      include: {
-        post: true,
-      }
-    });
-
-    if (!comment) {
-      throw new NotFoundError('Comment not found');
+  async voteComment(commentId: string, userId: string, value: number) {
+    if (value !== 1 && value !== -1) {
+      throw new Error('Vote value must be 1 or -1');
     }
 
-    if (comment.post.isArchived) {
-      throw new ForbiddenError('Cannot vote on comment in archived post');
-    }
-
-    // Check existing vote
+    // Check if vote exists
     const existingVote = await prisma.vote.findUnique({
       where: {
         userId_commentId: {
@@ -358,79 +226,55 @@ export class CommentService {
       }
     });
 
-    let scoreDelta = 0;
-    let upvoteDelta = 0;
-    let downvoteDelta = 0;
+    let voteChange = 0;
 
     if (existingVote) {
       if (existingVote.value === value) {
-        // Remove vote
+        // Remove vote (toggle off)
         await prisma.vote.delete({
-          where: {
-            userId_commentId: {
-              userId,
-              commentId
-            }
-          }
+          where: { id: existingVote.id }
         });
-        scoreDelta = -value;
-        if (value === 1) upvoteDelta = -1;
-        else downvoteDelta = -1;
+        voteChange = -value;
       } else {
-        // Change vote
+        // Update vote
         await prisma.vote.update({
-          where: {
-            userId_commentId: {
-              userId,
-              commentId
-            }
-          },
+          where: { id: existingVote.id },
           data: { value }
         });
-        scoreDelta = value * 2;
-        if (value === 1) {
-          upvoteDelta = 1;
-          downvoteDelta = -1;
-        } else {
-          upvoteDelta = -1;
-          downvoteDelta = 1;
-        }
+        voteChange = value - existingVote.value;
       }
     } else {
       // Create new vote
       await prisma.vote.create({
-        data: {
-          userId,
-          commentId,
-          value
-        }
+        data: { userId, commentId, value }
       });
-      scoreDelta = value;
-      if (value === 1) upvoteDelta = 1;
-      else downvoteDelta = 1;
+      voteChange = value;
     }
 
     // Update comment score
-    const updatedComment = await prisma.comment.update({
+    const comment = await prisma.comment.update({
       where: { id: commentId },
       data: {
-        score: { increment: scoreDelta },
-        upvotes: { increment: upvoteDelta },
-        downvotes: { increment: downvoteDelta }
+        upvotes: value === 1 ? { increment: voteChange > 0 ? 1 : -1 } : undefined,
+        downvotes: value === -1 ? { increment: voteChange < 0 ? 1 : -1 } : undefined,
+        score: { increment: voteChange }
+      },
+      select: {
+        score: true,
+        upvotes: true,
+        downvotes: true,
+        authorId: true,
       }
     });
 
     // Update author karma
-    await prisma.user.update({
-      where: { id: comment.authorId },
-      data: {
-        commentKarma: { increment: scoreDelta },
-        totalKarma: { increment: scoreDelta }
-      }
-    });
+    const { karmaService } = await import('./karma.service');
+    await karmaService.updateUserKarma(comment.authorId);
 
-    return updatedComment;
-  }
-}
-
-export const commentService = new CommentService();
+    return {
+      score: comment.score,
+      upvotes: comment.upvotes,
+      downvotes: comment.downvotes,
+    };
+  },
+};
