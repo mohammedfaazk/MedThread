@@ -1,60 +1,39 @@
 import { Router } from 'express';
-import { adminController } from '../controllers/admin.controller';
 import { authenticate } from '../middleware/auth.refactored';
 import { requireAdmin } from '../middleware/requireAdmin';
+import { adminController } from '../controllers/admin.controller';
 
 const router = Router();
 
 // All admin routes require authentication and admin role
-router.use(authenticate, requireAdmin);
+router.use(authenticate);
+router.use(requireAdmin);
 
-/**
- * @route   GET /api/v1/admin/stats
- * @desc    Get platform statistics
- * @access  Private (Admin only)
- */
+// Platform Statistics
 router.get('/stats', adminController.getPlatformStats);
 
-/**
- * @route   GET /api/v1/admin/users
- * @desc    Get all users with filters
- * @access  Private (Admin only)
- */
+// User Management
 router.get('/users', adminController.getUsers);
+router.put('/users/:id/suspend', adminController.suspendUser);
+router.put('/users/:id/unsuspend', adminController.unsuspendUser);
+router.delete('/users/:id', adminController.deleteUser);
 
-/**
- * @route   POST /api/v1/admin/users/:userId/suspend
- * @desc    Suspend user account
- * @access  Private (Admin only)
- */
-router.post('/users/:userId/suspend', adminController.suspendUser);
+// Post Management
+router.get('/posts', adminController.getPosts);
+router.delete('/posts/:id', adminController.deletePost);
+router.put('/posts/:id/pin', adminController.togglePinPost);
+router.put('/posts/:id/lock', adminController.toggleLockPost);
 
-/**
- * @route   POST /api/v1/admin/users/:userId/unsuspend
- * @desc    Unsuspend user account
- * @access  Private (Admin only)
- */
-router.post('/users/:userId/unsuspend', adminController.unsuspendUser);
+// Comment Management
+router.get('/comments', adminController.getComments);
+router.delete('/comments/:id', adminController.deleteComment);
 
-/**
- * @route   DELETE /api/v1/admin/users/:userId
- * @desc    Delete user account
- * @access  Private (Admin only)
- */
-router.delete('/users/:userId', adminController.deleteUser);
-
-/**
- * @route   GET /api/v1/admin/reports
- * @desc    Get reported content
- * @access  Private (Admin only)
- */
+// Report Management
 router.get('/reports', adminController.getReports);
+router.put('/reports/:id/resolve', adminController.resolveReport);
 
-/**
- * @route   POST /api/v1/admin/reports/:reportId/resolve
- * @desc    Resolve a report
- * @access  Private (Admin only)
- */
-router.post('/reports/:reportId/resolve', adminController.resolveReport);
+// Audit Logs
+router.get('/audit-logs', adminController.getAuditLogs);
+router.get('/audit-logs/stats', adminController.getAuditLogStats);
 
 export { router as adminRouter };

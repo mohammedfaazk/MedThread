@@ -6,6 +6,7 @@ import { useUser } from '@/context/UserContext'
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import ReportButton from '@/components/ReportButton'
 
 export default function UserProfilePage({ params }: { params: { username: string } }) {
   const [showBooking, setShowBooking] = useState(false)
@@ -171,6 +172,16 @@ export default function UserProfilePage({ params }: { params: { username: string
                   >
                     {showBooking ? 'Hide Booking' : 'Book Appointment'}
                   </button>
+                )}
+
+                {/* Report button - only show if not viewing own profile */}
+                {effectiveCurrentUserId && effectiveCurrentUserId !== profileUser.id && (
+                  <ReportButton 
+                    type="user" 
+                    targetId={profileUser.id}
+                    targetTitle={`User: ${profileUser.username || profileUser.full_name || profileUser.name || params.username}`}
+                    className="px-6 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50"
+                  />
                 )}
               </div>
             </div>

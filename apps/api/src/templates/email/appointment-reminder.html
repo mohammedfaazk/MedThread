@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Reminder</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <tr>
+            <td style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 40px 20px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 32px;">Appointment Reminder</h1>
+            </td>
+          </tr>
+          
+          <tr>
+            <td style="padding: 40px 30px;">
+              <h2 style="color: #333333; margin-top: 0;">Hi {{patientName}},</h2>
+              <p style="color: #666666; font-size: 16px; line-height: 1.6;">
+                This is a reminder about your upcoming appointment:
+              </p>
+              
+              <table width="100%" cellpadding="15" style="background-color: #f8f9fa; border-radius: 8px; margin: 20px 0;">
+                <tr>
+                  <td style="color: #666666; font-size: 14px;">
+                    <strong style="color: #333333;">Doctor:</strong> Dr. {{doctorName}}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: #666666; font-size: 14px;">
+                    <strong style="color: #333333;">Date:</strong> {{appointmentDate}}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: #666666; font-size: 14px;">
+                    <strong style="color: #333333;">Time:</strong> {{appointmentTime}}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="color: #666666; font-size: 14px;">
+                    <strong style="color: #333333;">Type:</strong> {{appointmentType}}
+                  </td>
+                </tr>
+              </table>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="{{appointmentUrl}}" style="background-color: #4facfe; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                  View Appointment
+                </a>
+              </div>
+              
+              <p style="color: #666666; font-size: 14px; line-height: 1.6;">
+                Please arrive 10 minutes early. If you need to reschedule, please contact us at least 24 hours in advance.
+              </p>
+            </td>
+          </tr>
+          
+          <tr>
+            <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+              <p style="color: #999999; font-size: 12px; margin: 0;">
+                © 2026 MedThread. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

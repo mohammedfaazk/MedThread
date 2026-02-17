@@ -54,8 +54,8 @@ export default function SymptomCheckerPage() {
               <div>
                 <h3 className="font-bold text-amber-900 mb-2">Important Medical Disclaimer</h3>
                 <p className="text-sm text-amber-800 leading-relaxed">
-                  This AI symptom checker is for informational purposes only and does not constitute medical advice. 
-                  Always consult with a qualified healthcare professional for proper diagnosis and treatment. 
+                  This AI symptom checker is for informational purposes only and does not constitute medical advice.
+                  Always consult with a qualified healthcare professional for proper diagnosis and treatment.
                   In case of emergency, call your local emergency services immediately.
                 </p>
               </div>
@@ -101,13 +101,13 @@ export default function SymptomCheckerPage() {
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
                 <Sparkles className="w-10 h-10 text-white" />
               </div>
-              
+
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 Coming Soon
               </h2>
-              
+
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                We're building an advanced AI-powered symptom checker that will help you understand your health better. 
+                We're building an advanced AI-powered symptom checker that will help you understand your health better.
                 This feature will analyze your symptoms, provide detailed insights, and recommend the right healthcare professionals.
               </p>
 
@@ -120,7 +120,7 @@ export default function SymptomCheckerPage() {
                   Browse Doctors
                   <ArrowRight className="w-5 h-5" />
                 </button>
-                
+
                 <button
                   onClick={() => router.push('/appointments')}
                   className="px-8 py-4 bg-white/60 backdrop-blur-sm text-gray-900 rounded-xl font-semibold hover:bg-white/80 transition-all shadow-lg hover:shadow-xl border border-white/40 flex items-center justify-center gap-2"

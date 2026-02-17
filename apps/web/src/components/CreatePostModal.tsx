@@ -52,16 +52,16 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
     }
 
     setPosts([newPost, ...posts])
-    
+
     // Reset form
     setTitle('')
     setContent('')
     setFlair('')
     setIsNSFW(false)
     setIsSpoiler(false)
-    
+
     onClose()
-    
+
     // Navigate to the new post
     router.push(`/post/${newPost.id}`)
   }
@@ -100,44 +100,40 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
           <div className="flex gap-2 mb-4 border-b border-gray-200/50">
             <button
               onClick={() => setPostType('text')}
-              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${
-                postType === 'text'
+              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${postType === 'text'
                   ? 'bg-yellow-100 text-charcoal'
                   : 'text-gray-600 hover:bg-cream-50/50'
-              }`}
+                }`}
             >
               <FileText className="w-4 h-4" />
               Text
             </button>
             <button
               onClick={() => setPostType('image')}
-              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${
-                postType === 'image'
+              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${postType === 'image'
                   ? 'bg-yellow-100 text-charcoal'
                   : 'text-gray-600 hover:bg-cream-50/50'
-              }`}
+                }`}
             >
               <Image className="w-4 h-4" />
               Image
             </button>
             <button
               onClick={() => setPostType('link')}
-              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${
-                postType === 'link'
+              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${postType === 'link'
                   ? 'bg-yellow-100 text-charcoal'
                   : 'text-gray-600 hover:bg-cream-50/50'
-              }`}
+                }`}
             >
               <Link2 className="w-4 h-4" />
               Link
             </button>
             <button
               onClick={() => setPostType('poll')}
-              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${
-                postType === 'poll'
+              className={`px-4 py-2 font-medium rounded-t-xl transition flex items-center gap-2 ${postType === 'poll'
                   ? 'bg-yellow-100 text-charcoal'
                   : 'text-gray-600 hover:bg-cream-50/50'
-              }`}
+                }`}
             >
               <BarChart3 className="w-4 h-4" />
               Poll

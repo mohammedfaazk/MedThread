@@ -85,6 +85,12 @@ export class AuthService {
   }
 
   async login(input: LoginInput): Promise<AuthResponse> {
+    // Log the login attempt (without password)
+    console.log('🔐 Login attempt:', { 
+      email: input.email,
+      timestamp: new Date().toISOString() 
+    });
+
     // Find user
     const user = await prisma.user.findUnique({
       where: { email: input.email },
@@ -100,16 +106,34 @@ export class AuthService {
     });
 
     if (!user) {
+      console.log('❌ User not found:', input.email);
       throw new UnauthorizedError('Invalid email or password');
     }
 
+    console.log('✅ User found:', { 
+      email: user.email, 
+      username: user.username,
+      role: user.role,
+      hasPasswordHash: !!user.passwordHash,
+      passwordHashLength: user.passwordHash?.length || 0
+    });
+
     // Check if user is suspended
     if (user.isSuspended) {
+      console.log('⛔ User suspended:', user.email);
       throw new UnauthorizedError('Account suspended. Please contact support.');
     }
 
+    // Check if passwordHash exists
+    if (!user.passwordHash) {
+      console.log('❌ No password hash for user:', user.email);
+      throw new UnauthorizedError('Invalid email or password');
+    }
+
     // Verify password
+    console.log('🔍 Comparing password...');
     const isValidPassword = await bcrypt.compare(input.password, user.passwordHash);
+    console.log('🔐 Password validation result:', isValidPassword ? '✅ VALID' : '❌ INVALID');
 
     if (!isValidPassword) {
       throw new UnauthorizedError('Invalid email or password');

@@ -7,6 +7,755 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                                              String                    @id @default(cuid())
+  email                                           String                    @unique
+  username                                        String                    @unique
+  passwordHash                                    String
+  role                                            UserRole                  @default(PATIENT)
+  verified                                        Boolean                   @default(false)
+  doctorVerificationStatus                        DoctorVerificationStatus?
+  medicalLicenseNumber                            String?
+  licenseIssuingAuthority                         String?
+  licenseExpiryDate                               DateTime?
+  specialty                                       String?
+  subSpecialty                                    String?
+  yearsOfExperience                               Int?
+  hospitalAffiliation                             String?
+  clinicAddress                                   String?
+  phone                                           String?
+  kycDocuments                                    Json?
+  verificationDocuments                           Json?
+  verificationNotes                               String?
+  verifiedAt                                      DateTime?
+  verifiedBy                                      String?
+  rejectionReason                                 String?
+  bio                                             String?
+  avatar                                          String?
+  banner                                          String?
+  postKarma                                       Int                       @default(0)
+  commentKarma                                    Int                       @default(0)
+  totalKarma                                      Int                       @default(0)
+  coins                                           Int                       @default(0)
+  isPremium                                       Boolean                   @default(false)
+  isNSFW                                          Boolean                   @default(false)
+  isSuspended                                     Boolean                   @default(false)
+  isShadowBanned                                  Boolean                   @default(false)
+  emailVerified                                   Boolean                   @default(false)
+  twoFactorEnabled                                Boolean                   @default(false)
+  createdAt                                       DateTime                  @default(now())
+  updatedAt                                       DateTime                  @updatedAt
+  AnalyticsEvent                                  AnalyticsEvent[]
+  appointmentsAsDoctor                            Appointment[]             @relation("DoctorAppointments")
+  appointmentsAsPatient                           Appointment[]             @relation("PatientAppointments")
+  auditLogs                                       AuditLog[]                @relation("AdminAuditLogs")
+  availabilities                                  Availability[]
+  givenAwards                                     AwardGiven[]
+  blockedBy                                       Block[]                   @relation("Blocked")
+  blockedUsers                                    Block[]                   @relation("Blocker")
+  timelineEvents                                  CaseTimelineEvent[]
+  comments                                        Comment[]
+  communities                                     CommunityMember[]
+  moderating                                      CommunityModerator[]
+  ConsultationFee_ConsultationFee_doctorIdToUser  ConsultationFee[]         @relation("ConsultationFee_doctorIdToUser")
+  ConsultationFee_ConsultationFee_patientIdToUser ConsultationFee[]         @relation("ConsultationFee_patientIdToUser")
+  ConversionEvent                                 ConversionEvent[]
+  following                                       Follow[]                  @relation("Following")
+  followers                                       Follow[]                  @relation("Followers")
+  hiddenPosts                                     HiddenPost[]
+  medicalThreads                                  MedicalThread[]           @relation("PatientThreads")
+  receivedMessages                                Message[]                 @relation("Receiver")
+  messages                                        Message[]                 @relation("Sender")
+  PageView                                        PageView[]
+  Payment                                         Payment[]
+  PaymentHistory                                  PaymentHistory[]
+  posts                                           Post[]
+  Refund                                          Refund[]
+  reports                                         Report[]                  @relation("UserReports")
+  savedComments                                   SavedComment[]
+  savedPosts                                      SavedPost[]
+  Subscription                                    Subscription[]
+  threadReplies                                   ThreadReply[]
+  UserAnalytics                                   UserAnalytics?
+  UserSession                                     UserSession[]
+  votes                                           Vote[]
+  email_queue                                     email_queue[]
+  notification_preferences                        notification_preferences?
+  notifications_notifications_actorIdToUser       notifications[]           @relation("notifications_actorIdToUser")
+  notifications_notifications_recipientIdToUser   notifications[]           @relation("notifications_recipientIdToUser")
+  conversations                                   Conversation[]            @relation("ConversationParticipants")
+
+  @@index([email])
+  @@index([username])
+  @@index([totalKarma])
+}
+
+model Community {
+  id           String               @id @default(cuid())
+  name         String               @unique
+  displayName  String
+  description  String?
+  icon         String?
+  banner       String?
+  theme        Json?
+  rules        Json?
+  isNSFW       Boolean              @default(false)
+  isPrivate    Boolean              @default(false)
+  isRestricted Boolean              @default(false)
+  memberCount  Int                  @default(0)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  members      CommunityMember[]
+  moderators   CommunityModerator[]
+  flairs       Flair[]
+  posts        Post[]
+
+  @@index([name])
+  @@index([memberCount])
+}
+
+model Post {
+  id               String          @id @default(cuid())
+  type             PostType        @default(TEXT)
+  title            String
+  content          String?
+  url              String?
+  mediaUrls        String[]
+  thumbnailUrl     String?
+  authorId         String
+  communityId      String
+  flairId          String?
+  upvotes          Int             @default(0)
+  downvotes        Int             @default(0)
+  score            Int             @default(0)
+  commentCount     Int             @default(0)
+  isNSFW           Boolean         @default(false)
+  isSpoiler        Boolean         @default(false)
+  isPinned         Boolean         @default(false)
+  isLocked         Boolean         @default(false)
+  isArchived       Boolean         @default(false)
+  isRemoved        Boolean         @default(false)
+  isDraft          Boolean         @default(false)
+  commentsDisabled Boolean         @default(false)
+  contestMode      Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  editedAt         DateTime?
+  publishedAt      DateTime?
+  awards           AwardGiven[]
+  comments         Comment[]
+  hiddenBy         HiddenPost[]
+  author           User            @relation(fields: [authorId], references: [id])
+  community        Community       @relation(fields: [communityId], references: [id])
+  flair            Flair?          @relation(fields: [flairId], references: [id])
+  PostAnalytics    PostAnalytics[]
+  reports          Report[]
+  savedBy          SavedPost[]
+  votes            Vote[]
+
+  @@index([authorId])
+  @@index([communityId])
+  @@index([score])
+  @@index([createdAt])
+  @@index([isDraft])
+}
+
+model Comment {
+  id              String         @id @default(cuid())
+  content         String
+  authorId        String
+  postId          String
+  parentId        String?
+  upvotes         Int            @default(0)
+  downvotes       Int            @default(0)
+  score           Int            @default(0)
+  depth           Int            @default(0)
+  isStickied      Boolean        @default(false)
+  isDistinguished Boolean        @default(false)
+  isRemoved       Boolean        @default(false)
+  isLocked        Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  editedAt        DateTime?
+  awards          AwardGiven[]
+  author          User           @relation(fields: [authorId], references: [id])
+  parent          Comment?       @relation("CommentReplies", fields: [parentId], references: [id])
+  replies         Comment[]      @relation("CommentReplies")
+  post            Post           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reports         Report[]
+  savedBy         SavedComment[]
+  votes           Vote[]
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentId])
+  @@index([score])
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String?
+  commentId String?
+  value     Int
+  createdAt DateTime @default(now())
+  comment   Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
+}
+
+model Flair {
+  id          String    @id @default(cuid())
+  text        String
+  color       String?
+  communityId String
+  isUserFlair Boolean   @default(false)
+  community   Community @relation(fields: [communityId], references: [id])
+  posts       Post[]
+
+  @@index([communityId])
+}
+
+model Award {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  icon        String
+  cost        Int
+  tier        Int          @default(1)
+  color       String       @default("#gray")
+  createdAt   DateTime     @default(now())
+  given       AwardGiven[]
+
+  @@index([cost])
+  @@index([tier])
+}
+
+model AwardGiven {
+  id        String   @id @default(cuid())
+  awardId   String
+  giverId   String
+  postId    String?
+  commentId String?
+  createdAt DateTime @default(now())
+  award     Award    @relation(fields: [awardId], references: [id])
+  comment   Comment? @relation(fields: [commentId], references: [id])
+  giver     User     @relation(fields: [giverId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id])
+
+  @@index([postId])
+  @@index([commentId])
+  @@index([giverId])
+}
+
+model SavedPost {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, postId])
+  @@index([userId])
+}
+
+model SavedComment {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  createdAt DateTime @default(now())
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, commentId])
+  @@index([userId])
+}
+
+model HiddenPost {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, postId])
+  @@index([userId])
+}
+
+model CommunityMember {
+  id          String    @id @default(cuid())
+  userId      String
+  communityId String
+  joinedAt    DateTime  @default(now())
+  community   Community @relation(fields: [communityId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, communityId])
+  @@index([userId])
+  @@index([communityId])
+}
+
+model CommunityModerator {
+  id          String    @id @default(cuid())
+  userId      String
+  communityId String
+  permissions Json
+  addedAt     DateTime  @default(now())
+  community   Community @relation(fields: [communityId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, communityId])
+  @@index([communityId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("Following", fields: [followerId], references: [id])
+  following   User     @relation("Followers", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id])
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id])
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  senderId       String
+  receiverId     String
+  subject        String?
+  content        String
+  isRead         Boolean       @default(false)
+  conversationId String?
+  attachment     String?
+  type           MessageType   @default(TEXT)
+  createdAt      DateTime      @default(now())
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  receiver       User          @relation("Receiver", fields: [receiverId], references: [id])
+  sender         User          @relation("Sender", fields: [senderId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String?
+  commentId String?
+  reason    String
+  details   String?
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+  comment   Comment? @relation(fields: [commentId], references: [id])
+  post      Post?    @relation(fields: [postId], references: [id])
+  user      User     @relation("UserReports", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Availability {
+  id        String   @id @default(cuid())
+  doctorId  String
+  dayOfWeek Int
+  startTime DateTime
+  endTime   DateTime
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  doctor    User     @relation(fields: [doctorId], references: [id])
+
+  @@index([doctorId])
+}
+
+model Appointment {
+  id           String            @id @default(cuid())
+  patientId    String
+  doctorId     String
+  startTime    DateTime
+  endTime      DateTime
+  status       AppointmentStatus @default(PENDING)
+  reason       String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  doctor       User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  patient      User              @relation("PatientAppointments", fields: [patientId], references: [id])
+  conversation Conversation?
+
+  @@index([patientId])
+  @@index([doctorId])
+}
+
+model Conversation {
+  id            String       @id @default(cuid())
+  appointmentId String?      @unique
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  messages      Message[]
+  participants  User[]       @relation("ConversationParticipants")
+}
+
+model MedicalThread {
+  id            String              @id @default(cuid())
+  patientId     String
+  title         String
+  symptoms      Json
+  severityScore String?
+  tags          String[]
+  status        String              @default("OPEN")
+  isResolved    Boolean             @default(false)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  timeline      CaseTimelineEvent[]
+  patient       User                @relation("PatientThreads", fields: [patientId], references: [id])
+  replies       ThreadReply[]
+
+  @@index([patientId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+model ThreadReply {
+  id             String        @id @default(cuid())
+  threadId       String
+  parentReplyId  String?
+  authorId       String
+  authorRole     UserRole
+  content        String
+  doctorVerified Boolean       @default(false)
+  upvotes        Int           @default(0)
+  downvotes      Int           @default(0)
+  isHelpful      Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  author         User          @relation(fields: [authorId], references: [id])
+  parentReply    ThreadReply?  @relation("ReplyReplies", fields: [parentReplyId], references: [id])
+  childReplies   ThreadReply[] @relation("ReplyReplies")
+  thread         MedicalThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([authorId])
+  @@index([parentReplyId])
+}
+
+model CaseTimelineEvent {
+  id        String        @id @default(cuid())
+  threadId  String
+  userId    String
+  eventType String
+  data      Json
+  timestamp DateTime      @default(now())
+  thread    MedicalThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([threadId])
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  action     AuditAction
+  adminId    String
+  targetType String?
+  targetId   String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime    @default(now())
+  admin      User        @relation("AdminAuditLogs", fields: [adminId], references: [id])
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([targetType, targetId])
+}
+
+model AnalyticsEvent {
+  id            String   @id
+  eventName     String
+  eventCategory String
+  userId        String?
+  sessionId     String
+  properties    Json?
+  timestamp     DateTime @default(now())
+  ipAddress     String?
+  userAgent     String?
+  referrer      String?
+  page          String?
+  User          User?    @relation(fields: [userId], references: [id])
+
+  @@index([eventName])
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([userId])
+}
+
+model ConsultationFee {
+  id                                   String        @id
+  doctorId                             String
+  appointmentId                        String?
+  patientId                            String
+  amount                               Decimal       @db.Decimal(10, 2)
+  currency                             String        @default("USD")
+  paymentId                            String?
+  status                               PaymentStatus @default(PENDING)
+  paidAt                               DateTime?
+  createdAt                            DateTime      @default(now())
+  updatedAt                            DateTime      @default(now())
+  User_ConsultationFee_doctorIdToUser  User          @relation("ConsultationFee_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
+  User_ConsultationFee_patientIdToUser User          @relation("ConsultationFee_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
+  Payment                              Payment?      @relation(fields: [paymentId], references: [id])
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([paymentId])
+  @@index([status])
+}
+
+model ConversionEvent {
+  id             String   @id
+  userId         String?
+  sessionId      String
+  conversionType String
+  value          Decimal? @db.Decimal(10, 2)
+  metadata       Json?
+  timestamp      DateTime @default(now())
+  User           User?    @relation(fields: [userId], references: [id])
+
+  @@index([conversionType])
+  @@index([timestamp])
+  @@index([userId])
+}
+
+model PageView {
+  id        String   @id
+  userId    String?
+  sessionId String
+  page      String
+  title     String?
+  referrer  String?
+  duration  Int?
+  timestamp DateTime @default(now())
+  User      User?    @relation(fields: [userId], references: [id])
+
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([userId])
+}
+
+model Payment {
+  id                    String            @id
+  userId                String
+  amount                Decimal           @db.Decimal(10, 2)
+  currency              String            @default("USD")
+  status                PaymentStatus     @default(PENDING)
+  type                  PaymentType
+  stripePaymentIntentId String?
+  stripeChargeId        String?
+  description           String?
+  metadata              Json?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @default(now())
+  ConsultationFee       ConsultationFee[]
+  User                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  PaymentHistory        PaymentHistory[]
+  Refund                Refund[]
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([stripePaymentIntentId])
+  @@index([type])
+  @@index([userId])
+}
+
+model PaymentHistory {
+  id          String   @id
+  userId      String
+  paymentId   String
+  action      String
+  amount      Decimal? @db.Decimal(10, 2)
+  status      String?
+  description String?
+  createdAt   DateTime @default(now())
+  Payment     Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([paymentId])
+  @@index([userId])
+}
+
+model PostAnalytics {
+  id           String   @id
+  postId       String
+  views        Int?     @default(0)
+  uniqueViews  Int?     @default(0)
+  clicks       Int?     @default(0)
+  shares       Int?     @default(0)
+  avgTimeSpent Int?     @default(0)
+  bounceRate   Decimal? @default(0) @db.Decimal(5, 2)
+  lastUpdated  DateTime @default(now())
+  Post         Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model Refund {
+  id             String       @id
+  paymentId      String
+  userId         String
+  amount         Decimal      @db.Decimal(10, 2)
+  reason         String
+  status         RefundStatus @default(PENDING)
+  stripeRefundId String?
+  processedAt    DateTime?
+  processedBy    String?
+  adminNotes     String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @default(now())
+  Payment        Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  User           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+  @@index([status])
+  @@index([userId])
+}
+
+model Subscription {
+  id                   String             @id
+  userId               String
+  planName             String
+  planPrice            Decimal            @db.Decimal(10, 2)
+  status               SubscriptionStatus @default(ACTIVE)
+  stripeSubscriptionId String?
+  stripeCustomerId     String?
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  metadata             Json?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @default(now())
+  User                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([stripeSubscriptionId])
+  @@index([userId])
+}
+
+model UserAnalytics {
+  id              String    @id
+  userId          String    @unique
+  totalSessions   Int?      @default(0)
+  totalPageViews  Int?      @default(0)
+  totalTimeSpent  Int?      @default(0)
+  postsCreated    Int?      @default(0)
+  commentsCreated Int?      @default(0)
+  lastActive      DateTime?
+  lastUpdated     DateTime  @default(now())
+  User            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserSession {
+  id        String    @id
+  userId    String?
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+  duration  Int?
+  pageViews Int?      @default(0)
+  events    Int?      @default(0)
+  ipAddress String?
+  userAgent String?
+  device    String?
+  browser   String?
+  os        String?
+  User      User?     @relation(fields: [userId], references: [id])
+
+  @@index([startTime])
+  @@index([userId])
+}
+
+model email_queue {
+  id             String        @id
+  userId         String
+  notificationId String
+  type           String
+  status         String        @default("pending")
+  attempts       Int           @default(0)
+  lastAttemptAt  DateTime?
+  sentAt         DateTime?
+  error          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  notifications  notifications @relation(fields: [notificationId], references: [id])
+  User           User          @relation(fields: [userId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([userId, type])
+}
+
+model notification_preferences {
+  id              String   @id
+  userId          String   @unique
+  inApp           Json
+  email           Json
+  push            Json
+  quietHoursStart String?
+  quietHoursEnd   String?
+  digestFrequency String   @default("daily")
+  upvoteThreshold Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  User            User     @relation(fields: [userId], references: [id])
+}
+
+model notifications {
+  id                                   String           @id
+  type                                 NotificationType
+  recipientId                          String
+  actorId                              String
+  contentId                            String?
+  contentType                          ContentType?
+  metadata                             Json
+  isRead                               Boolean          @default(false)
+  readAt                               DateTime?
+  isDeleted                            Boolean          @default(false)
+  deletedAt                            DateTime?
+  createdAt                            DateTime         @default(now())
+  updatedAt                            DateTime
+  email_queue                          email_queue[]
+  User_notifications_actorIdToUser     User             @relation("notifications_actorIdToUser", fields: [actorId], references: [id])
+  User_notifications_recipientIdToUser User             @relation("notifications_recipientIdToUser", fields: [recipientId], references: [id])
+
+  @@index([recipientId, isDeleted])
+  @@index([recipientId, isRead, createdAt])
+  @@index([recipientId, type])
+}
+
 enum UserRole {
   PATIENT
   DOCTOR
@@ -45,402 +794,6 @@ enum SortType {
   BEST
 }
 
-model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  username          String    @unique
-  passwordHash      String
-  role              UserRole  @default(PATIENT)
-  verified          Boolean   @default(false)
-  
-  // Doctor-specific fields
-  doctorVerificationStatus DoctorVerificationStatus?
-  medicalLicenseNumber     String?
-  licenseIssuingAuthority  String?
-  licenseExpiryDate        DateTime?
-  specialty                String?
-  subSpecialty             String?
-  yearsOfExperience        Int?
-  hospitalAffiliation      String?
-  clinicAddress            String?
-  phone                    String?
-  
-  // KYC Documents (stored as URLs or base64)
-  kycDocuments             Json?  // { idProof, medicalDegree, licenseDocument, etc. }
-  verificationDocuments    Json?  // Additional verification docs
-  verificationNotes        String?  // Admin notes
-  verifiedAt               DateTime?
-  verifiedBy               String?  // Admin user ID who verified
-  rejectionReason          String?
-  
-  bio               String?
-  avatar            String?
-  banner            String?
-  postKarma         Int       @default(0)
-  commentKarma      Int       @default(0)
-  totalKarma        Int       @default(0)
-  isPremium         Boolean   @default(false)
-  isNSFW            Boolean   @default(false)
-  isSuspended       Boolean   @default(false)
-  isShadowBanned    Boolean   @default(false)
-  emailVerified     Boolean   @default(false)
-  twoFactorEnabled  Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
-  posts             Post[]
-  comments          Comment[]
-  votes             Vote[]
-  savedPosts        SavedPost[]
-  savedComments     SavedComment[]
-  hiddenPosts       HiddenPost[]
-  awards            Award[]
-  givenAwards       AwardGiven[]
-  communities       CommunityMember[]
-  moderating        CommunityModerator[]
-  following         Follow[]              @relation("Following")
-  followers         Follow[]              @relation("Followers")
-  blockedUsers      Block[]               @relation("Blocker")
-  blockedBy         Block[]               @relation("Blocked")
-  messages          Message[]             @relation("Sender")
-  receivedMessages  Message[]             @relation("Receiver")
-  notifications     Notification[]
-  reports           Report[]
-  
-  // Chat & Appointments
-  availabilities         Availability[]
-  appointmentsAsDoctor   Appointment[]    @relation("DoctorAppointments")
-  appointmentsAsPatient  Appointment[]    @relation("PatientAppointments")
-  conversations          Conversation[]   @relation("ConversationParticipants")
-  
-  // Medical Threads
-  medicalThreads         MedicalThread[]  @relation("PatientThreads")
-  threadReplies          ThreadReply[]
-  timelineEvents         CaseTimelineEvent[]
-  
-  @@index([email])
-  @@index([username])
-  @@index([totalKarma])
-}
-
-model Community {
-  id                String              @id @default(cuid())
-  name              String              @unique
-  displayName       String
-  description       String?
-  icon              String?
-  banner            String?
-  theme             Json?
-  rules             Json?
-  isNSFW            Boolean             @default(false)
-  isPrivate         Boolean             @default(false)
-  isRestricted      Boolean             @default(false)
-  memberCount       Int                 @default(0)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  
-  posts             Post[]
-  members           CommunityMember[]
-  moderators        CommunityModerator[]
-  flairs            Flair[]
-  
-  @@index([name])
-  @@index([memberCount])
-}
-
-model Post {
-  id                String        @id @default(cuid())
-  type              PostType      @default(TEXT)
-  title             String
-  content           String?
-  url               String?
-  mediaUrls         String[]
-  thumbnailUrl      String?
-  authorId          String
-  author            User          @relation(fields: [authorId], references: [id])
-  communityId       String
-  community         Community     @relation(fields: [communityId], references: [id])
-  flairId           String?
-  flair             Flair?        @relation(fields: [flairId], references: [id])
-  upvotes           Int           @default(0)
-  downvotes         Int           @default(0)
-  score             Int           @default(0)
-  commentCount      Int           @default(0)
-  isNSFW            Boolean       @default(false)
-  isSpoiler         Boolean       @default(false)
-  isPinned          Boolean       @default(false)
-  isLocked          Boolean       @default(false)
-  isArchived        Boolean       @default(false)
-  isRemoved         Boolean       @default(false)
-  commentsDisabled  Boolean       @default(false)
-  contestMode       Boolean       @default(false)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  editedAt          DateTime?
-  
-  comments          Comment[]
-  votes             Vote[]
-  savedBy           SavedPost[]
-  hiddenBy          HiddenPost[]
-  awards            AwardGiven[]
-  reports           Report[]
-  
-  @@index([authorId])
-  @@index([communityId])
-  @@index([score])
-  @@index([createdAt])
-}
-
-model Comment {
-  id              String      @id @default(cuid())
-  content         String
-  authorId        String
-  author          User        @relation(fields: [authorId], references: [id])
-  postId          String
-  post            Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
-  parentId        String?
-  parent          Comment?    @relation("CommentReplies", fields: [parentId], references: [id])
-  replies         Comment[]   @relation("CommentReplies")
-  upvotes         Int         @default(0)
-  downvotes       Int         @default(0)
-  score           Int         @default(0)
-  depth           Int         @default(0)
-  isStickied      Boolean     @default(false)
-  isDistinguished Boolean     @default(false)
-  isRemoved       Boolean     @default(false)
-  isLocked        Boolean     @default(false)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  editedAt        DateTime?
-  
-  votes           Vote[]
-  savedBy         SavedComment[]
-  awards          AwardGiven[]
-  reports         Report[]
-  
-  @@index([postId])
-  @@index([authorId])
-  @@index([parentId])
-  @@index([score])
-}
-
-model Vote {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  postId      String?
-  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  commentId   String?
-  comment     Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  value       Int      // 1 for upvote, -1 for downvote
-  createdAt   DateTime @default(now())
-  
-  @@unique([userId, postId])
-  @@unique([userId, commentId])
-  @@index([userId])
-  @@index([postId])
-  @@index([commentId])
-}
-
-model Flair {
-  id          String    @id @default(cuid())
-  text        String
-  color       String?
-  communityId String
-  community   Community @relation(fields: [communityId], references: [id])
-  isUserFlair Boolean   @default(false)
-  
-  posts       Post[]
-  
-  @@index([communityId])
-}
-
-model Award {
-  id          String       @id @default(cuid())
-  name        String
-  description String?
-  icon        String
-  cost        Int
-  tier        Int          @default(1)
-  
-  userId      String
-  user        User         @relation(fields: [userId], references: [id])
-  given       AwardGiven[]
-  
-  @@index([userId])
-}
-
-model AwardGiven {
-  id        String   @id @default(cuid())
-  awardId   String
-  award     Award    @relation(fields: [awardId], references: [id])
-  giverId   String
-  giver     User     @relation(fields: [giverId], references: [id])
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id])
-  commentId String?
-  comment   Comment? @relation(fields: [commentId], references: [id])
-  createdAt DateTime @default(now())
-  
-  @@index([postId])
-  @@index([commentId])
-  @@index([giverId])
-}
-
-model SavedPost {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  
-  @@unique([userId, postId])
-  @@index([userId])
-}
-
-model SavedComment {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  commentId String
-  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  
-  @@unique([userId, commentId])
-  @@index([userId])
-}
-
-model HiddenPost {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  postId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  
-  @@unique([userId, postId])
-  @@index([userId])
-}
-
-model CommunityMember {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  communityId String
-  community   Community @relation(fields: [communityId], references: [id])
-  joinedAt    DateTime  @default(now())
-  
-  @@unique([userId, communityId])
-  @@index([userId])
-  @@index([communityId])
-}
-
-model CommunityModerator {
-  id          String    @id @default(cuid())
-  userId      String
-  user        User      @relation(fields: [userId], references: [id])
-  communityId String
-  community   Community @relation(fields: [communityId], references: [id])
-  permissions Json
-  addedAt     DateTime  @default(now())
-  
-  @@unique([userId, communityId])
-  @@index([communityId])
-}
-
-model Follow {
-  id          String   @id @default(cuid())
-  followerId  String
-  follower    User     @relation("Following", fields: [followerId], references: [id])
-  followingId String
-  following   User     @relation("Followers", fields: [followingId], references: [id])
-  createdAt   DateTime @default(now())
-  
-  @@unique([followerId, followingId])
-  @@index([followerId])
-  @@index([followingId])
-}
-
-model Block {
-  id        String   @id @default(cuid())
-  blockerId String
-  blocker   User     @relation("Blocker", fields: [blockerId], references: [id])
-  blockedId String
-  blocked   User     @relation("Blocked", fields: [blockedId], references: [id])
-  createdAt DateTime @default(now())
-  
-  @@unique([blockerId, blockedId])
-  @@index([blockerId])
-}
-
-model Message {
-  id         String   @id @default(cuid())
-  senderId   String
-  sender     User     @relation("Sender", fields: [senderId], references: [id])
-  receiverId String
-  receiver   User     @relation("Receiver", fields: [receiverId], references: [id])
-  subject    String?
-  content    String
-  isRead     Boolean  @default(false)
-  
-  // New fields for Chat
-  conversationId String?
-  conversation   Conversation? @relation(fields: [conversationId], references: [id])
-  attachment     String?
-  type           MessageType   @default(TEXT)
-  
-  createdAt  DateTime @default(now())
-  
-  @@index([senderId])
-  @@index([receiverId])
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  type      String
-  content   String
-  link      String?
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  
-  @@index([userId])
-  @@index([isRead])
-}
-
-model Report {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id])
-  commentId String?
-  comment   Comment? @relation(fields: [commentId], references: [id])
-  reason    String
-  details   String?
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
-  
-  @@index([userId])
-  @@index([status])
-}
-
-model Availability {
-  id        String   @id @default(cuid())
-  doctorId  String
-  doctor    User     @relation(fields: [doctorId], references: [id])
-  dayOfWeek Int      // 0-6 (Sun-Sat)
-  startTime DateTime // Use a fixed date for time or handle as DateTime
-  endTime   DateTime
-  isBooked  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([doctorId])
-}
-
 enum AppointmentStatus {
   PENDING
   APPROVED
@@ -449,101 +802,82 @@ enum AppointmentStatus {
   CANCELLED
 }
 
-model Appointment {
-  id             String            @id @default(cuid())
-  patientId      String
-  patient        User              @relation("PatientAppointments", fields: [patientId], references: [id])
-  doctorId       String
-  doctor         User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
-  startTime      DateTime
-  endTime        DateTime
-  status         AppointmentStatus @default(PENDING)
-  reason         String?
-  conversation   Conversation?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  
-  @@index([patientId])
-  @@index([doctorId])
-}
-
-model Conversation {
-  id            String      @id @default(cuid())
-  appointmentId String?     @unique
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  participants  User[]      @relation("ConversationParticipants")
-  messages      Message[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-}
-
 enum MessageType {
   TEXT
   IMAGE
   FILE
 }
 
-// Updating Message model in next step to avoid huge replace block if possible, but here I'll try to append/modify. 
-// Actually, I need to modify the existing Message model. Since I can't do random access easily, I will rely on the fact that I am appending new models at the end, 
-// BUT I also need to modify User and existing Message.
-// Let's do the Append first, then I will use another call to modify User and Message.
-
-// Medical Thread Models
-model MedicalThread {
-  id            String              @id @default(cuid())
-  patientId     String
-  patient       User                @relation("PatientThreads", fields: [patientId], references: [id])
-  title         String
-  symptoms      Json
-  severityScore String?
-  tags          String[]
-  status        String              @default("OPEN")
-  isResolved    Boolean             @default(false)
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  
-  replies       ThreadReply[]
-  timeline      CaseTimelineEvent[]
-  
-  @@index([patientId])
-  @@index([createdAt])
-  @@index([status])
+enum AuditAction {
+  ADMIN_LOGIN
+  ADMIN_LOGOUT
+  USER_SUSPEND
+  USER_UNSUSPEND
+  USER_DELETE
+  USER_UPDATE
+  POST_DELETE
+  POST_RESTORE
+  POST_PIN
+  POST_UNPIN
+  POST_LOCK
+  POST_UNLOCK
+  COMMENT_DELETE
+  COMMENT_RESTORE
+  REPORT_RESOLVE
+  REPORT_DISMISS
+  DOCTOR_APPROVE
+  DOCTOR_REJECT
+  DOCTOR_SUSPEND
+  SETTINGS_UPDATE
+  ROLE_CHANGE
 }
 
-model ThreadReply {
-  id              String         @id @default(cuid())
-  threadId        String
-  thread          MedicalThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  parentReplyId   String?
-  parentReply     ThreadReply?   @relation("ReplyReplies", fields: [parentReplyId], references: [id])
-  childReplies    ThreadReply[]  @relation("ReplyReplies")
-  authorId        String
-  author          User           @relation(fields: [authorId], references: [id])
-  authorRole      UserRole
-  content         String
-  doctorVerified  Boolean        @default(false)
-  upvotes         Int            @default(0)
-  downvotes       Int            @default(0)
-  isHelpful       Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  
-  @@index([threadId])
-  @@index([authorId])
-  @@index([parentReplyId])
+enum ContentType {
+  POST
+  COMMENT
+  APPOINTMENT
+  COMMUNITY
 }
 
-model CaseTimelineEvent {
-  id        String        @id @default(cuid())
-  threadId  String
-  thread    MedicalThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User          @relation(fields: [userId], references: [id])
-  eventType String
-  data      Json
-  timestamp DateTime      @default(now())
-  
-  @@index([threadId])
-  @@index([userId])
-  @@index([timestamp])
+enum NotificationType {
+  REPLY
+  MENTION
+  AWARD
+  FOLLOWER
+  APPOINTMENT_REQUEST
+  APPOINTMENT_UPDATE
+  VERIFICATION_STATUS
+  COMMUNITY_INVITE
+  DIRECT_MESSAGE
+  SYSTEM_ANNOUNCEMENT
+  UPVOTE_MILESTONE
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentType {
+  CONSULTATION
+  SUBSCRIPTION
+  PREMIUM_FEATURE
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PAST_DUE
 }

@@ -148,7 +148,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useEffect(() => {
         let mounted = true;
-        
+
         const loadJWTAuth = () => {
             const token = localStorage.getItem('auth_token');
             const userData = localStorage.getItem('user');
@@ -159,20 +159,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 try {
                     const parsedUser = JSON.parse(userData);
                     console.log('✅ JWT User found:', parsedUser);
-                    
+
                     if (mounted) {
                         setUseJWT(true); // Mark that we're using JWT
                         setUser(parsedUser);
                         setProfileId(parsedUser.id);
                         setDoctorVerificationStatus(parsedUser.doctorVerificationStatus);
-                        
+
                         // Map role correctly
                         if (parsedUser.role === 'DOCTOR' && parsedUser.doctorVerificationStatus === 'APPROVED') {
                             setRole('VERIFIED_DOCTOR');
                         } else {
                             setRole(parsedUser.role);
                         }
-                        
+
                         setLoading(false);
                     }
                     return true;
@@ -194,7 +194,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(session.user);
                 await fetchRole(session.user.id);
             }
-            
+
             if (mounted) {
                 setLoading(false);
             }
@@ -202,7 +202,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Try JWT first
         const hasJWT = loadJWTAuth();
-        
+
         // Only try Supabase if no JWT
         if (!hasJWT) {
             loadSupabaseAuth();
@@ -226,7 +226,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.log('⏭️ Ignoring Supabase event (using JWT)');
                 return;
             }
-            
+
             console.log('🔄 Supabase auth changed:', event);
             if (session?.user && mounted) {
                 setUser(session.user);
@@ -251,11 +251,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const signOut = async () => {
         try {
             setLoggingOut(true);
-            
+
             // Clear localStorage (JWT auth)
             localStorage.removeItem('auth_token');
             localStorage.removeItem('user');
-            
+
             // Also sign out from Supabase if using it
             const { error } = await supabase.auth.signOut();
             if (error) console.warn('Supabase signout error:', error);

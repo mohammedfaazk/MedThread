@@ -1,0 +1,57 @@
+# MedThread Robots.txt
+# Allow all crawlers
+
+User-agent: *
+Allow: /
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /settings/
+Disallow: /dashboard/
+
+# Disallow search result pages with parameters
+Disallow: /*?*sort=
+Disallow: /*?*filter=
+Disallow: /*?*page=
+
+# Allow specific important pages
+Allow: /about
+Allow: /communities
+Allow: /doctors
+Allow: /posts
+Allow: /threads
+
+# Crawl delay (optional, adjust as needed)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://medthread.com/sitemap.xml
+Sitemap: https://medthread.com/sitemap-posts.xml
+Sitemap: https://medthread.com/sitemap-doctors.xml
+Sitemap: https://medthread.com/sitemap-communities.xml
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+# Block bad bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /

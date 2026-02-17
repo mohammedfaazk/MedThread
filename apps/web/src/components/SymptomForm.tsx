@@ -42,9 +42,8 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           {[1, 2, 3].map(i => (
             <div
               key={i}
-              className={`flex-1 h-2 rounded-full transition ${
-                i <= step ? 'bg-yellow-200' : 'bg-gray-200/50'
-              }`}
+              className={`flex-1 h-2 rounded-full transition ${i <= step ? 'bg-yellow-200' : 'bg-gray-200/50'
+                }`}
             />
           ))}
         </div>
@@ -58,14 +57,14 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           className="space-y-6"
         >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Basic Information</h2>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2 text-charcoal">Age</label>
               <input
                 type="number"
                 value={formData.age}
-                onChange={e => setFormData({...formData, age: e.target.value})}
+                onChange={e => setFormData({ ...formData, age: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
                 placeholder="Enter age"
               />
@@ -74,7 +73,7 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
               <label className="block text-sm font-medium mb-2 text-charcoal">Gender</label>
               <select
                 value={formData.gender}
-                onChange={e => setFormData({...formData, gender: e.target.value})}
+                onChange={e => setFormData({ ...formData, gender: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
               >
                 <option value="">Select</option>
@@ -90,7 +89,7 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
             <input
               type="number"
               value={formData.weight}
-              onChange={e => setFormData({...formData, weight: e.target.value})}
+              onChange={e => setFormData({ ...formData, weight: e.target.value })}
               className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
               placeholder="Enter weight"
             />
@@ -112,7 +111,7 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           className="space-y-6"
         >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Symptoms</h2>
-          
+
           <div>
             <label className="block text-sm font-medium mb-3 text-charcoal">Select your symptoms</label>
             <div className="flex flex-wrap gap-2">
@@ -120,11 +119,10 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
                 <button
                   key={symptom}
                   onClick={() => toggleSymptom(symptom)}
-                  className={`px-4 py-2 rounded-full transition-all ${
-                    formData.primarySymptoms.includes(symptom)
+                  className={`px-4 py-2 rounded-full transition-all ${formData.primarySymptoms.includes(symptom)
                       ? 'bg-yellow-200 text-charcoal shadow-soft'
                       : 'bg-cream-100/50 text-gray-700 hover:bg-cream-100'
-                  }`}
+                    }`}
                 >
                   {symptom}
                 </button>
@@ -136,7 +134,7 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
             <label className="block text-sm font-medium mb-2 text-charcoal">Duration</label>
             <select
               value={formData.duration}
-              onChange={e => setFormData({...formData, duration: e.target.value})}
+              onChange={e => setFormData({ ...formData, duration: e.target.value })}
               className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
             >
               <option value="">Select duration</option>
@@ -172,14 +170,14 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           className="space-y-6"
         >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Additional Details</h2>
-          
+
           <div>
             <label className="block text-sm font-medium mb-2 text-charcoal">
               Describe your symptoms in detail
             </label>
             <textarea
               value={formData.description}
-              onChange={e => setFormData({...formData, description: e.target.value})}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
               rows={6}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
               placeholder="Please provide as much detail as possible..."

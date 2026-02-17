@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '@medthread/database';
 import { z } from 'zod';
+import { getPaginationParams, createPaginatedResponse, getSkipTake } from '../utils/pagination';
 
 export const threadRouter = Router();
 
@@ -42,16 +43,28 @@ threadRouter.post('/', async (req, res) => {
 });
 
 threadRouter.get('/', async (req, res) => {
-  const threads = await prisma.medicalThread.findMany({
-    include: {
-      patient: { select: { username: true, role: true } },
-      replies: { take: 3, orderBy: { createdAt: 'desc' } }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 20
-  });
-  
-  res.json(threads);
+  try {
+    const { page, limit, sortBy, sortOrder } = getPaginationParams(req.query);
+    const { skip, take } = getSkipTake(page, limit);
+
+    const [threads, total] = await Promise.all([
+      prisma.medicalThread.findMany({
+        include: {
+          patient: { select: { username: true, role: true, avatar: true } },
+          replies: { take: 3, orderBy: { createdAt: 'desc' } }
+        },
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take,
+      }),
+      prisma.medicalThread.count()
+    ]);
+
+    const response = createPaginatedResponse(threads, total, page, limit);
+    res.json(response);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch threads' });
+  }
 });
 
 threadRouter.get('/:id', async (req, res) => {

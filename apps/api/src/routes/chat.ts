@@ -72,7 +72,7 @@ router.get('/conversations', async (req, res) => {
         // Merge Results - with deduplication
         const allConversations = [...dbConversations];
         const seenParticipantPairs = new Set<string>();
-        
+
         // Add DB conversations to seen set
         dbConversations.forEach((conv: any) => {
             if (conv.participants && conv.participants.length === 2) {
@@ -80,14 +80,14 @@ router.get('/conversations', async (req, res) => {
                 seenParticipantPairs.add(ids);
             }
         });
-        
+
         // Only add mock conversations if they don't duplicate existing ones
         mockConversationsWithMessages.forEach((mockConv: any) => {
             // Check by conversation ID
             if (allConversations.find(dbConv => dbConv.id === mockConv.id)) {
                 return; // Skip duplicate by ID
             }
-            
+
             // Check by participant pair
             if (mockConv.participantIds && mockConv.participantIds.length === 2) {
                 const ids = [...mockConv.participantIds].sort().join('-');
@@ -97,7 +97,7 @@ router.get('/conversations', async (req, res) => {
                 }
                 seenParticipantPairs.add(ids);
             }
-            
+
             allConversations.push(mockConv);
         });
 
@@ -160,47 +160,94 @@ router.post('/messages', async (req, res) => {
     try {
         const { conversationId, senderId, content, type = 'TEXT', attachment } = req.body;
 
-        try {
-            // First try DB if it exists (not starting with conv-)
-            if (!conversationId.startsWith('conv-')) {
-                const message = await prisma.message.create({
-                    data: {
-                        conversationId,
-                        senderId,
-                        receiverId: senderId, // Will be updated to proper receiver
-                        content,
-                        type,
-                        attachment
-                    },
-                    include: {
-                        sender: { select: { id: true, username: true, avatar: true } }
-                    }
-                });
-                return res.json(message);
-            }
-        } catch (dbError) {
-            console.error('[API] DB Message save failed, falling back to mock store');
-        }
+        // Get conversation to find receiver
+        let receiverId = senderId; // Default fallback
+        let conversation: any = null;
 
-        // Fallback to mock store - try to get actual username
-        let senderUsername = 'User';
-        
         try {
-            const { createClient } = require('@supabase/supabase-js');
-            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-            const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-            
-            if (supabaseUrl && supabaseKey) {
-                const supabase = createClient(supabaseUrl, supabaseKey);
-                const { data: userAuth } = await supabase.auth.admin.getUserById(senderId);
-                if (userAuth?.user?.email) {
-                    senderUsername = userAuth.user.email.split('@')[0];
+            // Try to get conversation from DB first
+            conversation = await prisma.conversation.findUnique({
+                where: { id: conversationId },
+                include: {
+                    participants: { select: { id: true, username: true, avatar: true } }
+                }
+            });
+
+            if (conversation) {
+                // Find the other participant (receiver)
+                const otherParticipant = conversation.participants.find((p: any) => p.id !== senderId);
+                if (otherParticipant) {
+                    receiverId = otherParticipant.id;
                 }
             }
-        } catch (authError) {
-            console.log('[API] Could not fetch sender info:', authError);
+        } catch (dbError) {
+            console.log('[API] Could not fetch conversation from DB, checking mock store');
         }
-        
+
+        // If not in DB, check mock store
+        if (!conversation) {
+            conversation = conversationsStore.find((c: any) => c.id === conversationId);
+            if (conversation && conversation.participantIds) {
+                const otherParticipantId = conversation.participantIds.find((id: string) => id !== senderId);
+                if (otherParticipantId) {
+                    receiverId = otherParticipantId;
+                }
+            }
+        }
+
+        // Try to save to database
+        try {
+            const message = await prisma.message.create({
+                data: {
+                    conversationId,
+                    senderId,
+                    receiverId,
+                    content,
+                    type,
+                    attachment
+                },
+                include: {
+                    sender: { select: { id: true, username: true, avatar: true } }
+                }
+            });
+            console.log('[API] Message saved to database successfully');
+            
+            // Also save to mock store for backward compatibility
+            messagesStore.push({
+                id: message.id,
+                conversationId: message.conversationId,
+                senderId: message.senderId,
+                content: message.content,
+                type: message.type,
+                attachment: message.attachment,
+                createdAt: message.createdAt.toISOString(),
+                sender: message.sender
+            });
+            saveStore();
+            
+            return res.json(message);
+        } catch (dbError) {
+            console.error('[API] DB Message save failed:', dbError);
+            console.log('[API] Falling back to mock store only');
+        }
+
+        // Fallback to mock store only - get sender info
+        let senderUsername = 'User';
+        let senderAvatar = null;
+
+        try {
+            const user = await prisma.user.findUnique({
+                where: { id: senderId },
+                select: { username: true, avatar: true }
+            });
+            if (user) {
+                senderUsername = user.username;
+                senderAvatar = user.avatar;
+            }
+        } catch (userError) {
+            console.log('[API] Could not fetch sender info from DB');
+        }
+
         const message = {
             id: `msg-${Date.now()}`,
             conversationId,
@@ -209,7 +256,7 @@ router.post('/messages', async (req, res) => {
             type,
             attachment,
             createdAt: new Date().toISOString(),
-            sender: { id: senderId, username: senderUsername, avatar: null }
+            sender: { id: senderId, username: senderUsername, avatar: senderAvatar }
         };
         messagesStore.push(message);
         saveStore();
@@ -220,22 +267,52 @@ router.post('/messages', async (req, res) => {
     }
 });
 
-// Upload attachment (Base64)
+// Upload attachment (Now uses Cloudinary)
 router.post('/upload', async (req, res) => {
     try {
         const { base64Data, filename, mimeType } = req.body;
 
-        // In a real app, you might want to store this in cloud storage
-        // For now, we'll just return the base64 data
-        const attachment = {
-            data: base64Data,
-            filename,
-            mimeType,
-            url: `data:${mimeType};base64,${base64Data}`
-        };
+        if (!base64Data) {
+            return res.status(400).json({ error: 'No file data provided' });
+        }
 
-        res.json(attachment);
+        // Import cloudinary helper
+        const { uploadBase64ToCloudinary } = require('../config/cloudinary');
+
+        // Determine resource type
+        let resourceType: 'image' | 'video' | 'raw' = 'raw';
+        if (mimeType?.startsWith('image/')) {
+            resourceType = 'image';
+        } else if (mimeType?.startsWith('video/')) {
+            resourceType = 'video';
+        }
+
+        try {
+            // Upload to Cloudinary
+            const result = await uploadBase64ToCloudinary(base64Data, 'chat-attachments', resourceType);
+
+            const attachment = {
+                url: result.url,
+                publicId: result.publicId,
+                filename,
+                mimeType,
+            };
+
+            res.json(attachment);
+        } catch (cloudinaryError: any) {
+            console.error('Cloudinary upload error:', cloudinaryError);
+            
+            // Fallback to returning base64 if Cloudinary fails
+            const attachment = {
+                url: base64Data,
+                filename,
+                mimeType,
+            };
+            
+            res.json(attachment);
+        }
     } catch (error) {
+        console.error('Upload error:', error);
         res.status(500).json({ error: 'Failed to upload attachment' });
     }
 });

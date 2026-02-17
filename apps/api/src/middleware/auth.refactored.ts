@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
+import { getTokenFromRequest } from '../utils/cookies';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -15,13 +16,12 @@ interface JwtPayload {
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers.authorization;
+    // Get token from cookie or Authorization header
+    const token = getTokenFromRequest(req);
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       throw new UnauthorizedError('No token provided');
     }
-    
-    const token = authHeader.split(' ')[1];
     
     const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
     

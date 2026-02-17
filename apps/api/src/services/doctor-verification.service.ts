@@ -374,49 +374,56 @@ export class DoctorVerificationService {
    * Get doctor verification statistics (Admin dashboard)
    */
   async getVerificationStats() {
-    const [
-      totalDoctors,
-      pendingVerifications,
-      approvedDoctors,
-      rejectedDoctors,
-      suspendedDoctors,
-      recentApprovals,
-    ] = await Promise.all([
-      prisma.user.count({ where: { role: 'DOCTOR' } }),
-      prisma.user.count({
-        where: {
-          role: 'DOCTOR',
-          doctorVerificationStatus: { in: ['PENDING', 'UNDER_REVIEW'] }
+    // Use a single query with groupBy to reduce database connections
+    const statusCounts = await prisma.user.groupBy({
+      by: ['doctorVerificationStatus'],
+      where: {
+        role: 'DOCTOR'
+      },
+      _count: {
+        id: true
+      }
+    });
+
+    // Count recent approvals separately
+    const recentApprovals = await prisma.user.count({
+      where: {
+        role: 'DOCTOR',
+        doctorVerificationStatus: 'APPROVED',
+        verifiedAt: {
+          not: null,
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
         }
-      }),
-      prisma.user.count({
-        where: {
-          role: 'DOCTOR',
-          doctorVerificationStatus: 'APPROVED'
-        }
-      }),
-      prisma.user.count({
-        where: {
-          role: 'DOCTOR',
-          doctorVerificationStatus: 'REJECTED'
-        }
-      }),
-      prisma.user.count({
-        where: {
-          role: 'DOCTOR',
-          doctorVerificationStatus: 'SUSPENDED'
-        }
-      }),
-      prisma.user.count({
-        where: {
-          role: 'DOCTOR',
-          doctorVerificationStatus: 'APPROVED',
-          verifiedAt: {
-            gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
-          }
-        }
-      }),
-    ]);
+      }
+    });
+
+    // Calculate totals from grouped results
+    let totalDoctors = 0;
+    let pendingVerifications = 0;
+    let approvedDoctors = 0;
+    let rejectedDoctors = 0;
+    let suspendedDoctors = 0;
+
+    statusCounts.forEach(group => {
+      const count = group._count.id;
+      totalDoctors += count;
+
+      switch (group.doctorVerificationStatus) {
+        case 'PENDING':
+        case 'UNDER_REVIEW':
+          pendingVerifications += count;
+          break;
+        case 'APPROVED':
+          approvedDoctors += count;
+          break;
+        case 'REJECTED':
+          rejectedDoctors += count;
+          break;
+        case 'SUSPENDED':
+          suspendedDoctors += count;
+          break;
+      }
+    });
 
     return {
       totalDoctors,

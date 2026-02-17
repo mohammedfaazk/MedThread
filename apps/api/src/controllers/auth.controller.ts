@@ -1,17 +1,32 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.refactored';
 import { authService } from '../services/auth.service';
+import { emailService } from '../services/email.service';
 import { registerSchema, loginSchema } from '../validators/auth.validator';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { setAuthCookie, clearAuthCookies } from '../utils/cookies';
 
 export class AuthController {
   register = asyncHandler(async (req: AuthRequest, res: Response) => {
     const validatedData = registerSchema.parse(req.body);
     const result = await authService.register(validatedData);
 
+    // Set token in httpOnly cookie
+    setAuthCookie(res, result.token);
+
+    // Send welcome email
+    emailService.sendWelcomeEmail({
+      username: result.user.username,
+      email: result.user.email,
+      loginUrl: 'http://localhost:3000/login',
+    }).catch(err => console.error('Failed to send welcome email:', err));
+
     res.status(201).json({
       success: true,
-      data: result,
+      data: {
+        user: result.user,
+        token: result.token,
+      },
       message: 'Registration successful'
     });
   });
@@ -20,9 +35,31 @@ export class AuthController {
     const validatedData = loginSchema.parse(req.body);
     const result = await authService.login(validatedData);
 
+    // Set token in httpOnly cookie
+    setAuthCookie(res, result.token);
+
+    // Log admin login
+    if (result.user.role === 'ADMIN') {
+      const { auditLogService } = require('../services/audit-log.service');
+      auditLogService.createLog({
+        action: 'ADMIN_LOGIN',
+        adminId: result.user.id,
+        details: {
+          email: result.user.email,
+          username: result.user.username,
+        },
+        ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'],
+      }).catch((err: any) => console.error('Audit log failed:', err));
+    }
+
     res.status(200).json({
       success: true,
-      data: result,
+      data: {
+        user: result.user,
+        // Still send token for backward compatibility
+        token: result.token,
+      },
       message: 'Login successful'
     });
   });
@@ -63,8 +100,20 @@ export class AuthController {
   });
 
   logout = asyncHandler(async (req: AuthRequest, res: Response) => {
-    // In a stateless JWT system, logout is handled client-side
-    // If using refresh tokens, you would invalidate them here
+    // Clear httpOnly cookies
+    clearAuthCookies(res);
+
+    // Log admin logout
+    if (req.userId && req.userRole === 'ADMIN') {
+      const { auditLogService } = require('../services/audit-log.service');
+      auditLogService.createLog({
+        action: 'ADMIN_LOGOUT',
+        adminId: req.userId,
+        ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+        userAgent: req.headers['user-agent'],
+      }).catch((err: any) => console.error('Audit log failed:', err));
+    }
+
     res.status(200).json({
       success: true,
       message: 'Logout successful'

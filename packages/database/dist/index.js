@@ -16,5 +16,16 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = void 0;
 const client_1 = require("@prisma/client");
-exports.prisma = new client_1.PrismaClient();
+exports.prisma = new client_1.PrismaClient({
+    datasources: {
+        db: {
+            url: process.env.DATABASE_URL,
+        },
+    },
+    log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+});
+// Handle graceful shutdown
+process.on('beforeExit', async () => {
+    await exports.prisma.$disconnect();
+});
 __exportStar(require("@prisma/client"), exports);

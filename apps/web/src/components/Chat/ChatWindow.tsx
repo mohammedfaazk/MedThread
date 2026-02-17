@@ -195,8 +195,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     >
                         <div
                             className={`max-w-[70%] rounded-lg p-3 ${msg.senderId === currentUserId
-                                    ? 'bg-[#00BCD4] text-white'
-                                    : 'bg-gray-200 text-gray-900'
+                                ? 'bg-[#00BCD4] text-white'
+                                : 'bg-gray-200 text-gray-900'
                                 }`}
                         >
                             {msg.type === 'IMAGE' && msg.attachment && (

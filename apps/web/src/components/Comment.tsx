@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useStore } from '@/store/useStore'
 import { useUser } from '@/context/UserContext'
 import { User, Stethoscope, CheckCircle } from 'lucide-react'
+import ReportButton from './ReportButton'
+import { analytics } from '@/lib/analytics'
 
 interface CommentProps {
   id: string
@@ -54,6 +56,7 @@ export function Comment({
     
     setLocalVote(newVote === 0 ? null : newVote)
     setLocalScore(localScore + scoreDiff)
+    analytics.trackEvent('comment_vote', 'engagement', { commentId: id, vote: value })
   }
 
   const handleReply = () => {
@@ -65,23 +68,19 @@ export function Comment({
     
     setReplyText('')
     setShowReply(false)
+    analytics.trackEvent('comment_reply', 'engagement', { commentId: id })
   }
 
   const handleSave = () => {
     setSaved(!saved)
-  }
-
-  const handleReport = () => {
-    const reason = prompt('Why are you reporting this comment?\n\n1. Misinformation\n2. Harassment\n3. Spam\n4. Other')
-    if (reason) {
-      alert('Comment reported. Our moderators will review it shortly.')
-    }
+    analytics.trackEvent('comment_save', 'engagement', { commentId: id })
   }
 
   const handleShare = () => {
     const link = `${window.location.origin}/post/${postId}#comment-${id}`
     navigator.clipboard.writeText(link)
     alert('Comment link copied to clipboard!')
+    analytics.trackShare('comment', id, 'clipboard')
   }
 
   if (collapsed) {
@@ -160,12 +159,12 @@ export function Comment({
             >
               Share
             </button>
-            <button
-              onClick={handleReport}
+            <ReportButton 
+              type="comment" 
+              targetId={id} 
+              targetTitle={content.substring(0, 50) + '...'}
               className="hover:bg-neutral-300/20 px-2 py-1 rounded-full transition-all"
-            >
-              Report
-            </button>
+            />
             <button
               onClick={handleSave}
               className={`hover:bg-neutral-300/20 px-2 py-1 rounded-full transition-all ${saved ? 'text-yellow-200 font-semibold' : ''}`}
