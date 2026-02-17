@@ -162,14 +162,31 @@ router.post('/messages', authenticate, requireVerifiedDoctor, async (req, res) =
     try {
         const { conversationId, senderId, content, type = 'TEXT', attachment } = req.body;
 
+        let message: any;
+        let receiverId: string | undefined;
+
         try {
             // First try DB if it exists (not starting with conv-)
             if (!conversationId.startsWith('conv-')) {
-                const message = await prisma.message.create({
+                // Get conversation to find receiver
+                const conversation = await prisma.conversation.findUnique({
+                    where: { id: conversationId },
+                    include: {
+                        participants: {
+                            select: { id: true }
+                        }
+                    }
+                });
+
+                if (conversation) {
+                    receiverId = conversation.participants.find(p => p.id !== senderId)?.id;
+                }
+
+                message = await prisma.message.create({
                     data: {
                         conversationId,
                         senderId,
-                        receiverId: senderId, // Will be updated to proper receiver
+                        receiverId: receiverId || senderId,
                         content,
                         type,
                         attachment
@@ -178,6 +195,27 @@ router.post('/messages', authenticate, requireVerifiedDoctor, async (req, res) =
                         sender: { select: { id: true, username: true, avatar: true } }
                     }
                 });
+
+                // Create direct message notification
+                if (receiverId) {
+                    try {
+                        const { notificationService } = await import('../services/notification.service');
+                        await notificationService.createNotification({
+                            type: 'DIRECT_MESSAGE',
+                            recipientIds: [receiverId],
+                            actorId: senderId,
+                            contentId: conversationId,
+                            contentType: 'POST',
+                            metadata: {
+                                preview: content?.substring(0, 100) || 'Sent a message',
+                                link: `/chat?conversation=${conversationId}`,
+                            },
+                        });
+                    } catch (notifError) {
+                        console.error('Error creating direct message notification:', notifError);
+                    }
+                }
+
                 return res.json(message);
             }
         } catch (dbError) {
@@ -203,7 +241,7 @@ router.post('/messages', authenticate, requireVerifiedDoctor, async (req, res) =
             console.log('[API] Could not fetch sender info:', authError);
         }
         
-        const message = {
+        message = {
             id: `msg-${Date.now()}`,
             conversationId,
             senderId,

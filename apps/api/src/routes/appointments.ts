@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { PrismaClient } from '@medthread/database';
 import { authenticate } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
+import { notificationService } from '../services/notification.service';
+import { NotificationType, ContentType } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -193,11 +195,31 @@ router.post('/book', async (req, res) => {
                     status: 'PENDING'
                 },
                 include: {
-                    patient: { select: { username: true, avatar: true } },
-                    doctor: { select: { username: true, avatar: true, specialty: true } }
+                    patient: { select: { id: true, username: true, avatar: true } },
+                    doctor: { select: { id: true, username: true, avatar: true, specialty: true } }
                 }
             });
             console.log('[API] Saved to DB');
+
+            // Create APPOINTMENT_REQUEST notification for doctor
+            try {
+                await notificationService.createNotification({
+                    type: NotificationType.APPOINTMENT_REQUEST,
+                    recipientIds: [doctorId],
+                    actorId: patientId,
+                    contentId: appointment.id,
+                    contentType: ContentType.APPOINTMENT,
+                    metadata: {
+                        title: 'New Appointment Request',
+                        body: `${appointment.patient.username} requested an appointment`,
+                        preview: reason,
+                        link: `/appointments`,
+                        appointmentTime: startTime,
+                    }
+                });
+            } catch (notifError) {
+                console.error('Failed to create appointment request notification:', notifError);
+            }
         } catch (dbError) {
             console.error('[API] DB Save failed, using In-Memory persistence');
             console.log('[API] Mock booking with IDs:', { patientId, doctorId });
@@ -405,7 +427,11 @@ router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req,
 
         try {
             const appointment = await prisma.appointment.findUnique({
-                where: { id }
+                where: { id },
+                include: {
+                    patient: { select: { id: true, username: true, avatar: true } },
+                    doctor: { select: { id: true, username: true, avatar: true } }
+                }
             });
 
             if (appointment && appointment.doctorId === doctorId) {
@@ -413,10 +439,30 @@ router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req,
                     where: { id },
                     data: { status },
                     include: {
-                        patient: { select: { username: true, avatar: true } },
-                        doctor: { select: { username: true, avatar: true } }
+                        patient: { select: { id: true, username: true, avatar: true } },
+                        doctor: { select: { id: true, username: true, avatar: true } }
                     }
                 });
+
+                // Create APPOINTMENT_UPDATE notification for patient
+                try {
+                    const statusText = status === 'APPROVED' ? 'approved' : 'rejected';
+                    await notificationService.createNotification({
+                        type: NotificationType.APPOINTMENT_UPDATE,
+                        recipientIds: [appointment.patientId],
+                        actorId: doctorId,
+                        contentId: id,
+                        contentType: ContentType.APPOINTMENT,
+                        metadata: {
+                            title: `Appointment ${statusText}`,
+                            body: `Dr. ${updated.doctor.username} ${statusText} your appointment request`,
+                            link: `/appointments`,
+                            appointmentStatus: status,
+                        }
+                    });
+                } catch (notifError) {
+                    console.error('Failed to create appointment update notification:', notifError);
+                }
 
                 // If approved, create a conversation
                 if (status === 'APPROVED') {

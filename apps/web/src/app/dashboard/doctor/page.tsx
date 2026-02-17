@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
+import { getImageUrl } from '@/lib/imageUrl'
 import {
     Calendar,
     Clock,
@@ -331,7 +332,7 @@ export default function DoctorDashboard() {
                                                 <div className="flex items-start gap-3 mb-3">
                                                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                                                         {apt.patient.avatar ? (
-                                                            <img src={apt.patient.avatar} className="w-full h-full object-cover rounded-full" alt={apt.patient.username} />
+                                                            <img src={getImageUrl(apt.patient.avatar) || ''} className="w-full h-full object-cover rounded-full" alt={apt.patient.username} />
                                                         ) : (
                                                             <span className="text-blue-600 font-bold text-lg">
                                                                 {apt.patient.username.charAt(0).toUpperCase()}

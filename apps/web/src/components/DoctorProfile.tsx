@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useJWTAuth } from '@/context/JWTAuthContext'
+import { getImageUrl } from '@/lib/imageUrl'
 import axios from 'axios'
 import { 
     User, 
@@ -183,7 +184,7 @@ export function DoctorProfile() {
                     <div className="flex items-center gap-6">
                         <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
                             {profileData.avatar ? (
-                                <img src={profileData.avatar} alt="Profile" className="w-full h-full object-cover" />
+                                <img src={getImageUrl(profileData.avatar) || ''} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
                                 profileData.username.charAt(0).toUpperCase()
                             )}

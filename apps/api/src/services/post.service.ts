@@ -1,5 +1,6 @@
 import { prisma } from '@medthread/database';
 import { PostType } from '@prisma/client';
+import { notificationService } from './notification.service';
 
 interface CreatePostInput {
   title: string;
@@ -30,6 +31,22 @@ interface GetPostsOptions {
 }
 
 export const postService = {
+  /**
+   * Parse @mentions from post content
+   * Returns array of unique mentioned usernames
+   */
+  parseMentions(content: string): string[] {
+    const mentionRegex = /@(\w+)/g;
+    const mentions = new Set<string>();
+    let match;
+    
+    while ((match = mentionRegex.exec(content)) !== null) {
+      mentions.add(match[1]);
+    }
+    
+    return Array.from(mentions);
+  },
+
   async createPost(data: CreatePostInput) {
     const post = await prisma.post.create({
       data: {
@@ -74,6 +91,55 @@ export const postService = {
         }
       }
     });
+
+    // Trigger MENTION notifications for published posts
+    if (!data.isDraft && data.content) {
+      try {
+        const mentionedUsernames = this.parseMentions(data.content);
+        
+        if (mentionedUsernames.length > 0) {
+          // Find users by username
+          const mentionedUsers = await prisma.user.findMany({
+            where: {
+              username: {
+                in: mentionedUsernames,
+                mode: 'insensitive'
+              }
+            },
+            select: {
+              id: true,
+              username: true
+            }
+          });
+
+          // Filter out the post author (don't notify self)
+          const recipientIds = mentionedUsers
+            .filter(user => user.id !== data.authorId)
+            .map(user => user.id);
+
+          if (recipientIds.length > 0) {
+            await notificationService.createNotification({
+              type: 'MENTION',
+              recipientIds,
+              actorId: data.authorId,
+              contentId: post.id,
+              contentType: 'POST',
+              metadata: {
+                title: 'You were mentioned',
+                body: `${post.author.username} mentioned you in a post`,
+                preview: data.title,
+                link: `/post/${post.id}`,
+                communityName: post.community.displayName,
+                postTitle: data.title,
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error creating MENTION notifications:', error);
+        // Don't fail post creation if notification fails
+      }
+    }
 
     return post;
   },
@@ -417,6 +483,14 @@ export const postService = {
         score: true,
         upvotes: true,
         downvotes: true,
+        authorId: true,
+        title: true,
+        community: {
+          select: {
+            name: true,
+            displayName: true
+          }
+        }
       }
     });
 
@@ -430,6 +504,51 @@ export const postService = {
       // Use centralized karma service
       const { karmaService } = await import('./karma.service');
       await karmaService.updateUserKarma(postAuthor.authorId);
+    }
+
+    // Trigger UPVOTE_MILESTONE notification
+    if (value === 1 && voteChange > 0) {
+      try {
+        // Get user's upvote threshold preference
+        const { PreferencesService } = await import('./notification-preferences.service');
+        const preferencesService = new PreferencesService();
+        const preferences = await preferencesService.getPreferences(post.authorId);
+        
+        const threshold = preferences.upvoteThreshold || 10; // Default to 10
+        
+        // Check if we just hit a milestone
+        const previousUpvotes = post.upvotes - 1;
+        const currentUpvotes = post.upvotes;
+        
+        // Trigger notification if we crossed a threshold (10, 25, 50, 100, 250, 500, 1000, etc.)
+        const milestones = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+        const crossedMilestone = milestones.find(
+          milestone => previousUpvotes < milestone && currentUpvotes >= milestone && milestone >= threshold
+        );
+        
+        if (crossedMilestone && post.authorId !== userId) {
+          await notificationService.createNotification({
+            type: 'UPVOTE_MILESTONE',
+            recipientIds: [post.authorId],
+            actorId: userId,
+            contentId: postId,
+            contentType: 'POST',
+            metadata: {
+              title: 'Milestone reached!',
+              body: `Your post reached ${crossedMilestone} upvotes`,
+              preview: post.title,
+              link: `/post/${postId}`,
+              communityName: post.community.displayName,
+              postTitle: post.title,
+              milestone: crossedMilestone,
+              upvotes: currentUpvotes,
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error creating UPVOTE_MILESTONE notification:', error);
+        // Don't fail vote if notification fails
+      }
     }
 
     return post;

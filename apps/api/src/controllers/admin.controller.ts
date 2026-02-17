@@ -129,6 +129,38 @@ export class AdminController {
       message: `Report ${action.toLowerCase()} successfully`
     });
   });
+
+  /**
+   * Create system announcement notification
+   */
+  createSystemAnnouncement = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { title, body, link } = req.body;
+
+    if (!title || title.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        error: 'Announcement title must be at least 5 characters'
+      });
+    }
+
+    if (!body || body.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Announcement body must be at least 10 characters'
+      });
+    }
+
+    const result = await adminService.createSystemAnnouncement(
+      req.user!.id,
+      { title, body, link }
+    );
+
+    res.status(201).json({
+      success: true,
+      data: result,
+      message: 'System announcement created successfully'
+    });
+  });
 }
 
 export const adminController = new AdminController();

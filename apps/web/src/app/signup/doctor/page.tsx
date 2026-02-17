@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import axios from 'axios'
+import { useJWTAuth } from '@/context/JWTAuthContext'
 import { Check, ChevronRight, Upload, Loader2, User, FileText, Mail, Phone, Lock, Briefcase, Building2, Calendar, MapPin, Camera } from 'lucide-react'
 import { CameraCapture } from '@/components/CameraCapture'
 
@@ -15,6 +16,7 @@ const specializations = [
 
 export default function DoctorSignupPage() {
   const router = useRouter()
+  const { login } = useJWTAuth()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   
@@ -221,9 +223,8 @@ export default function DoctorSignupPage() {
         }
       }
 
-      // Save token and user data
-      localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify({
+      // Use the login function from context to properly set auth state
+      login(token, {
         ...user,
         full_name: formData.full_name,
         phone: formData.phone,
@@ -233,7 +234,7 @@ export default function DoctorSignupPage() {
         hospitalAffiliation: formData.hospital_name,
         clinicAddress: formData.hospital_address,
         avatar: profilePhotoBase64,
-      }))
+      })
 
       alert('Account created successfully! Your verification request has been submitted. You will be notified once approved.')
       router.push('/login')

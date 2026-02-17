@@ -1,11 +1,14 @@
 import { prisma } from '@medthread/database';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { notificationService } from './notification.service';
+import { NotificationType } from '@prisma/client';
 
 interface UpdateUserInput {
   bio?: string;
   specialty?: string;
   avatar?: string;
   banner?: string;
+  username?: string;
 }
 
 export class UserService {
@@ -123,8 +126,40 @@ export class UserService {
       data: {
         followerId,
         followingId
+      },
+      include: {
+        follower: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          }
+        },
+        following: {
+          select: {
+            id: true,
+            username: true,
+          }
+        }
       }
     });
+
+    // Create FOLLOWER notification
+    try {
+      await notificationService.createNotification({
+        type: NotificationType.FOLLOWER,
+        recipientIds: [followingId],
+        actorId: followerId,
+        metadata: {
+          title: 'New Follower',
+          body: `${follow.follower.username} started following you`,
+          link: `/u/${follow.follower.username}`,
+        }
+      });
+    } catch (error) {
+      console.error('Failed to create follower notification:', error);
+      // Don't fail the follow operation if notification fails
+    }
 
     return follow;
   }

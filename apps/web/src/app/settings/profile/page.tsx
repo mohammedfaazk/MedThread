@@ -1,0 +1,465 @@
+'use client'
+
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
+import { Sidebar } from '@/components/Sidebar'
+import { useJWTAuth } from '@/context/JWTAuthContext'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import axios from 'axios'
+import { User, Upload, X } from 'lucide-react'
+import { getImageUrl } from '@/lib/imageUrl'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
+export default function ProfileSettingsPage() {
+  const { user, role } = useJWTAuth()
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [profile, setProfile] = useState<any>(null)
+  const [formData, setFormData] = useState({
+    username: '',
+    bio: '',
+    specialty: '',
+    website: '',
+    location: ''
+  })
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
+  const [checkingUsername, setCheckingUsername] = useState(false)
+  const [usernameMessage, setUsernameMessage] = useState('')
+
+  // Check if user is a doctor
+  const isDoctor = role === 'DOCTOR' || role === 'VERIFIED_DOCTOR'
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile()
+    }
+  }, [user])
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) return
+
+      const response = await axios.get(`${API_URL}/api/profile/me/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+
+      if (response.data.success) {
+        const profileData = response.data.data
+        setProfile(profileData)
+        setFormData({
+          username: profileData.username || '',
+          bio: profileData.bio || '',
+          specialty: profileData.specialty || '',
+          website: '',
+          location: ''
+        })
+        setAvatarPreview(getImageUrl(profileData.avatar))
+        setBannerPreview(getImageUrl(profileData.banner))
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile:', error)
+    }
+  }
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username === profile?.username) {
+      setUsernameAvailable(null)
+      setUsernameMessage('')
+      return
+    }
+
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      setUsernameAvailable(false)
+      setUsernameMessage('Username must be 3-20 characters and contain only letters, numbers, and underscores')
+      return
+    }
+
+    setCheckingUsername(true)
+    try {
+      const response = await axios.get(`${API_URL}/api/profile/check-username`, {
+        params: { username }
+      })
+
+      if (response.data.success) {
+        setUsernameAvailable(response.data.data.available)
+        setUsernameMessage(response.data.data.message)
+      }
+    } catch (error) {
+      console.error('Failed to check username:', error)
+      setUsernameAvailable(null)
+      setUsernameMessage('Failed to check username availability')
+    } finally {
+      setCheckingUsername(false)
+    }
+  }
+
+  useEffect(() => {
+    if (formData.username && formData.username !== profile?.username) {
+      const debounce = setTimeout(() => {
+        checkUsernameAvailability(formData.username)
+      }, 500)
+      return () => clearTimeout(debounce)
+    }
+  }, [formData.username])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Avatar must be 2MB or less')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Banner must be 5MB or less')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setBannerPreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const uploadAvatar = async () => {
+    // Only upload if avatarPreview is a new base64 image (starts with data:image)
+    if (!avatarPreview || !avatarPreview.startsWith('data:image')) return
+
+    // Don't upload if it's the same as the existing avatar
+    const existingAvatarUrl = getImageUrl(profile?.avatar)
+    if (avatarPreview === existingAvatarUrl) return
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      const response = await axios.put(
+        `${API_URL}/api/profile/me/avatar`,
+        { image: avatarPreview },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (response.data.success) {
+        return response.data.data.avatar
+      }
+    } catch (error: any) {
+      console.error('Failed to upload avatar:', error)
+      throw new Error(error.response?.data?.error || 'Failed to upload avatar')
+    }
+  }
+
+  const uploadBanner = async () => {
+    // Only upload if bannerPreview is a new base64 image (starts with data:image)
+    if (!bannerPreview || !bannerPreview.startsWith('data:image')) return
+
+    // Don't upload if it's the same as the existing banner
+    const existingBannerUrl = getImageUrl(profile?.banner)
+    if (bannerPreview === existingBannerUrl) return
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      const response = await axios.put(
+        `${API_URL}/api/profile/me/banner`,
+        { image: bannerPreview },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (response.data.success) {
+        return response.data.data.banner
+      }
+    } catch (error: any) {
+      console.error('Failed to upload banner:', error)
+      throw new Error(error.response?.data?.error || 'Failed to upload banner')
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please login to update your profile')
+        return
+      }
+
+      // Upload images first
+      await Promise.all([
+        uploadAvatar(),
+        uploadBanner()
+      ])
+
+      // Update profile
+      const profileUpdateData: any = {
+        bio: formData.bio
+      }
+      
+      // Only include username if it changed and is available
+      if (formData.username && formData.username !== profile?.username) {
+        if (usernameAvailable === false) {
+          alert('Please choose an available username')
+          return
+        }
+        profileUpdateData.username = formData.username
+      }
+      
+      // Only include specialty if user is a doctor
+      if (isDoctor) {
+        profileUpdateData.specialty = formData.specialty
+      }
+
+      const response = await axios.put(
+        `${API_URL}/api/profile/me/profile`,
+        profileUpdateData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (response.data.success) {
+        alert('Profile updated successfully!')
+        fetchProfile()
+      }
+    } catch (error: any) {
+      console.error('Failed to update profile:', error)
+      alert(error.message || 'Failed to update profile')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Please login to access settings</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen">
+      <NavbarEnhanced />
+      <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
+        <Sidebar />
+        
+        <main className="flex-1 max-w-[900px]">
+          {/* Breadcrumb */}
+          <div className="mb-4">
+            <button
+              onClick={() => router.push('/settings')}
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+            >
+              ← Back to Settings
+            </button>
+          </div>
+
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg">
+            <div className="flex items-center gap-3 mb-6">
+              <User className="w-6 h-6 text-blue-600" />
+              <h1 className="text-3xl font-bold text-gray-900">Edit Profile</h1>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Username */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Username
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    minLength={3}
+                    maxLength={20}
+                    pattern="[a-zA-Z0-9_]+"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    placeholder="your_username"
+                  />
+                  {checkingUsername && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  {!checkingUsername && formData.username && formData.username !== profile?.username && usernameAvailable !== null && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {usernameAvailable ? (
+                        <span className="text-green-600 text-xl">✓</span>
+                      ) : (
+                        <span className="text-red-600 text-xl">✗</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {usernameMessage && (
+                  <p className={`text-sm mt-1 ${usernameAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                    {usernameMessage}
+                  </p>
+                )}
+                <p className="text-sm text-gray-600 mt-1">
+                  3-20 characters, letters, numbers, and underscores only
+                </p>
+              </div>
+
+              {/* Banner Upload */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Banner Image
+                </label>
+                <div className="relative h-48 bg-gradient-to-r from-blue-400 to-purple-500 rounded-xl overflow-hidden">
+                  {bannerPreview && (
+                    <img
+                      src={bannerPreview}
+                      alt="Banner"
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                  <label className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 cursor-pointer transition">
+                    <div className="text-center text-white">
+                      <Upload className="w-8 h-8 mx-auto mb-2" />
+                      <span className="text-sm font-semibold">Upload Banner</span>
+                      <p className="text-xs mt-1">Max 5MB</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerChange}
+                      className="hidden"
+                    />
+                  </label>
+                  {bannerPreview && (
+                    <button
+                      type="button"
+                      onClick={() => setBannerPreview(null)}
+                      className="absolute top-4 right-4 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Avatar Upload */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Profile Picture
+                </label>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    {avatarPreview ? (
+                      <img
+                        src={avatarPreview}
+                        alt="Avatar"
+                        className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                        {user.username?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                    )}
+                    {avatarPreview && (
+                      <button
+                        type="button"
+                        onClick={() => setAvatarPreview(null)}
+                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <label className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 cursor-pointer transition">
+                    <Upload className="w-4 h-4 inline mr-2" />
+                    Upload Avatar
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                  </label>
+                  <p className="text-sm text-gray-600">Max 2MB</p>
+                </div>
+              </div>
+
+              {/* Bio */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Bio
+                </label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  maxLength={500}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  placeholder="Tell us about yourself..."
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  {formData.bio.length}/500 characters
+                </p>
+              </div>
+
+              {/* Specialty - Only for Doctors */}
+              {isDoctor && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Specialty
+                  </label>
+                  <input
+                    type="text"
+                    name="specialty"
+                    value={formData.specialty}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                    placeholder="e.g., Cardiology, General Practice"
+                  />
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => router.push('/settings')}
+                  className="px-6 py-2.5 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition shadow-lg disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}

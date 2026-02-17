@@ -6,6 +6,7 @@ import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { getImageUrl } from '@/lib/imageUrl'
 import {
     Plus,
     Calendar,
@@ -240,7 +241,7 @@ export default function PatientDashboard() {
                                         {appointments.map((apt) => (
                                             <div key={apt.id} className="bg-gray-50 p-4 rounded-xl flex items-center gap-4 border border-gray-100">
                                                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    {apt.doctor.avatar ? <img src={apt.doctor.avatar} className="w-full h-full object-cover rounded-full" alt={apt.doctor.username} /> : (
+                                                    {apt.doctor.avatar ? <img src={getImageUrl(apt.doctor.avatar) || ''} className="w-full h-full object-cover rounded-full" alt={apt.doctor.username} /> : (
                                                         <span className="text-blue-600 font-bold text-lg">
                                                             {apt.doctor.username.charAt(0).toUpperCase()}
                                                         </span>

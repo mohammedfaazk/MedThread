@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from '@/context/SocketContext';
+import { getImageUrl } from '@/lib/imageUrl';
 import axios from 'axios';
 
 interface Message {
@@ -173,7 +174,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             {/* Header */}
             <div className="p-4 border-b flex items-center gap-3 bg-white/20 backdrop-blur-sm border-neutral-400/20">
                 {otherUser.avatar && (
-                    <img src={otherUser.avatar} alt={otherUser.username} className="w-10 h-10 rounded-full" />
+                    <img src={getImageUrl(otherUser.avatar) || ''} alt={otherUser.username} className="w-10 h-10 rounded-full" />
                 )}
                 {!otherUser.avatar && (
                     <div className="w-10 h-10 rounded-full bg-[#00BCD4] flex items-center justify-center text-white font-bold">

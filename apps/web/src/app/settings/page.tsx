@@ -38,7 +38,19 @@ export default function SettingsPage() {
         setDeletionPreview(response.data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch deletion preview:', error)
+      // Silently fail - deletion preview is optional
+      console.warn('Could not fetch deletion preview (non-critical):', error)
+      // Set default empty preview so UI doesn't break
+      setDeletionPreview({
+        dataToDelete: {
+          posts: 0,
+          comments: 0,
+          votes: 0,
+          communities: 0,
+          followers: 0,
+          following: 0
+        }
+      })
     }
   }
 
@@ -114,8 +126,58 @@ export default function SettingsPage() {
         <Sidebar />
         
         <main className="flex-1 max-w-[900px]">
-          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg mb-6">
+          {/* Settings Navigation */}
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg mb-6">
             <h1 className="text-3xl font-bold mb-6 text-gray-900">Settings</h1>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => router.push('/settings/profile')}
+                className="p-4 bg-white/60 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition text-left"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-gray-900">Profile</h3>
+                </div>
+                <p className="text-sm text-gray-600">Edit your profile, avatar, and banner</p>
+              </button>
+
+              <button
+                onClick={() => router.push('/settings/security')}
+                className="p-4 bg-white/60 rounded-lg border border-gray-200 hover:border-green-500 hover:bg-green-50 transition text-left"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-green-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900">Security</h3>
+                </div>
+                <p className="text-sm text-gray-600">Password and two-factor authentication</p>
+              </button>
+
+              <button
+                onClick={() => router.push('/settings/notifications')}
+                className="p-4 bg-white/60 rounded-lg border border-gray-200 hover:border-purple-500 hover:bg-purple-50 transition text-left"
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-gray-900">Notifications</h3>
+                </div>
+                <p className="text-sm text-gray-600">Manage notification preferences</p>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg mb-6">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900">General Settings</h2>
             
             <div className="space-y-8">
               {/* Account Settings */}

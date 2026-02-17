@@ -3,9 +3,10 @@ import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import Link from 'next/link'
 import { AppointmentCalendar } from '@/components/Board/AppointmentCalendar'
 import { useUser } from '@/context/UserContext'
-import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import { ProfileTabs } from '@/components/ProfileTabs'
+import { getImageUrl } from '@/lib/imageUrl'
 
 export default function UserProfilePage({ params }: { params: { username: string } }) {
   const [showBooking, setShowBooking] = useState(false)
@@ -22,87 +23,77 @@ export default function UserProfilePage({ params }: { params: { username: string
   const fetchProfile = async () => {
     try {
       console.log('[Profile] Fetching profile for:', params.username);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       
-      // 1. Try fetching from API first (verified doctors)
+      // 1. Try fetching from new profile API endpoint
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const response = await axios.get(`${API_URL}/api/profile/${params.username}`);
+        
+        if (response.data.success) {
+          const userData = response.data.data;
+          console.log('[Profile] Found user from API:', userData);
+          setProfileUser(userData);
+          setLoading(false);
+          return;
+        }
+      } catch (apiError: any) {
+        console.warn('[Profile] Profile API fetch failed:', apiError.response?.status, apiError.response?.data);
+        
+        // If it's a 404, the user doesn't exist
+        if (apiError.response?.status === 404) {
+          console.warn('[Profile] User not found:', params.username);
+          setProfileUser(null);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // 2. Fallback: Try fetching verified doctors list
+      try {
         const response = await axios.get(`${API_URL}/api/v1/doctor-verification/verified`);
         const doctorsList = response.data?.data?.doctors || response.data?.doctors || [];
         
-        // Find doctor by ID or username
         const matchedDoctor = doctorsList.find((doc: any) => 
           doc.id === params.username || doc.username === params.username
         );
         
         if (matchedDoctor) {
-          console.log('[Profile] Found verified doctor from API:', matchedDoctor);
+          console.log('[Profile] Found verified doctor from list:', matchedDoctor);
           setProfileUser({ ...matchedDoctor, role: 'VERIFIED_DOCTOR' });
           setLoading(false);
           return;
         }
-      } catch (apiError) {
-        console.warn('[Profile] API fetch failed:', apiError);
+      } catch (doctorError) {
+        console.warn('[Profile] Doctor verification API failed:', doctorError);
       }
 
-      // 2. Try finding as a doctor in Supabase by ID or user_id
-      let { data: profile, error: dError } = await supabase
-        .from('doctors')
-        .select('*')
-        .or(`id.eq.${params.username},user_id.eq.${params.username}`)
-        .maybeSingle()
-
-      let role: 'VERIFIED_DOCTOR' | 'PATIENT' = 'VERIFIED_DOCTOR'
-
-      // 3. If not found in Supabase, try doctor_data.json fallback
-      if (!profile) {
-        try {
-          const response = await fetch('/doctor_data.json');
-          if (response.ok) {
-            const doctorData = await response.json();
-            const matchedDoctor = doctorData.find((doc: any) => 
-              doc.id === params.username || doc.user_id === params.username || doc.username === params.username
-            );
-            if (matchedDoctor) {
-              profile = matchedDoctor;
-              console.log('[Profile] Found doctor in fallback JSON:', profile);
-            }
+      // 3. Final fallback: Try doctor_data.json
+      try {
+        const response = await fetch('/doctor_data.json');
+        if (response.ok) {
+          const doctorData = await response.json();
+          const matchedDoctor = doctorData.find((doc: any) => 
+            doc.id === params.username || doc.user_id === params.username || doc.username === params.username
+          );
+          if (matchedDoctor) {
+            console.log('[Profile] Found doctor in fallback JSON:', matchedDoctor);
+            setProfileUser({ ...matchedDoctor, role: 'VERIFIED_DOCTOR' });
+            setLoading(false);
+            return;
           }
-        } catch (jsonError) {
-          console.warn('[Profile] Failed to load doctor_data.json:', jsonError);
         }
+      } catch (jsonError) {
+        console.warn('[Profile] Failed to load doctor_data.json:', jsonError);
       }
 
-      // 4. Try finding as a patient by ID
-      if (!profile) {
-        role = 'PATIENT'
-        const { data: patientById } = await supabase
-          .from('patient_health_record')
-          .select('*')
-          .eq('user_id', params.username)
-          .maybeSingle()
-
-        if (!patientById) {
-          const { data: patientByIdFull } = await supabase
-            .from('patient_health_record')
-            .select('*')
-            .eq('id', params.username)
-            .maybeSingle()
-          if (patientByIdFull) profile = patientByIdFull
-        } else {
-          profile = patientById
-        }
-      }
-
-      if (profile) {
-        console.log('[Profile] Found profile:', profile);
-        setProfileUser({ ...profile, role })
-      } else {
-        console.warn('[Profile] No user found for ID:', params.username)
-      }
+      // If we get here, user was not found
+      console.warn('[Profile] No user found for username:', params.username);
+      setProfileUser(null);
     } catch (error) {
-      console.error('[Profile] Error fetching profile:', error)
+      console.error('[Profile] Error fetching profile:', error);
+      setProfileUser(null);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -112,81 +103,140 @@ export default function UserProfilePage({ params }: { params: { username: string
   const doctorId = profileUser.id;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <NavbarEnhanced />
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg hover:shadow-xl transition-all">
-          <div className="flex items-start gap-6">
-            {profileUser.avatar ? (
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        {/* Profile Card */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          {/* Banner Section */}
+          <div className="relative h-48 sm:h-56 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+            {profileUser.banner && (
               <img
-                src={profileUser.avatar}
-                alt={profileUser.username || profileUser.name}
-                className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                src={getImageUrl(profileUser.banner) || ''}
+                alt="Profile Banner"
+                className="w-full h-full object-cover"
               />
-            ) : (
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-4xl font-bold shadow-lg">
-                {(profileUser.username || profileUser.full_name || profileUser.name || params.username)[0].toUpperCase()}
-              </div>
             )}
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">
+          </div>
+
+          {/* Profile Info Section */}
+          <div className="px-6 pb-6">
+            {/* Avatar - Positioned to overlap banner */}
+            <div className="-mt-16 mb-4">
+              <div className="relative z-10 inline-block">
+                {profileUser.avatar ? (
+                  <img
+                    src={getImageUrl(profileUser.avatar) || ''}
+                    alt={profileUser.username || profileUser.name}
+                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg bg-white"
+                  />
+                ) : (
+                  <div className="w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-lg border-4 border-white">
+                    {(profileUser.username || profileUser.full_name || profileUser.name || params.username)[0].toUpperCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Name and Username */}
+            <div className="mb-3">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
                 {profileUser.role === 'VERIFIED_DOCTOR' 
                   ? `Dr. ${profileUser.username || profileUser.full_name || profileUser.name || params.username}`
-                  : (profileUser.full_name || profileUser.name || profileUser.username || `u/${params.username}`)
+                  : (profileUser.full_name || profileUser.name || profileUser.username || params.username)
                 }
               </h1>
-              <div className="flex gap-6 text-sm text-gray-600 mb-4">
-                <div>
-                  <span className="font-semibold">{profileUser.totalKarma || 0}</span> Karma
-                </div>
-                {profileUser.yearsOfExperience && (
-                  <div>
-                    <span className="font-semibold">{profileUser.yearsOfExperience}</span> years experience
-                  </div>
-                )}
-                {profileUser.hospitalAffiliation && (
-                  <div>
-                    🏥 <span className="font-semibold">{profileUser.hospitalAffiliation}</span>
-                  </div>
-                )}
-                {profileUser.role === 'VERIFIED_DOCTOR' && (profileUser.specialty || profileUser.specialization) && (
-                  <div className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold uppercase">
-                    {profileUser.specialty || profileUser.specialization}
-                  </div>
-                )}
-                {profileUser.role === 'VERIFIED_DOCTOR' && (
-                  <div className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold uppercase flex items-center gap-1">
-                    ✓ Verified Doctor
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3">
-                {/* <button className="px-6 py-2 bg-[#FF4500] text-white rounded-full font-semibold hover:bg-[#ff5722]">
-                  Follow
-                </button> */}
-                <Link href={`/profile?tab=consultation&doctor=${doctorId}`}>
-                  <button className="px-6 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50">
-                    Message
-                  </button>
-                </Link>
+              <p className="text-gray-600 text-base">@{profileUser.username || params.username}</p>
+            </div>
 
-                {/* Show booking button only if viewing a doctor profile and user is a patient */}
-                {profileUser.role === 'VERIFIED_DOCTOR' && currentUserRole === 'PATIENT' && (
-                  <button
-                    onClick={() => setShowBooking(!showBooking)}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600"
-                  >
-                    {showBooking ? 'Hide Booking' : 'Book Appointment'}
-                  </button>
-                )}
+            {/* Bio */}
+            {profileUser.bio && (
+              <p className="text-gray-700 mb-4 text-base leading-relaxed max-w-2xl">{profileUser.bio}</p>
+            )}
+
+            {/* Stats and Badges */}
+            <div className="flex flex-wrap items-center gap-3 text-sm mb-4">
+              {/* Karma */}
+              <div className="flex items-center gap-1.5">
+                <span className="font-semibold text-gray-900">{profileUser.totalKarma || 0}</span>
+                <span className="text-gray-600">Karma</span>
               </div>
+
+              {/* Separator */}
+              <span className="text-gray-300">•</span>
+
+              {/* Verified Doctor Badge */}
+              {profileUser.role === 'VERIFIED_DOCTOR' && (
+                <>
+                  <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Verified Doctor
+                  </span>
+                  <span className="text-gray-300">•</span>
+                </>
+              )}
+
+              {/* Specialty */}
+              {(profileUser.specialty || profileUser.specialization) && (
+                <>
+                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                    {profileUser.specialty || profileUser.specialization}
+                  </span>
+                  <span className="text-gray-300">•</span>
+                </>
+              )}
+
+              {/* Years of Experience */}
+              {profileUser.yearsOfExperience && (
+                <>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <span className="font-semibold text-gray-900">{profileUser.yearsOfExperience}</span>
+                    <span>years experience</span>
+                  </div>
+                  <span className="text-gray-300">•</span>
+                </>
+              )}
+
+              {/* Hospital Affiliation */}
+              {profileUser.hospitalAffiliation && (
+                <div className="flex items-center gap-1.5 text-gray-600">
+                  <span>🏥</span>
+                  <span className="font-medium">{profileUser.hospitalAffiliation}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons - Below stats for better visibility */}
+            <div className="flex flex-wrap gap-3">
+              <Link href={`/profile?tab=consultation&doctor=${doctorId}`}>
+                <button className="px-5 py-2.5 border-2 border-gray-300 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition text-sm flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Message
+                </button>
+              </Link>
+
+              {profileUser.role === 'VERIFIED_DOCTOR' && currentUserRole === 'PATIENT' && (
+                <button
+                  onClick={() => setShowBooking(!showBooking)}
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm flex items-center gap-2 shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {showBooking ? 'Hide Booking' : 'Book Appointment'}
+                </button>
+              )}
             </div>
           </div>
 
           {/* Appointment Booking Section */}
           {showBooking && profileUser.role === 'VERIFIED_DOCTOR' && currentUserRole === 'PATIENT' && (
-            <div className="mt-8 border-t border-gray-200 pt-6">
+            <div className="px-6 pb-6 border-t border-gray-200 pt-6">
               <AppointmentCalendar
                 doctorId={doctorId}
                 patientId={effectiveCurrentUserId}
@@ -198,16 +248,9 @@ export default function UserProfilePage({ params }: { params: { username: string
             </div>
           )}
 
-          <div className="mt-8 border-t border-gray-200 pt-6">
-            <div className="flex gap-6 border-b border-gray-200">
-              <button className="px-4 py-2 font-semibold border-b-2 border-[#00BCD4]">Posts</button>
-              <button className="px-4 py-2 text-gray-600 hover:bg-gray-50">Comments</button>
-              <button className="px-4 py-2 text-gray-600 hover:bg-gray-50">About</button>
-            </div>
-
-            <div className="mt-6">
-              <p className="text-gray-600">No posts yet</p>
-            </div>
+          {/* Profile Tabs */}
+          <div className="border-t border-gray-200">
+            <ProfileTabs username={params.username} profileUser={profileUser} />
           </div>
         </div>
       </div>

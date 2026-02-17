@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { KarmaDisplay } from '@/components/KarmaDisplay'
+import { getImageUrl } from '@/lib/imageUrl'
 import Link from 'next/link'
 import axios from 'axios'
 import { Trophy, TrendingUp, Stethoscope, Users, Loader2, Crown, Medal, Award } from 'lucide-react'
@@ -170,7 +171,7 @@ export default function LeaderboardPage() {
                     {/* Avatar */}
                     {user.avatar ? (
                       <img
-                        src={user.avatar}
+                        src={getImageUrl(user.avatar) || ''}
                         alt={user.username}
                         className="w-14 h-14 rounded-full object-cover"
                       />

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import axios from 'axios'
+import { useJWTAuth } from '@/context/JWTAuthContext'
 
 // Medical specialties list
 const SPECIALTIES = [
@@ -52,6 +53,7 @@ import { Stethoscope, UserRound } from 'lucide-react'
 
 export default function SignupPage() {
   const router = useRouter()
+  const { login } = useJWTAuth()
   const [userType, setUserType] = useState<'patient' | 'doctor'>('patient')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -182,7 +184,8 @@ export default function SignupPage() {
       })
 
       if (response.data.success) {
-        localStorage.setItem('auth_token', response.data.data.token)
+        // Use the login function from context to properly set auth state
+        login(response.data.data.token, response.data.data.user)
         alert('Account created successfully! Welcome to MedThread.')
         router.push('/')
       }
@@ -261,7 +264,10 @@ export default function SignupPage() {
 
       if (registerResponse.data.success) {
         const token = registerResponse.data.data.token
-        localStorage.setItem('auth_token', token)
+        const userData = registerResponse.data.data.user
+        
+        // Use the login function from context to properly set auth state
+        login(token, userData)
 
         // Step 2: Submit verification request
         try {

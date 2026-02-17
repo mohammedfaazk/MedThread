@@ -8,6 +8,10 @@ interface User {
     email: string;
     role: 'PATIENT' | 'DOCTOR' | 'ADMIN';
     doctorVerificationStatus?: string;
+    avatar?: string;
+    banner?: string;
+    bio?: string;
+    specialty?: string;
 }
 
 interface AuthContextType {

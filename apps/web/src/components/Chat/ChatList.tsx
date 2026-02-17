@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getImageUrl } from '@/lib/imageUrl';
 
 interface Conversation {
     id: string;
@@ -147,7 +148,7 @@ export const ChatList: React.FC<ChatListProps> = ({
                                 <div className="flex items-center gap-3">
                                     {other?.avatar && (
                                         <img
-                                            src={other.avatar}
+                                            src={getImageUrl(other.avatar) || ''}
                                             alt={other.username}
                                             className="w-12 h-12 rounded-full"
                                         />

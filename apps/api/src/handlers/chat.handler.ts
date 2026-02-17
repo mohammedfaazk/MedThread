@@ -14,12 +14,39 @@ export const chatHandler = (io: Server, socket: Socket) => {
     });
 
     // Send a message
-    socket.on("send_message", (data: any) => {
-        // data should contain conversationId, content, senderId, etc.
-        // In a real implementation, we would save to DB here or via API
-        // For now, just relay it to the room
+    socket.on("send_message", async (data: any) => {
+        // data should contain conversationId, content, senderId, receiverId, etc.
         const { conversationId, message } = data;
+        
+        // Relay message to the room
         io.to(conversationId).emit("receive_message", message);
+        
+        // Create direct message notification for the receiver
+        if (message.senderId && message.receiverId) {
+            try {
+                const { notificationService } = await import('../services/notification.service');
+                const { socketDeliveryService } = await import('../services/socket-delivery.service');
+                
+                const notifications = await notificationService.createNotification({
+                    type: 'DIRECT_MESSAGE',
+                    recipientIds: [message.receiverId],
+                    actorId: message.senderId,
+                    contentId: conversationId,
+                    contentType: 'POST', // Using POST as placeholder since CONVERSATION is not in ContentType enum
+                    metadata: {
+                        preview: message.content?.substring(0, 100) || 'Sent a message',
+                        link: `/chat?conversation=${conversationId}`,
+                    },
+                });
+                
+                // Send notification via socket
+                for (const notification of notifications) {
+                    await socketDeliveryService.sendNotification([notification.recipientId], notification);
+                }
+            } catch (error) {
+                console.error('Error creating direct message notification:', error);
+            }
+        }
     });
 
     // Typing indicator
@@ -31,3 +58,4 @@ export const chatHandler = (io: Server, socket: Socket) => {
         console.log(`User disconnected: ${socket.id}`);
     });
 };
+

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
+import { getImageUrl } from '@/lib/imageUrl'
 import axios from 'axios'
 import {
   Settings,
@@ -384,7 +385,7 @@ export default function CommunitySettingsPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                           {member.avatar ? (
-                            <img src={member.avatar} alt={member.username} className="w-full h-full rounded-full object-cover" />
+                            <img src={getImageUrl(member.avatar) || ''} alt={member.username} className="w-full h-full rounded-full object-cover" />
                           ) : (
                             <span className="text-blue-600 font-bold text-lg">
                               {member.username.charAt(0).toUpperCase()}
@@ -443,7 +444,7 @@ export default function CommunitySettingsPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                           {mod.avatar ? (
-                            <img src={mod.avatar} alt={mod.username} className="w-full h-full rounded-full object-cover" />
+                            <img src={getImageUrl(mod.avatar) || ''} alt={mod.username} className="w-full h-full rounded-full object-cover" />
                           ) : (
                             <span className="text-purple-600 font-bold text-lg">
                               {mod.username.charAt(0).toUpperCase()}

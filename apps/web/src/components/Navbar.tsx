@@ -3,11 +3,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { Search, Bell, User, LogOut, Settings, Heart, Leaf, Stethoscope, ChevronDown, CheckCircle2 } from 'lucide-react'
+import { NotificationBell } from './NotificationBell'
 
 export function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
   const router = useRouter()
   const { user, role, loading, logout } = useJWTAuth()
   
@@ -61,31 +61,7 @@ export function Navbar() {
           {user ? (
             <>
               {/* Notifications */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 hover:bg-neutral-300/20 backdrop-blur-[1px] border border-neutral-400/20 rounded-xl relative transition-all"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF4500] rounded-full"></span>
-                </button>
-
-                {showNotifications && (
-                  <div className="absolute right-0 top-12 w-80 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
-                    <div className="p-4 border-b border-neutral-400/20 bg-neutral-300/10">
-                      <h3 className="font-semibold text-sm">Notifications</h3>
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      <div className="p-4 hover:bg-neutral-300/20 cursor-pointer border-b border-neutral-400/10 transition-all">
-                        <p className="text-sm"><span className="font-semibold">Dr_Sarah_Johnson</span> replied to your post</p>
-                        <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <NotificationBell />
 
               {/* User Menu */}
               <div className="relative">
