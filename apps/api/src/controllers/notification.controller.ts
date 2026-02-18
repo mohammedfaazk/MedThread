@@ -309,8 +309,7 @@ export class NotificationController {
       });
     }
 
-    // TODO: Add admin check when admin middleware is available
-    // For now, allow any authenticated user to view stats
+    // Admin check is handled by requireAdmin middleware
 
     const stats = await emailQueueService.getQueueStats();
     const circuitBreakerStatus = emailQueueService.getCircuitBreakerStatus();
@@ -336,7 +335,7 @@ export class NotificationController {
       });
     }
 
-    // TODO: Add admin check when admin middleware is available
+    // Admin check is handled by requireAdmin middleware
 
     const count = await emailQueueService.retryFailedJobs();
 
@@ -359,7 +358,7 @@ export class NotificationController {
       });
     }
 
-    // TODO: Add admin check when admin middleware is available
+    // Admin check is handled by requireAdmin middleware
 
     emailQueueService.resetCircuitBreaker();
 

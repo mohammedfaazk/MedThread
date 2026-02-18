@@ -1,0 +1,25 @@
+# PWA Icons Directory
+
+This directory contains PWA icons in various sizes.
+
+## Generate Icons
+
+Run the following command to generate all required icons:
+
+```bash
+node scripts/generate-pwa-icons.js public/medthread-logo-1.jpeg
+```
+
+Or use an online tool:
+https://realfavicongenerator.net/
+
+## Required Sizes
+
+- 72x72
+- 96x96
+- 128x128
+- 144x144
+- 152x152
+- 192x192
+- 384x384
+- 512x512

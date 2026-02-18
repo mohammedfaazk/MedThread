@@ -36,6 +36,7 @@ import { profileRouter } from './routes/profile.routes';
 import { followRouter } from './routes/follow';
 import { badgeRouter } from './routes/badge.routes';
 import { blockRouter } from './routes/block.routes';
+import { usersRouter } from './routes/users.routes';
 
 dotenv.config();
 
@@ -109,6 +110,9 @@ app.use('/api/badges', badgeRouter);
 
 // Block System
 app.use('/api/block', blockRouter);
+
+// Users System
+app.use('/api/users', usersRouter);
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

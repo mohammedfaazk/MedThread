@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { notificationController } from '../controllers/notification.controller';
 import { authenticate } from '../middleware/auth';
+import { requireAdmin } from '../middleware/requireAdmin';
 import { notificationRateLimit } from '../middleware/rateLimit';
 
 const router = Router();
@@ -108,33 +109,36 @@ router.post(
 /**
  * @route   GET /api/notifications/queue/stats
  * @desc    Get email queue statistics
- * @access  Private (Admin only - TODO: add admin middleware)
+ * @access  Private (Admin only)
  */
 router.get(
   '/queue/stats',
   authenticate,
+  requireAdmin,
   notificationController.getQueueStats
 );
 
 /**
  * @route   POST /api/notifications/queue/retry-failed
  * @desc    Retry failed email jobs
- * @access  Private (Admin only - TODO: add admin middleware)
+ * @access  Private (Admin only)
  */
 router.post(
   '/queue/retry-failed',
   authenticate,
+  requireAdmin,
   notificationController.retryFailedJobs
 );
 
 /**
  * @route   POST /api/notifications/queue/reset-circuit-breaker
  * @desc    Reset email service circuit breaker
- * @access  Private (Admin only - TODO: add admin middleware)
+ * @access  Private (Admin only)
  */
 router.post(
   '/queue/reset-circuit-breaker',
   authenticate,
+  requireAdmin,
   notificationController.resetCircuitBreaker
 );
 

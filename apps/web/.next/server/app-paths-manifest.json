@@ -1,9 +1,14 @@
 {
-  "/chat/page": "app/chat/page.js",
-  "/dashboard/patient/page": "app/dashboard/patient/page.js",
-  "/u/[username]/page": "app/u/[username]/page.js",
   "/login/page": "app/login/page.js",
-  "/dashboard/doctor/page": "app/dashboard/doctor/page.js",
+  "/dashboard/patient/page": "app/dashboard/patient/page.js",
   "/settings/page": "app/settings/page.js",
-  "/profile/page": "app/profile/page.js"
+  "/u/[username]/page": "app/u/[username]/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/patients/profile/page": "app/patients/profile/page.js",
+  "/not-found": "app/not-found.js",
+  "/page": "app/page.js",
+  "/offline/page": "app/offline/page.js",
+  "/chat/page": "app/chat/page.js",
+  "/appointments/page": "app/appointments/page.js",
+  "/settings/profile/page": "app/settings/profile/page.js"
 }
