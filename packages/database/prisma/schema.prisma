@@ -80,6 +80,7 @@ model User {
   commentKarma     Int      @default(0)
   totalKarma       Int      @default(0)
   coins            Int      @default(0) // Virtual currency for awards
+  badgePoints      Int      @default(0) // Points from earned badges
   isPremium        Boolean  @default(false)
   isNSFW           Boolean  @default(false)
   isSuspended      Boolean  @default(false)
@@ -96,6 +97,7 @@ model User {
   savedComments           SavedComment[]
   hiddenPosts             HiddenPost[]
   givenAwards             AwardGiven[]
+  badges                  UserBadge[]
   communities             CommunityMember[]
   moderating              CommunityModerator[]
   following               Follow[]                 @relation("Following")
@@ -111,10 +113,12 @@ model User {
   reports                 Report[]
 
   // Chat & Appointments
-  availabilities        Availability[]
-  appointmentsAsDoctor  Appointment[]  @relation("DoctorAppointments")
-  appointmentsAsPatient Appointment[]  @relation("PatientAppointments")
-  conversations         Conversation[] @relation("ConversationParticipants")
+  availabilities            Availability[]
+  appointmentsAsDoctor      Appointment[]  @relation("DoctorAppointments")
+  appointmentsAsPatient     Appointment[]  @relation("PatientAppointments")
+  conversations             Conversation[] @relation("ConversationParticipants")
+  conversationsAsPatient    Conversation[] @relation("PatientConversations")
+  conversationsAsDoctor     Conversation[] @relation("DoctorConversations")
 
   // Medical Threads
   medicalThreads MedicalThread[]     @relation("PatientThreads")
@@ -382,25 +386,30 @@ model Block {
 }
 
 model Message {
-  id         String  @id @default(cuid())
-  senderId   String
-  sender     User    @relation("Sender", fields: [senderId], references: [id])
-  receiverId String
-  receiver   User    @relation("Receiver", fields: [receiverId], references: [id])
-  subject    String?
-  content    String
-  isRead     Boolean @default(false)
-
-  // New fields for Chat
+  id             String        @id @default(cuid())
+  senderId       String
+  sender         User          @relation("Sender", fields: [senderId], references: [id])
+  receiverId     String
+  receiver       User          @relation("Receiver", fields: [receiverId], references: [id])
+  subject        String?
+  content        String
+  isRead         Boolean       @default(false)
   conversationId String?
-  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   attachment     String?
   type           MessageType   @default(TEXT)
-
-  createdAt DateTime @default(now())
+  isEdited       Boolean       @default(false)
+  isDeleted      Boolean       @default(false)
+  readAt         DateTime?
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
 
   @@index([senderId])
   @@index([receiverId])
+  @@index([conversationId, createdAt])
+  @@index([readAt])
+  @@index([isDeleted])
 }
 
 enum NotificationType {
@@ -544,13 +553,24 @@ model Appointment {
 }
 
 model Conversation {
-  id            String       @id @default(cuid())
-  appointmentId String?      @unique
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  participants  User[]       @relation("ConversationParticipants")
-  messages      Message[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  appointmentId  String?      @unique
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id])
+  patientId      String?
+  patient        User?        @relation("PatientConversations", fields: [patientId], references: [id])
+  doctorId       String?
+  doctor         User?        @relation("DoctorConversations", fields: [doctorId], references: [id])
+  participants   User[]       @relation("ConversationParticipants")
+  messages       Message[]
+  isActive       Boolean      @default(true)
+  lastMessageAt  DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([appointmentId])
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([isActive])
 }
 
 enum MessageType {
@@ -622,4 +642,17 @@ model CaseTimelineEvent {
   @@index([threadId])
   @@index([userId])
   @@index([timestamp])
+}
+
+// Badge System
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeType String   // BadgeType enum value
+  earnedAt  DateTime @default(now())
+
+  @@unique([userId, badgeType])
+  @@index([userId])
+  @@index([earnedAt])
 }

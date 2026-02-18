@@ -141,6 +141,18 @@ export const postService = {
       }
     }
 
+    // Check engagement badges in background
+    if (!data.isDraft) {
+      try {
+        const { badgeService } = await import('./badge.service');
+        badgeService.checkEngagementBadges(data.authorId).catch(err => {
+          console.error('Error checking engagement badges:', err);
+        });
+      } catch (error) {
+        console.error('Error importing badge service:', error);
+      }
+    }
+
     return post;
   },
 

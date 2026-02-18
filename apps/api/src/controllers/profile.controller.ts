@@ -56,7 +56,23 @@ export class ProfileController {
   async getProfileByUsername(req: AuthRequest, res: Response) {
     try {
       const { username } = req.params;
+      const currentUserId = req.userId;
+      
       const user = await userService.getUserByUsername(username);
+      
+      // Check if blocked (if user is authenticated)
+      if (currentUserId && user.id !== currentUserId) {
+        const { blockService } = await import('../services/block.service');
+        const hasBlock = await blockService.hasBlockBetween(currentUserId, user.id);
+        
+        if (hasBlock) {
+          return res.status(403).json({
+            success: false,
+            error: 'Profile not accessible',
+          });
+        }
+      }
+      
       res.json({ success: true, data: user });
     } catch (error: any) {
       res.status(error.statusCode || 500).json({ 

@@ -12,6 +12,7 @@
   "dependencies": {
     "@medthread/database": "*",
     "@medthread/types": "*",
+    "@prisma/client": "^7.4.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",

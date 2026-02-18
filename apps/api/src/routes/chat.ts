@@ -2,11 +2,108 @@ import { Router } from 'express';
 import { PrismaClient } from '@medthread/database';
 import { authenticate } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
+import { checkBlock } from '../middleware/blockCheck';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 import { conversationsStore, messagesStore, appointmentsStore, createMockConversation, saveStore } from '../lib/mockStore';
+
+// Get conversation previews (optimized for inbox - no full message history)
+router.get('/conversations/preview', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        console.log('[API] Fetching conversation previews for userId:', userId);
+
+        let conversations: any[] = [];
+
+        try {
+            // Optimized query: only fetch last message, not full history
+            conversations = await prisma.conversation.findMany({
+                where: {
+                    OR: [
+                        { patientId: userId as string },
+                        { doctorId: userId as string }
+                    ],
+                    isActive: true
+                },
+                include: {
+                    appointment: {
+                        include: {
+                            patient: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    avatar: true,
+                                    role: true
+                                }
+                            },
+                            doctor: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    avatar: true,
+                                    role: true,
+                                    specialty: true
+                                }
+                            }
+                        }
+                    },
+                    // Only fetch the LAST message for preview
+                    messages: {
+                        where: { isDeleted: false },
+                        orderBy: { createdAt: 'desc' },
+                        take: 1,
+                        select: {
+                            id: true,
+                            content: true,
+                            senderId: true,
+                            createdAt: true,
+                            isRead: true
+                        }
+                    }
+                },
+                orderBy: {
+                    lastMessageAt: 'desc'
+                }
+            });
+
+            // Calculate unread counts efficiently
+            const conversationsWithUnread = await Promise.all(
+                conversations.map(async (conv) => {
+                    const unreadCount = await prisma.message.count({
+                        where: {
+                            conversationId: conv.id,
+                            receiverId: userId as string,
+                            isRead: false,
+                            isDeleted: false
+                        }
+                    });
+
+                    return {
+                        id: conv.id,
+                        participants: [
+                            conv.appointment.patient,
+                            conv.appointment.doctor
+                        ],
+                        lastMessage: conv.messages[0] || null,
+                        unreadCount,
+                        lastMessageAt: conv.lastMessageAt
+                    };
+                })
+            );
+
+            console.log(`[API] Returning ${conversationsWithUnread.length} conversation previews`);
+            return res.json(conversationsWithUnread);
+        } catch (dbError) {
+            console.error('[API] DB preview fetch failed:', dbError);
+            return res.status(500).json({ error: 'Failed to fetch conversation previews' });
+        }
+    } catch (error) {
+        console.error('[API] Fetch conversation previews error:', error);
+        res.status(500).json({ error: 'Failed to fetch conversation previews' });
+    }
+});
 
 // Get all conversations for a user
 router.get('/conversations', async (req, res) => {

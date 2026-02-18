@@ -1,181 +1,417 @@
-'use client'
+'use client';
 
-import { NavbarEnhanced } from '@/components/NavbarEnhanced'
-import { Sidebar } from '@/components/Sidebar'
-import { ChatList } from '@/components/Chat/ChatList'
-import { ChatWindow } from '@/components/Chat/ChatWindow'
-import { useUser } from '@/context/UserContext'
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
-import axios from 'axios'
-
-interface Appointment {
-  id: string;
-  patient: { username: string; avatar?: string };
-  doctor: { username: string; avatar?: string };
-  startTime: string;
-  endTime: string;
-  status: string;
-  reason?: string;
-}
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import ChatInbox from '@/components/Chat/ChatInbox';
+import ChatWindow from '@/components/Chat/ChatWindow';
+import { 
+  ArrowLeft, 
+  AlertCircle, 
+  Lock, 
+  LayoutDashboard, 
+  MessageSquare, 
+  Calendar,
+  User,
+  Settings,
+  LogOut,
+  Stethoscope,
+  Users
+} from 'lucide-react';
 
 export default function ChatPage() {
-  const searchParams = useSearchParams()
-  const conversationIdParam = searchParams.get('conversationId')
-  const initialTab = searchParams.get('tab') || 'messages'
-  const [activeTab, setActiveTab] = useState(initialTab)
-  const { user, role, profileId, loading: userLoading } = useUser()
-  const [selectedConversation, setSelectedConversation] = useState<any>(null)
-  const [appointments, setAppointments] = useState<Appointment[]>([])
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>('');
+  const [accessDeniedReason, setAccessDeniedReason] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const userRole = role;
-  const effectiveUserId = profileId || user?.id;
+  // Add chat-page class to body
+  useEffect(() => {
+    document.body.classList.add('chat-page');
+    return () => {
+      document.body.classList.remove('chat-page');
+    };
+  }, []);
 
   useEffect(() => {
-    if (activeTab === 'appointments' && effectiveUserId) {
-      loadAppointments()
-    }
-  }, [activeTab, effectiveUserId])
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  const loadAppointments = async () => {
-    try {
-      const res = await axios.get(`/api/appointments/appointments?userId=${effectiveUserId}&role=${userRole === 'VERIFIED_DOCTOR' ? 'doctor' : 'patient'}`)
-      setAppointments(res.data);
-    } catch (error) {
-      console.error('Failed to load appointments:', error)
+  useEffect(() => {
+    const storedToken = localStorage.getItem('auth_token');
+    const storedUserData = localStorage.getItem('user');
+    
+    if (!storedToken || !storedUserData) {
+      setIsLoading(false);
+      return;
     }
+
+    try {
+      const userData = JSON.parse(storedUserData);
+      setCurrentUserId(userData.id);
+      setToken(storedToken);
+      setUserRole(userData.role);
+      setUsername(userData.username || 'User');
+
+      if (userData.role === 'DOCTOR' && !isVerified) {
+        setShowPasswordModal(true);
+      } else {
+        setIsVerified(true);
+      }
+
+      const conversationId = searchParams.get('conversation');
+      if (conversationId) {
+        setSelectedConversationId(conversationId);
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchParams, isVerified]);
+
+  const handlePasswordVerification = async () => {
+    if (!password) {
+      setPasswordError('Please enter your password');
+      return;
+    }
+
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await fetch(`${API_URL}/api/auth/verify-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ password })
+      });
+
+      if (response.ok) {
+        setIsVerified(true);
+        setShowPasswordModal(false);
+        setPassword('');
+        setPasswordError('');
+      } else {
+        setPasswordError('Incorrect password');
+      }
+    } catch (error) {
+      console.error('Password verification error:', error);
+      setIsVerified(true);
+      setShowPasswordModal(false);
+    }
+  };
+
+  const handleSelectConversation = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    setAccessDeniedReason(null);
+    
+    const url = new URL(window.location.href);
+    url.searchParams.set('conversation', conversationId);
+    window.history.pushState({}, '', url.toString());
+  };
+
+  const handleAccessDenied = (reason: string) => {
+    setAccessDeniedReason(reason);
+  };
+
+  const handleBack = () => {
+    setSelectedConversationId(null);
+    setAccessDeniedReason(null);
+    
+    const url = new URL(window.location.href);
+    url.searchParams.delete('conversation');
+    window.history.pushState({}, '', url.toString());
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
+
+  if (!currentUserId || !token) {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-screen" style={{ background: 'linear-gradient(135deg, #f6e3af 0%, #7dc2f1 100%)' }}>
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-700">Loading...</p>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50 p-8">
+        <AlertCircle size={64} className="text-blue-600 mb-4" />
+        <h2 className="text-2xl font-semibold mb-2">Authentication Required</h2>
+        <p className="text-gray-600 mb-6 text-center max-w-md">
+          Please log in to access the chat system
+        </p>
+        <button
+          onClick={() => router.push('/login')}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Go to Login
+        </button>
+      </div>
+    );
   }
 
-  const handleApproveReject = async (appointmentId: string, status: 'APPROVED' | 'REJECTED') => {
-    try {
-      await axios.put(`/api/appointments/appointments/${appointmentId}`, {
-        status,
-        doctorId: effectiveUserId
-      })
-      loadAppointments()
-      alert(`Appointment ${status.toLowerCase()}!`)
-    } catch (error) {
-      console.error('Failed to update appointment:', error)
-    }
-  }
-
-  if (userLoading || !user) return <div className="p-8">Loading...</div>
-
-  return (
-    <div className="min-h-screen">
-      <NavbarEnhanced />
-      <div className="flex max-w-[1400px] mx-auto">
-        <Sidebar />
-        <div className="flex-1 px-6 py-8">
-          {/* Tab Navigation */}
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/20 mb-6">
-            <div className="flex border-b border-white/20">
-              <button
-                onClick={() => setActiveTab('messages')}
-                className={`px-6 py-4 font-medium transition ${
-                  activeTab === 'messages'
-                    ? 'border-b-2 border-cyan-500 text-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Messages
-              </button>
-              <button
-                onClick={() => setActiveTab('appointments')}
-                className={`px-6 py-4 font-medium transition ${
-                  activeTab === 'appointments'
-                    ? 'border-b-2 border-cyan-500 text-cyan-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Appointments
-              </button>
+  if (showPasswordModal && userRole === 'DOCTOR') {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+          <div className="flex items-center justify-center mb-6">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <Lock size={32} className="text-blue-600" />
             </div>
           </div>
-
-        {/* Tab Content */}
-        {activeTab === 'messages' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[600px]">
-            <div className="md:col-span-1">
-              <ChatList
-                currentUserId={effectiveUserId}
-                autoSelectOtherUserId={searchParams.get('doctor')}
-                autoSelectConversationId={conversationIdParam}
-                onSelectConversation={setSelectedConversation}
-                activeTab="consultation"
-                onTabChange={() => {}}
+          <h2 className="text-2xl font-semibold text-center mb-2">Verify Your Identity</h2>
+          <p className="text-gray-600 text-center mb-6">
+            For security purposes, please enter your password to access patient chats
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError('');
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handlePasswordVerification();
+                  }
+                }}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter your password"
+                autoFocus
               />
-            </div>
-            <div className="md:col-span-2">
-              {selectedConversation ? (
-                <ChatWindow
-                  conversationId={selectedConversation.id}
-                  currentUserId={effectiveUserId}
-                  otherUser={selectedConversation.participants.find((p: any) => p.id !== effectiveUserId)}
-                />
-              ) : (
-                <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg h-full flex items-center justify-center text-gray-500 border border-white/20">
-                  Select a conversation to start chatting
-                </div>
+              {passwordError && (
+                <p className="text-red-600 text-sm mt-2">{passwordError}</p>
               )}
             </div>
+            <button
+              onClick={handlePasswordVerification}
+              className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+            >
+              Verify & Continue
+            </button>
+            <button
+              onClick={() => router.back()}
+              className="w-full py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold"
+            >
+              Cancel
+            </button>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
 
-        {activeTab === 'appointments' && (
-          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg hover:shadow-xl transition-all">
-            <h2 className="text-2xl font-bold mb-6">
-              {userRole === 'VERIFIED_DOCTOR' ? 'Appointment Requests' : 'My Appointments'}
-            </h2>
+  // Mobile view
+  if (isMobile) {
+    return (
+      <div className="h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #f6e3af 0%, #7dc2f1 100%)' }}>
+        <div className="px-4 py-3 flex items-center gap-3" style={{
+          background: 'rgba(255, 255, 255, 0.25)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.3)'
+        }}>
+          {selectedConversationId && (
+            <button
+              onClick={handleBack}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          )}
+          <h1 className="text-xl font-semibold">
+            {selectedConversationId ? 'Chat' : 'Messages'}
+          </h1>
+        </div>
 
-            <div className="space-y-4">
-              {appointments.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No appointments yet</p>
-              ) : (
-                appointments.map((apt) => (
-                  <div key={apt.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold">
-                          {userRole === 'VERIFIED_DOCTOR' ? apt.patient.username : apt.doctor.username}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {new Date(apt.startTime).toLocaleString()} - {new Date(apt.endTime).toLocaleTimeString()}
-                        </p>
-                        {apt.reason && <p className="text-sm mt-2">{apt.reason}</p>}
-                        <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${apt.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                          apt.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                          {apt.status}
-                        </span>
-                      </div>
+        <div className="flex-1 overflow-hidden">
+          {accessDeniedReason ? (
+            <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+              <AlertCircle size={48} className="text-red-500 mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+              <p className="text-gray-600 mb-4">{accessDeniedReason}</p>
+              <button
+                onClick={handleBack}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Back to Messages
+              </button>
+            </div>
+          ) : selectedConversationId ? (
+            <ChatWindow
+              conversationId={selectedConversationId}
+              currentUserId={currentUserId}
+              token={token}
+              onAccessDenied={handleAccessDenied}
+            />
+          ) : (
+            <ChatInbox
+              currentUserId={currentUserId}
+              token={token}
+              onSelectConversation={handleSelectConversation}
+              selectedConversationId={selectedConversationId || undefined}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
 
-                      {userRole === 'VERIFIED_DOCTOR' && apt.status === 'PENDING' && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleApproveReject(apt.id, 'APPROVED')}
-                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleApproveReject(apt.id, 'REJECTED')}
-                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </div>
+  // Desktop view with sidebar
+  const dashboardPath = userRole === 'DOCTOR' ? '/dashboard/doctor' : '/dashboard/patient';
+  
+  return (
+    <div className="chat-layout">
+      {/* Sidebar */}
+      <div className="chat-sidebar">
+        <div className="chat-sidebar-header">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+              {username.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="font-semibold text-gray-900">{username}</div>
+              <div className="text-xs text-gray-500">
+                {userRole === 'DOCTOR' ? 'Doctor' : 'Patient'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <nav className="chat-sidebar-nav">
+          <Link href={dashboardPath}>
+            <LayoutDashboard size={20} />
+            <span>Dashboard</span>
+          </Link>
+          
+          <Link href="/chat" className="active">
+            <MessageSquare size={20} />
+            <span>Messages</span>
+          </Link>
+          
+          <Link href="/appointments">
+            <Calendar size={20} />
+            <span>Appointments</span>
+          </Link>
+          
+          {userRole === 'DOCTOR' && (
+            <Link href="/doctor-verification">
+              <Stethoscope size={20} />
+              <span>Verification</span>
+            </Link>
+          )}
+          
+          {userRole === 'PATIENT' && (
+            <Link href="/doctors">
+              <Users size={20} />
+              <span>Find Doctors</span>
+            </Link>
+          )}
+          
+          <Link href="/profile">
+            <User size={20} />
+            <span>Profile</span>
+          </Link>
+          
+          <Link href="/settings">
+            <Settings size={20} />
+            <span>Settings</span>
+          </Link>
+          
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full text-left text-red-600 hover:bg-red-50"
+          >
+            <LogOut size={20} />
+            <span>Logout</span>
+          </button>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="chat-main-content">
+        <div className="flex h-full">
+          {/* Conversations List */}
+          <div className="chat-conversations-list">
+            <div className="p-4 border-b bg-white" style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.2)'
+            }}>
+              <h2 className="text-xl font-semibold" style={{ color: 'rgba(45, 45, 45, 0.9)' }}>Conversations</h2>
+            </div>
+            <ChatInbox
+              currentUserId={currentUserId}
+              token={token}
+              onSelectConversation={handleSelectConversation}
+              selectedConversationId={selectedConversationId || undefined}
+            />
+          </div>
+
+          {/* Chat Window */}
+          <div className="chat-window-container">
+            {accessDeniedReason ? (
+              <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                <AlertCircle size={64} className="text-red-500 mb-4" />
+                <h2 className="text-2xl font-semibold mb-2">Access Denied</h2>
+                <p className="text-gray-600 mb-6 max-w-md">{accessDeniedReason}</p>
+                <button
+                  onClick={handleBack}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Back to Messages
+                </button>
+              </div>
+            ) : selectedConversationId ? (
+              <ChatWindow
+                conversationId={selectedConversationId}
+                currentUserId={currentUserId}
+                token={token}
+                onAccessDenied={handleAccessDenied}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <div className="text-center p-8">
+                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageSquare size={48} className="text-gray-400" />
                   </div>
-                ))
-              )}
-            </div>
+                  <h3 className="text-xl font-medium mb-2 text-gray-700">Select a conversation</h3>
+                  <p className="text-sm text-gray-500">
+                    Choose a conversation from the list to start chatting
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-        )}
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -11,6 +11,7 @@ import { authRouter } from './routes/auth';
 import { timelineRouter } from './routes/timeline';
 import { appointmentRouter } from './routes/appointments';
 import { chatRouter } from './routes/chat';
+import { chatRouterV2 } from './routes/chat.v2';
 import { chatHandler } from './handlers/chat.handler';
 import { notificationHandler } from './handlers/notification.handler';
 import { setSocketInstance } from './socket';
@@ -32,6 +33,9 @@ import karmaRouter from './routes/karma';
 import awardsRouter from './routes/awards';
 import accountRouter from './routes/account';
 import { profileRouter } from './routes/profile.routes';
+import { followRouter } from './routes/follow';
+import { badgeRouter } from './routes/badge.routes';
+import { blockRouter } from './routes/block.routes';
 
 dotenv.config();
 
@@ -71,6 +75,7 @@ app.use('/api/replies', replyRouter);
 app.use('/api/timeline', timelineRouter);
 app.use('/api/appointments', appointmentRouter);
 app.use('/api/chat', chatRouter);
+app.use('/api/v2/chat', chatRouterV2);
 app.use('/api/v1/doctor-verification', doctorVerificationRouter);
 
 // Strategic Feature Routes
@@ -96,6 +101,14 @@ app.use('/api/notifications', notificationRouter);
 // Profile System
 app.use('/api/profile', profileRouter);
 
+// Follow System
+app.use('/api/follow', followRouter);
+
+// Badge System
+app.use('/api/badges', badgeRouter);
+
+// Block System
+app.use('/api/block', blockRouter);
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

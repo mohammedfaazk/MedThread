@@ -49,7 +49,8 @@ export class UserService {
   }
 
   async getUserByUsername(username: string) {
-    const user = await prisma.user.findUnique({
+    // Try to find by username first
+    let user = await prisma.user.findUnique({
       where: { username },
       select: {
         id: true,
@@ -57,6 +58,10 @@ export class UserService {
         role: true,
         verified: true,
         specialty: true,
+        subSpecialty: true,
+        yearsOfExperience: true,
+        hospitalAffiliation: true,
+        doctorVerificationStatus: true,
         bio: true,
         avatar: true,
         banner: true,
@@ -75,6 +80,40 @@ export class UserService {
         }
       }
     });
+
+    // If not found by username, try by ID (fallback)
+    if (!user) {
+      user = await prisma.user.findUnique({
+        where: { id: username },
+        select: {
+          id: true,
+          username: true,
+          role: true,
+          verified: true,
+          specialty: true,
+          subSpecialty: true,
+          yearsOfExperience: true,
+          hospitalAffiliation: true,
+          doctorVerificationStatus: true,
+          bio: true,
+          avatar: true,
+          banner: true,
+          postKarma: true,
+          commentKarma: true,
+          totalKarma: true,
+          isPremium: true,
+          createdAt: true,
+          _count: {
+            select: {
+              posts: true,
+              comments: true,
+              followers: true,
+              following: true,
+            }
+          }
+        }
+      });
+    }
 
     if (!user) {
       throw new NotFoundError('User not found');

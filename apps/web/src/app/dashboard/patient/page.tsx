@@ -267,7 +267,7 @@ export default function PatientDashboard() {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        router.push(`/chat?doctorId=${apt.doctor.user_id || apt.doctor.id}`)
+                                                        router.push('/chat')
                                                     }}
                                                     className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition"
                                                     title="Start Chat"
