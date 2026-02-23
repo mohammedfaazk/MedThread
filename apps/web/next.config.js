@@ -5,7 +5,6 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@medthread/ui']
   },
-<<<<<<< HEAD
   // PWA Configuration
   headers: async () => [
     {
@@ -31,7 +30,6 @@ const nextConfig = {
       ],
     },
   ],
-=======
   images: {
     domains: ['res.cloudinary.com', 'cloudinary.com'],
     formats: ['image/avif', 'image/webp'],
@@ -41,7 +39,6 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
->>>>>>> person4
   async rewrites() {
     return [
       {
