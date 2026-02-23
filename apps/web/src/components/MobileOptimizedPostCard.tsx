@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Heart, MessageCircle, Share2, Bookmark, MoreVertical } from 'lucide-react'
 import { useTouchFeedback } from '@/hooks/useTouchFeedback'
-import { OptimizedImage } from './OptimizedImage'
+import OptimizedImage from './OptimizedImage'
 
 interface MobileOptimizedPostCardProps {
   post: {

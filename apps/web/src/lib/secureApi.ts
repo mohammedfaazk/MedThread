@@ -30,7 +30,7 @@ async function getCsrfToken(): Promise<string> {
       withCredentials: true,
     });
     csrfToken = response.data.csrfToken;
-    return csrfToken;
+    return csrfToken || '';
   } catch (error) {
     console.error('Failed to fetch CSRF token:', error);
     return '';
