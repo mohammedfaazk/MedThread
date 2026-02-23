@@ -1,4 +1,4 @@
-// File: C:\Users\g_and\OneDrive\Documents\GitHub\MedThread\apps\web\src\app\profile\page.tsx
+// File: C:\Project\MedThread3.0\MedThread\apps\web\src\app\profile\page.tsx
 import * as entry from '../../../../src/app/profile/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

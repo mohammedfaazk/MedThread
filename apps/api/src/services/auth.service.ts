@@ -24,6 +24,10 @@ interface AuthResponse {
     email: string;
     role: string;
     doctorVerificationStatus?: string;
+    avatar?: string;
+    banner?: string;
+    bio?: string;
+    specialty?: string;
   };
 }
 
@@ -66,6 +70,10 @@ export class AuthService {
         email: true,
         role: true,
         doctorVerificationStatus: true,
+        avatar: true,
+        banner: true,
+        bio: true,
+        specialty: true,
       }
     });
 
@@ -80,6 +88,10 @@ export class AuthService {
         email: user.email,
         role: user.role,
         doctorVerificationStatus: user.doctorVerificationStatus || undefined,
+        avatar: user.avatar || undefined,
+        banner: user.banner || undefined,
+        bio: user.bio || undefined,
+        specialty: user.specialty || undefined,
       },
     };
   }
@@ -96,6 +108,10 @@ export class AuthService {
         passwordHash: true,
         isSuspended: true,
         doctorVerificationStatus: true,
+        avatar: true,
+        banner: true,
+        bio: true,
+        specialty: true,
       }
     });
 
@@ -126,6 +142,10 @@ export class AuthService {
         email: user.email,
         role: user.role,
         doctorVerificationStatus: user.doctorVerificationStatus || undefined,
+        avatar: user.avatar || undefined,
+        banner: user.banner || undefined,
+        bio: user.bio || undefined,
+        specialty: user.specialty || undefined,
       },
     };
   }

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
+import { getImageUrl } from '@/lib/imageUrl'
 import {
     Calendar,
     Clock,
@@ -56,6 +57,12 @@ export default function DoctorDashboard() {
     const [addingSlot, setAddingSlot] = useState(false)
 
     const effectiveUserId = user?.id;
+
+    // Helper function to get auth headers
+    const getAuthHeaders = () => {
+        const token = localStorage.getItem('auth_token')
+        return token ? { 'Authorization': `Bearer ${token}` } : {}
+    }
 
     useEffect(() => {
         if (!loading && (!user || (role !== 'VERIFIED_DOCTOR' && role !== 'DOCTOR'))) {
@@ -146,9 +153,19 @@ export default function DoctorDashboard() {
     const handleApproveReject = async (appointmentId: string, status: 'APPROVED' | 'REJECTED') => {
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const token = localStorage.getItem('auth_token')
+            
+            if (!token) {
+                alert('Authentication required. Please log in again.')
+                router.push('/login')
+                return
+            }
+            
             await axios.put(`${API_URL}/api/appointments/appointments/${appointmentId}`, {
                 status,
                 doctorId: effectiveUserId
+            }, {
+                headers: getAuthHeaders()
             })
             loadAppointments()
             if (status === 'APPROVED') {
@@ -331,7 +348,7 @@ export default function DoctorDashboard() {
                                                 <div className="flex items-start gap-3 mb-3">
                                                     <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                                                         {apt.patient.avatar ? (
-                                                            <img src={apt.patient.avatar} className="w-full h-full object-cover rounded-full" alt={apt.patient.username} />
+                                                            <img src={getImageUrl(apt.patient.avatar) || ''} className="w-full h-full object-cover rounded-full" alt={apt.patient.username} />
                                                         ) : (
                                                             <span className="text-blue-600 font-bold text-lg">
                                                                 {apt.patient.username.charAt(0).toUpperCase()}
@@ -529,7 +546,7 @@ export default function DoctorDashboard() {
                                             return (
                                                 <div 
                                                     key={conv.id}
-                                                    onClick={() => router.push(`/chat?conversationId=${conv.id}`)}
+                                                    onClick={() => router.push(`/chat?conversation=${conv.id}`)}
                                                     className="flex items-center gap-3 p-3 hover:bg-neutral-300/20 rounded-xl cursor-pointer transition-all"
                                                 >
                                                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-bold flex-shrink-0">

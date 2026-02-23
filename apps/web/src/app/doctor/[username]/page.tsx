@@ -1,42 +1,185 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import axios from 'axios'
 import { 
   CheckCircle2, Calendar, TrendingUp, Award, BookOpen, 
   Users, Clock, Target, Star, MapPin, Phone, Globe,
-  Briefcase, GraduationCap, FileText, Trophy
+  Briefcase, GraduationCap, FileText, Trophy, MessageCircle, UserPlus
 } from 'lucide-react'
+import { Sidebar } from '@/components/Sidebar'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 export default function DoctorProfilePage() {
   const params = useParams()
+  const router = useRouter()
   const username = params.username as string
   
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [isFollowing, setIsFollowing] = useState(false)
 
   useEffect(() => {
     fetchDoctorProfile()
   }, [username])
 
+  // Check if already following
+  useEffect(() => {
+    if (profile?.profile) {
+      checkFollowStatus()
+    }
+  }, [profile])
+
+  const checkFollowStatus = async () => {
+    try {
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token')
+      if (!token || !profile?.profile) return
+
+      const response = await axios.get(`${API_URL}/api/follow/${profile.profile.id}/check`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      if (response.data.success) {
+        setIsFollowing(response.data.data.isFollowing)
+      }
+    } catch (error) {
+      console.error('Error checking follow status:', error)
+    }
+  }
+
   const fetchDoctorProfile = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/doctor-profile/${username}`)
-      setProfile(response.data)
+      console.log('[DoctorProfile] Fetching profile for:', username);
+      
+      // Try multiple endpoints
+      // 1. Try doctor-profile endpoint
+      try {
+        const response = await axios.get(`${API_URL}/api/doctor-profile/${username}`);
+        console.log('[DoctorProfile] Found from doctor-profile API:', response.data);
+        setProfile(response.data);
+        setLoading(false);
+        return;
+      } catch (error: any) {
+        console.warn('[DoctorProfile] doctor-profile API failed:', error.response?.status);
+      }
+
+      // 2. Try profile endpoint
+      try {
+        const response = await axios.get(`${API_URL}/api/profile/${username}`);
+        if (response.data.success) {
+          console.log('[DoctorProfile] Found from profile API:', response.data.data);
+          // Transform to expected format
+          const doctor = response.data.data;
+          setProfile({
+            profile: doctor,
+            metrics: {
+              caseResolutionRate: 0,
+              averagePatientSatisfaction: 0,
+              averageResponseTime: 0,
+              specializationDepthScore: 0
+            },
+            stats: {
+              totalCasesHandled: 0,
+              emergencyFlagsDetected: 0,
+              monthlyContributionStreak: 0
+            },
+            topConditions: [],
+            recentActivity: []
+          });
+          setLoading(false);
+          return;
+        }
+      } catch (error: any) {
+        console.warn('[DoctorProfile] profile API failed:', error.response?.status);
+      }
+
+      // 3. Try verified doctors list
+      try {
+        const response = await axios.get(`${API_URL}/api/v1/doctor-verification/verified`);
+        const doctorsList = response.data?.data?.doctors || response.data?.doctors || [];
+        const matchedDoctor = doctorsList.find((doc: any) => 
+          doc.id === username || doc.username === username
+        );
+        
+        if (matchedDoctor) {
+          console.log('[DoctorProfile] Found from verified doctors list:', matchedDoctor);
+          setProfile({
+            profile: matchedDoctor,
+            metrics: {
+              caseResolutionRate: 0,
+              averagePatientSatisfaction: 0,
+              averageResponseTime: 0,
+              specializationDepthScore: 0
+            },
+            stats: {
+              totalCasesHandled: 0,
+              emergencyFlagsDetected: 0,
+              monthlyContributionStreak: 0
+            },
+            topConditions: [],
+            recentActivity: []
+          });
+          setLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.warn('[DoctorProfile] verified doctors API failed:', error);
+      }
+
+      console.error('[DoctorProfile] Doctor not found:', username);
+      setProfile(null);
     } catch (error) {
       console.error('Error fetching doctor profile:', error)
+      setProfile(null);
     } finally {
       setLoading(false)
     }
   }
 
+  const handleFollow = async () => {
+    try {
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token')
+      if (!token) {
+        alert('Please log in to follow doctors')
+        return
+      }
+
+      if (isFollowing) {
+        await axios.delete(`${API_URL}/api/follow/${profile.profile.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setIsFollowing(false)
+      } else {
+        await axios.post(`${API_URL}/api/follow/${profile.profile.id}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setIsFollowing(true)
+      }
+    } catch (error: any) {
+      console.error('Error following/unfollowing:', error)
+      const errorMessage = error.response?.data?.error || error.response?.data?.message || error.message
+      if (error.response?.status === 401) {
+        alert('Please log in to follow doctors')
+      } else {
+        alert(`Failed to follow/unfollow: ${errorMessage}`)
+      }
+    }
+  }
+
+  const handleMessage = () => {
+    router.push('/chat')
+  }
+
+  const handleBookAppointment = () => {
+    router.push('/appointments')
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#f5f1e8] to-[#e3f2fd] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
@@ -44,10 +187,13 @@ export default function DoctorProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Doctor Not Found</h2>
-          <p className="text-gray-600">The doctor profile you're looking for doesn't exist.</p>
+      <div className="min-h-screen bg-gradient-to-br from-[#f5f1e8] to-[#e3f2fd] flex">
+        <Sidebar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Doctor Not Found</h2>
+            <p className="text-gray-600">The doctor profile you're looking for doesn't exist.</p>
+          </div>
         </div>
       </div>
     )
@@ -56,130 +202,155 @@ export default function DoctorProfilePage() {
   const { profile: doctor, metrics, stats, topConditions, recentActivity } = profile
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="flex items-start gap-6">
-            {/* Avatar */}
-            <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center text-4xl font-bold text-blue-600 shadow-lg">
-              {doctor.username.charAt(0).toUpperCase()}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-bold">Dr. {doctor.username}</h1>
-                {doctor.doctorVerificationStatus === 'APPROVED' && (
-                  <CheckCircle2 className="w-8 h-8 text-blue-300 fill-blue-300/20" />
-                )}
-              </div>
-              
-              <p className="text-xl text-blue-100 mb-4">
-                {doctor.specialty}
-                {doctor.subSpecialty && ` • ${doctor.subSpecialty}`}
-              </p>
-
-              <div className="flex flex-wrap gap-4 text-sm">
-                {doctor.yearsOfExperience && (
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4" />
-                    <span>{doctor.yearsOfExperience} years experience</span>
-                  </div>
-                )}
-                {doctor.hospitalAffiliation && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    <span>{doctor.hospitalAffiliation}</span>
-                  </div>
-                )}
-                {doctor.medicalLicenseNumber && (
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    <span>License: {doctor.medicalLicenseNumber}</span>
-                  </div>
-                )}
+    <div className="min-h-screen bg-gradient-to-br from-[#f5f1e8] to-[#e3f2fd] flex">
+      <Sidebar />
+      
+      <main className="flex-1 overflow-y-auto max-w-6xl mx-auto">
+        {/* Header Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+          <div className="max-w-5xl mx-auto px-4 py-12">
+            <div className="flex items-start gap-6">
+              {/* Avatar */}
+              <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center text-4xl font-bold text-blue-600 shadow-lg">
+                {doctor.username.charAt(0).toUpperCase()}
               </div>
 
-              {/* CTA Button */}
-              <button className="mt-6 px-8 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-blue-50 transition flex items-center gap-2 shadow-lg">
-                <Calendar className="w-5 h-5" />
-                Book Consultation
-              </button>
+              {/* Info */}
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl font-bold">Dr. {doctor.username}</h1>
+                  {doctor.doctorVerificationStatus === 'APPROVED' && (
+                    <CheckCircle2 className="w-8 h-8 text-blue-300 fill-blue-300/20" />
+                  )}
+                </div>
+                
+                <p className="text-xl text-blue-100 mb-4">
+                  {doctor.specialty}
+                  {doctor.subSpecialty && ` • ${doctor.subSpecialty}`}
+                </p>
+
+                <div className="flex flex-wrap gap-4 text-sm mb-6">
+                  {doctor.yearsOfExperience && (
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      <span>{doctor.yearsOfExperience} years experience</span>
+                    </div>
+                  )}
+                  {doctor.hospitalAffiliation && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>{doctor.hospitalAffiliation}</span>
+                    </div>
+                  )}
+                  {doctor.medicalLicenseNumber && (
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      <span>License: {doctor.medicalLicenseNumber}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handleFollow}
+                    className="px-6 py-3 bg-white text-blue-600 rounded-full font-semibold hover:bg-blue-50 transition flex items-center gap-2 shadow-lg"
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                  
+                  <button 
+                    onClick={handleMessage}
+                    className="px-6 py-3 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-400 transition flex items-center gap-2 shadow-lg"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    Message
+                  </button>
+                  
+                  <button 
+                    onClick={handleBookAppointment}
+                    className="px-6 py-3 bg-green-500 text-white rounded-full font-semibold hover:bg-green-400 transition flex items-center gap-2 shadow-lg"
+                  >
+                    <Calendar className="w-5 h-5" />
+                    Book Appointment
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Performance Metrics */}
-      <div className="max-w-7xl mx-auto px-4 -mt-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <MetricCard
-            icon={<Target className="w-6 h-6" />}
-            label="Case Resolution Rate"
-            value={`${metrics.caseResolutionRate}%`}
-            color="blue"
-          />
-          <MetricCard
-            icon={<Star className="w-6 h-6" />}
-            label="Patient Satisfaction"
-            value={metrics.averagePatientSatisfaction > 0 ? `${metrics.averagePatientSatisfaction}/5` : 'N/A'}
-            color="yellow"
-          />
-          <MetricCard
-            icon={<Clock className="w-6 h-6" />}
-            label="Avg Response Time"
-            value={`${metrics.averageResponseTime} min`}
-            color="green"
-          />
-          <MetricCard
-            icon={<TrendingUp className="w-6 h-6" />}
-            label="Specialization Depth"
-            value={`${metrics.specializationDepthScore}/100`}
-            color="purple"
-          />
-        </div>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex gap-8 px-6">
-              {['overview', 'credentials', 'activity', 'reviews'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`py-4 border-b-2 font-medium transition ${
-                    activeTab === tab
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
-              ))}
-            </nav>
+        {/* Performance Metrics */}
+        <div className="max-w-5xl mx-auto px-4 -mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <MetricCard
+              icon={<Target className="w-6 h-6" />}
+              label="Case Resolution Rate"
+              value={`${metrics.caseResolutionRate}%`}
+              color="blue"
+            />
+            <MetricCard
+              icon={<Star className="w-6 h-6" />}
+              label="Patient Satisfaction"
+              value={metrics.averagePatientSatisfaction > 0 ? `${metrics.averagePatientSatisfaction}/5` : 'N/A'}
+              color="yellow"
+            />
+            <MetricCard
+              icon={<Clock className="w-6 h-6" />}
+              label="Avg Response Time"
+              value={`${metrics.averageResponseTime} min`}
+              color="green"
+            />
+            <MetricCard
+              icon={<TrendingUp className="w-6 h-6" />}
+              label="Specialization Depth"
+              value={`${metrics.specializationDepthScore}/100`}
+              color="purple"
+            />
           </div>
 
-          <div className="p-6">
-            {activeTab === 'overview' && (
-              <OverviewTab 
-                doctor={doctor} 
-                stats={stats} 
-                topConditions={topConditions}
-              />
-            )}
-            {activeTab === 'credentials' && (
-              <CredentialsTab doctor={doctor} />
-            )}
-            {activeTab === 'activity' && (
-              <ActivityTab recentActivity={recentActivity} />
-            )}
-            {activeTab === 'reviews' && (
-              <ReviewsTab doctorId={doctor.id} />
-            )}
+          {/* Tabs */}
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg mb-6">
+            <div className="border-b border-gray-200/30">
+              <nav className="flex gap-8 px-6">
+                {['overview', 'credentials', 'activity', 'reviews'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`py-4 border-b-2 font-medium transition ${
+                      activeTab === tab
+                        ? 'border-blue-600 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'overview' && (
+                <OverviewTab 
+                  doctor={doctor} 
+                  stats={stats} 
+                  topConditions={topConditions}
+                />
+              )}
+              {activeTab === 'credentials' && (
+                <CredentialsTab doctor={doctor} />
+              )}
+              {activeTab === 'activity' && (
+                <ActivityTab recentActivity={recentActivity} />
+              )}
+              {activeTab === 'reviews' && (
+                <ReviewsTab doctorId={doctor.id} />
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
@@ -193,7 +364,7 @@ function MetricCard({ icon, label, value, color }: any) {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6 shadow-sm">
+    <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-6 shadow-lg">
       <div className={`w-12 h-12 rounded-lg ${colorClasses[color as keyof typeof colorClasses]} flex items-center justify-center mb-3`}>
         {icon}
       </div>
@@ -324,7 +495,7 @@ function ReviewsTab({ doctorId }: any) {
 
 function StatBox({ label, value, icon }: any) {
   return (
-    <div className="p-4 bg-gray-50 rounded-lg">
+    <div className="p-4 bg-white/30 backdrop-blur-sm rounded-lg border border-white/20">
       <div className="flex items-center gap-2 mb-2 text-gray-600">
         {icon}
         <span className="text-sm">{label}</span>

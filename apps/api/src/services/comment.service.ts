@@ -1,4 +1,5 @@
 import { prisma } from '@medthread/database';
+import { notificationService } from './notification.service';
 
 interface CreateCommentInput {
   content: string;
@@ -8,20 +9,65 @@ interface CreateCommentInput {
 }
 
 export const commentService = {
+  /**
+   * Parse @mentions from comment content
+   * Returns array of unique mentioned usernames
+   */
+  parseMentions(content: string): string[] {
+    const mentionRegex = /@(\w+)/g;
+    const mentions = new Set<string>();
+    let match;
+    
+    while ((match = mentionRegex.exec(content)) !== null) {
+      mentions.add(match[1]);
+    }
+    
+    return Array.from(mentions);
+  },
+
   async createComment(data: CreateCommentInput) {
     // Calculate depth if it's a reply
     let depth = 0;
+    let parentComment = null;
     if (data.parentId) {
-      const parent = await prisma.comment.findUnique({
+      parentComment = await prisma.comment.findUnique({
         where: { id: data.parentId },
-        select: { depth: true }
+        select: { 
+          depth: true,
+          authorId: true,
+          author: {
+            select: {
+              username: true
+            }
+          }
+        }
       });
-      depth = (parent?.depth || 0) + 1;
+      depth = (parentComment?.depth || 0) + 1;
 
       // Limit nesting to 10 levels
       if (depth > 10) {
         throw new Error('Maximum comment nesting depth reached');
       }
+    }
+
+    // Get post details for notifications
+    const post = await prisma.post.findUnique({
+      where: { id: data.postId },
+      select: {
+        id: true,
+        title: true,
+        authorId: true,
+        community: {
+          select: {
+            name: true,
+            displayName: true
+          }
+        }
+      }
+    });
+
+    if (!post) {
+      throw new Error('Post not found');
     }
 
     const comment = await prisma.comment.create({
@@ -59,6 +105,88 @@ export const commentService = {
         commentCount: { increment: 1 }
       }
     });
+
+    // Trigger REPLY notification
+    try {
+      let replyRecipientId: string | null = null;
+      
+      if (data.parentId && parentComment) {
+        // Reply to a comment
+        replyRecipientId = parentComment.authorId;
+      } else {
+        // Top-level comment on a post
+        replyRecipientId = post.authorId;
+      }
+
+      // Only send notification if not replying to self
+      if (replyRecipientId && replyRecipientId !== data.authorId) {
+        await notificationService.createNotification({
+          type: 'REPLY',
+          recipientIds: [replyRecipientId],
+          actorId: data.authorId,
+          contentId: comment.id,
+          contentType: 'COMMENT',
+          metadata: {
+            title: 'New reply',
+            body: `${comment.author.username} replied to your ${data.parentId ? 'comment' : 'post'}`,
+            preview: data.content.substring(0, 100),
+            link: `/post/${data.postId}?comment=${comment.id}`,
+            communityName: post.community.displayName,
+            postTitle: post.title,
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error creating REPLY notification:', error);
+      // Don't fail comment creation if notification fails
+    }
+
+    // Trigger MENTION notifications
+    try {
+      const mentionedUsernames = this.parseMentions(data.content);
+      
+      if (mentionedUsernames.length > 0) {
+        // Find users by username
+        const mentionedUsers = await prisma.user.findMany({
+          where: {
+            username: {
+              in: mentionedUsernames,
+              mode: 'insensitive'
+            }
+          },
+          select: {
+            id: true,
+            username: true
+          }
+        });
+
+        // Filter out the comment author (don't notify self)
+        const recipientIds = mentionedUsers
+          .filter(user => user.id !== data.authorId)
+          .map(user => user.id);
+
+        if (recipientIds.length > 0) {
+          await notificationService.createNotification({
+            type: 'MENTION',
+            recipientIds,
+            actorId: data.authorId,
+            contentId: comment.id,
+            contentType: 'COMMENT',
+            metadata: {
+              title: 'You were mentioned',
+              body: `${comment.author.username} mentioned you in a comment`,
+              preview: data.content.substring(0, 100),
+              link: `/post/${data.postId}?comment=${comment.id}`,
+              communityName: post.community.displayName,
+              postTitle: post.title,
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error creating MENTION notifications:', error);
+      // Don't fail comment creation if notification fails
+    }
 
     return comment;
   },
@@ -264,12 +392,70 @@ export const commentService = {
         upvotes: true,
         downvotes: true,
         authorId: true,
+        postId: true,
+        content: true,
+        post: {
+          select: {
+            title: true,
+            community: {
+              select: {
+                name: true,
+                displayName: true
+              }
+            }
+          }
+        }
       }
     });
 
     // Update author karma
     const { karmaService } = await import('./karma.service');
     await karmaService.updateUserKarma(comment.authorId);
+
+    // Trigger UPVOTE_MILESTONE notification
+    if (value === 1 && voteChange > 0) {
+      try {
+        // Get user's upvote threshold preference
+        const { PreferencesService } = await import('./notification-preferences.service');
+        const preferencesService = new PreferencesService();
+        const preferences = await preferencesService.getPreferences(comment.authorId);
+        
+        const threshold = preferences.upvoteThreshold || 10; // Default to 10
+        
+        // Check if we just hit a milestone
+        const previousUpvotes = comment.upvotes - 1;
+        const currentUpvotes = comment.upvotes;
+        
+        // Trigger notification if we crossed a threshold (10, 25, 50, 100, 250, 500, 1000, etc.)
+        const milestones = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+        const crossedMilestone = milestones.find(
+          milestone => previousUpvotes < milestone && currentUpvotes >= milestone && milestone >= threshold
+        );
+        
+        if (crossedMilestone && comment.authorId !== userId) {
+          await notificationService.createNotification({
+            type: 'UPVOTE_MILESTONE',
+            recipientIds: [comment.authorId],
+            actorId: userId,
+            contentId: commentId,
+            contentType: 'COMMENT',
+            metadata: {
+              title: 'Milestone reached!',
+              body: `Your comment reached ${crossedMilestone} upvotes`,
+              preview: comment.content.substring(0, 100),
+              link: `/post/${comment.postId}?comment=${commentId}`,
+              communityName: comment.post.community.displayName,
+              postTitle: comment.post.title,
+              milestone: crossedMilestone,
+              upvotes: currentUpvotes,
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error creating UPVOTE_MILESTONE notification:', error);
+        // Don't fail vote if notification fails
+      }
+    }
 
     return {
       score: comment.score,

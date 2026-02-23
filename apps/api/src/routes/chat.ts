@@ -2,11 +2,108 @@ import { Router } from 'express';
 import { PrismaClient } from '@medthread/database';
 import { authenticate } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
+import { checkBlock } from '../middleware/blockCheck';
 
 const router = Router();
 const prisma = new PrismaClient();
 
 import { conversationsStore, messagesStore, appointmentsStore, createMockConversation, saveStore } from '../lib/mockStore';
+
+// Get conversation previews (optimized for inbox - no full message history)
+router.get('/conversations/preview', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        console.log('[API] Fetching conversation previews for userId:', userId);
+
+        let conversations: any[] = [];
+
+        try {
+            // Optimized query: only fetch last message, not full history
+            conversations = await prisma.conversation.findMany({
+                where: {
+                    OR: [
+                        { patientId: userId as string },
+                        { doctorId: userId as string }
+                    ],
+                    isActive: true
+                },
+                include: {
+                    appointment: {
+                        include: {
+                            patient: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    avatar: true,
+                                    role: true
+                                }
+                            },
+                            doctor: {
+                                select: {
+                                    id: true,
+                                    username: true,
+                                    avatar: true,
+                                    role: true,
+                                    specialty: true
+                                }
+                            }
+                        }
+                    },
+                    // Only fetch the LAST message for preview
+                    messages: {
+                        where: { isDeleted: false },
+                        orderBy: { createdAt: 'desc' },
+                        take: 1,
+                        select: {
+                            id: true,
+                            content: true,
+                            senderId: true,
+                            createdAt: true,
+                            isRead: true
+                        }
+                    }
+                },
+                orderBy: {
+                    lastMessageAt: 'desc'
+                }
+            });
+
+            // Calculate unread counts efficiently
+            const conversationsWithUnread = await Promise.all(
+                conversations.map(async (conv) => {
+                    const unreadCount = await prisma.message.count({
+                        where: {
+                            conversationId: conv.id,
+                            receiverId: userId as string,
+                            isRead: false,
+                            isDeleted: false
+                        }
+                    });
+
+                    return {
+                        id: conv.id,
+                        participants: [
+                            conv.appointment.patient,
+                            conv.appointment.doctor
+                        ],
+                        lastMessage: conv.messages[0] || null,
+                        unreadCount,
+                        lastMessageAt: conv.lastMessageAt
+                    };
+                })
+            );
+
+            console.log(`[API] Returning ${conversationsWithUnread.length} conversation previews`);
+            return res.json(conversationsWithUnread);
+        } catch (dbError) {
+            console.error('[API] DB preview fetch failed:', dbError);
+            return res.status(500).json({ error: 'Failed to fetch conversation previews' });
+        }
+    } catch (error) {
+        console.error('[API] Fetch conversation previews error:', error);
+        res.status(500).json({ error: 'Failed to fetch conversation previews' });
+    }
+});
 
 // Get all conversations for a user
 router.get('/conversations', async (req, res) => {
@@ -162,14 +259,31 @@ router.post('/messages', authenticate, requireVerifiedDoctor, async (req, res) =
     try {
         const { conversationId, senderId, content, type = 'TEXT', attachment } = req.body;
 
+        let message: any;
+        let receiverId: string | undefined;
+
         try {
             // First try DB if it exists (not starting with conv-)
             if (!conversationId.startsWith('conv-')) {
-                const message = await prisma.message.create({
+                // Get conversation to find receiver
+                const conversation = await prisma.conversation.findUnique({
+                    where: { id: conversationId },
+                    include: {
+                        participants: {
+                            select: { id: true }
+                        }
+                    }
+                });
+
+                if (conversation) {
+                    receiverId = conversation.participants.find(p => p.id !== senderId)?.id;
+                }
+
+                message = await prisma.message.create({
                     data: {
                         conversationId,
                         senderId,
-                        receiverId: senderId, // Will be updated to proper receiver
+                        receiverId: receiverId || senderId,
                         content,
                         type,
                         attachment
@@ -178,6 +292,27 @@ router.post('/messages', authenticate, requireVerifiedDoctor, async (req, res) =
                         sender: { select: { id: true, username: true, avatar: true } }
                     }
                 });
+
+                // Create direct message notification
+                if (receiverId) {
+                    try {
+                        const { notificationService } = await import('../services/notification.service');
+                        await notificationService.createNotification({
+                            type: 'DIRECT_MESSAGE',
+                            recipientIds: [receiverId],
+                            actorId: senderId,
+                            contentId: conversationId,
+                            contentType: 'POST',
+                            metadata: {
+                                preview: content?.substring(0, 100) || 'Sent a message',
+                                link: `/chat?conversation=${conversationId}`,
+                            },
+                        });
+                    } catch (notifError) {
+                        console.error('Error creating direct message notification:', notifError);
+                    }
+                }
+
                 return res.json(message);
             }
         } catch (dbError) {
@@ -203,7 +338,7 @@ router.post('/messages', authenticate, requireVerifiedDoctor, async (req, res) =
             console.log('[API] Could not fetch sender info:', authError);
         }
         
-        const message = {
+        message = {
             id: `msg-${Date.now()}`,
             conversationId,
             senderId,

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { Search, Bell, Leaf, ChevronDown, CheckCircle2, Clock, X, TrendingUp, Hash, User as UserIcon } from 'lucide-react'
 import { useSearchHistory } from '@/hooks/useSearchHistory'
+import { getImageUrl } from '@/lib/imageUrl'
 import axios from 'axios'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -239,7 +240,7 @@ export function NavbarEnhanced() {
                         <>
                           {suggestion.icon ? (
                             <img
-                              src={suggestion.icon}
+                              src={getImageUrl(suggestion.icon) || suggestion.icon}
                               alt={suggestion.displayName}
                               className="w-8 h-8 rounded-full flex-shrink-0"
                             />
@@ -303,12 +304,20 @@ export function NavbarEnhanced() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-3 px-2 py-1.5 hover:bg-neutral-300/20 backdrop-blur-[1px] border border-neutral-400/20 rounded-2xl transition-all group"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-700 font-bold border border-blue-200 group-hover:shadow-md transition-all">
-                    {user.email?.charAt(0).toUpperCase()}
-                  </div>
+                  {user.avatar ? (
+                    <img
+                      src={getImageUrl(user.avatar) || user.avatar}
+                      alt={user.username || user.email}
+                      className="w-8 h-8 rounded-xl object-cover border border-blue-200 group-hover:shadow-md transition-all"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center text-blue-700 font-bold border border-blue-200 group-hover:shadow-md transition-all">
+                      {(user.username || user.email)?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="flex flex-col items-start hidden lg:flex">
                     <div className="flex items-center gap-1 mb-0.5">
-                      <span className="text-sm font-semibold text-slate-700 leading-none">{user.email?.split('@')[0]}</span>
+                      <span className="text-sm font-semibold text-slate-700 leading-none">{user.username || user.email?.split('@')[0]}</span>
                       {role === 'VERIFIED_DOCTOR' && <CheckCircle2 className="w-3 h-3 text-blue-500 fill-blue-500/10" />}
                     </div>
                     <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{role?.replace('_', ' ')}</span>
@@ -318,7 +327,7 @@ export function NavbarEnhanced() {
 
                 {showUserMenu && (
                   <div className="absolute right-0 top-12 w-56 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
-                    <Link href="/profile" className="block px-4 py-3 hover:bg-neutral-300/20 border-b border-neutral-400/20 transition-all">
+                    <Link href={`/u/${user.username || user.id}`} className="block px-4 py-3 hover:bg-neutral-300/20 border-b border-neutral-400/20 transition-all">
                       <p className="font-semibold text-sm">My Profile</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </Link>

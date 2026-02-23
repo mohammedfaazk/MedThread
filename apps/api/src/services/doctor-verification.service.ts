@@ -1,6 +1,8 @@
 import { prisma } from '@medthread/database';
 import { NotFoundError, ForbiddenError, ValidationError } from '../utils/errors';
 import { emailService } from './email.service';
+import { notificationService } from './notification.service';
+import { NotificationType } from '@prisma/client';
 
 interface DoctorRegistrationData {
   medicalLicenseNumber: string;
@@ -273,6 +275,23 @@ export class DoctorVerificationService {
       }
     });
 
+    // Create VERIFICATION_STATUS notification
+    try {
+      await notificationService.createNotification({
+        type: NotificationType.VERIFICATION_STATUS,
+        recipientIds: [userId],
+        actorId: adminId,
+        metadata: {
+          title: 'Verification Approved',
+          body: 'Your doctor verification has been approved! You can now access all doctor features.',
+          link: '/doctor-verification',
+          status: 'APPROVED',
+        }
+      });
+    } catch (notifError) {
+      console.error('Failed to create verification approval notification:', notifError);
+    }
+
     // Send notification/email to doctor
     try {
       await emailService.sendVerificationApprovedEmail(updatedUser.email, updatedUser.username);
@@ -323,6 +342,25 @@ export class DoctorVerificationService {
         rejectionReason: true,
       }
     });
+
+    // Create VERIFICATION_STATUS notification
+    try {
+      await notificationService.createNotification({
+        type: NotificationType.VERIFICATION_STATUS,
+        recipientIds: [userId],
+        actorId: adminId,
+        metadata: {
+          title: 'Verification Rejected',
+          body: 'Your doctor verification request has been rejected.',
+          preview: reason,
+          link: '/doctor-verification',
+          status: 'REJECTED',
+          reason,
+        }
+      });
+    } catch (notifError) {
+      console.error('Failed to create verification rejection notification:', notifError);
+    }
 
     // Send notification/email to doctor with rejection reason
     try {

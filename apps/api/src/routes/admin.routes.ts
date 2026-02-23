@@ -57,4 +57,11 @@ router.get('/reports', adminController.getReports);
  */
 router.post('/reports/:reportId/resolve', adminController.resolveReport);
 
+/**
+ * @route   POST /api/v1/admin/announcements
+ * @desc    Create system announcement notification
+ * @access  Private (Admin only)
+ */
+router.post('/announcements', adminController.createSystemAnnouncement);
+
 export { router as adminRouter };

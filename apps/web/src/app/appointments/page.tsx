@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { getImageUrl } from '@/lib/imageUrl'
 import axios from 'axios'
 import { motion } from 'framer-motion'
 import {
@@ -235,7 +236,7 @@ export default function AppointmentsPage() {
                                             <div className="flex items-start gap-6">
                                                 <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0">
                                                     {doctor.avatar ? (
-                                                        <img src={doctor.avatar} className="w-full h-full object-cover rounded-2xl" alt={doctor.username} />
+                                                        <img src={getImageUrl(doctor.avatar) || ''} className="w-full h-full object-cover rounded-2xl" alt={doctor.username} />
                                                     ) : (
                                                         <Stethoscope className="w-8 h-8 text-blue-600" />
                                                     )}

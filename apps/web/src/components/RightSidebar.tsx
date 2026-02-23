@@ -125,12 +125,12 @@ export function RightSidebar() {
               topDoctors.map((doctor, idx) => {
                 const displayUsername = doctor.username || doctor.id;
                 const displayName = doctor.full_name || doctor.name || `Dr. ${displayUsername}`;
-                const reputation = doctor.reputation_score || doctor.reputation || 0;
+                const reputation = doctor.reputation_score || doctor.reputation || doctor.totalKarma || 0;
 
                 return (
                   <Link
                     key={doctor.id}
-                    href={`/u/${displayUsername}`}
+                    href={`/doctor/${displayUsername}`}
                     className="flex items-center gap-3 py-2 hover:bg-gray-50 rounded-xl px-2 cursor-pointer transition-all"
                   >
                     <span className="text-sm font-bold text-gray-500 w-4">{idx + 1}</span>

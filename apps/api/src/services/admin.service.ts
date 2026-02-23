@@ -365,6 +365,57 @@ export class AdminService {
       report: updatedReport,
     };
   }
+
+  /**
+   * Create system announcement notification for all users
+   */
+  async createSystemAnnouncement(
+    adminId: string,
+    announcement: { title: string; body: string; link?: string }
+  ) {
+    // Get all active (non-suspended) user IDs
+    const users = await prisma.user.findMany({
+      where: {
+        isSuspended: false,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    const recipientIds = users.map(u => u.id);
+
+    // Import notification service dynamically to avoid circular dependency
+    const { notificationService } = await import('./notification.service');
+
+    // Create notifications for all users
+    const notifications = await notificationService.createNotification({
+      type: 'SYSTEM_ANNOUNCEMENT',
+      recipientIds,
+      actorId: adminId,
+      metadata: {
+        title: announcement.title,
+        body: announcement.body,
+        link: announcement.link,
+      },
+    });
+
+    // Broadcast via socket to all connected users
+    try {
+      const { socketDeliveryService } = await import('./socket-delivery.service');
+      for (const notification of notifications) {
+        await socketDeliveryService.sendNotification([notification.recipientId], notification);
+      }
+    } catch (error) {
+      console.error('Error broadcasting system announcement via socket:', error);
+    }
+
+    return {
+      message: 'System announcement created successfully',
+      recipientCount: notifications.length,
+      totalUsers: recipientIds.length,
+    };
+  }
 }
 
 export const adminService = new AdminService();
