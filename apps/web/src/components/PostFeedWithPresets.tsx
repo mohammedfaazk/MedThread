@@ -82,7 +82,7 @@ export function PostFeedWithPresets({ community }: PostFeedWithPresetsProps = {}
       return
     }
 
-    savePreset(presetName, filters, sortBy)
+    savePreset(presetName, filters, sortBy === 'controversial' ? 'hot' : sortBy)
     setPresetName('')
     setShowSavePreset(false)
     alert('Filter preset saved!')

@@ -10,7 +10,7 @@ import {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 export default function CmeDashboardPage() {
-  const [cmeData, setC meData] = useState<any>(null)
+  const [cmeData, setCmeData] = useState<any>(null)
   const [leaderboard, setLeaderboard] = useState<any[]>([])
   const [opportunities, setOpportunities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

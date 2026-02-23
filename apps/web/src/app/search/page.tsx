@@ -178,7 +178,6 @@ function SearchResults() {
                   doctorReplies={0}
                   tags={[]}
                   isPinned={post.isPinned}
-                  isNSFW={post.isNSFW}
                   editedAt={post.editedAt}
                 />
               ))}

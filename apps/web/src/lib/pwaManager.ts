@@ -123,7 +123,7 @@ export class PWAManager {
   private async syncOfflineData(): Promise<void> {
     if ('sync' in this.registration!) {
       try {
-        await this.registration!.sync.register('sync-posts')
+        await (this.registration as any).sync.register('sync-posts')
         console.log('[PWA] Background sync registered')
       } catch (error) {
         console.error('[PWA] Background sync failed:', error)

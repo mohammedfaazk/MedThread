@@ -174,11 +174,11 @@ export default function ChatList({
                     )}
                   </div>
 
-                  {'specialty' in otherUser && otherUser.specialty && (
+                  {('specialty' in otherUser && otherUser.specialty) ? (
                     <p className="text-xs text-gray-500 mb-1">
-                      {otherUser.specialty}
+                      {String(otherUser.specialty)}
                     </p>
-                  )}
+                  ) : null}
 
                   {lastMessage && (
                     <div className="flex items-center gap-2">

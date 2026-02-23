@@ -79,7 +79,7 @@ export default function HiddenPostsPage() {
 
   const handleUnhide = async (postId: string) => {
     const token = localStorage.getItem('auth_token')
-    await hidePost(postId, token)
+    await hidePost(postId, token || undefined)
   }
 
   if (!user) {

@@ -132,7 +132,7 @@ export function PostDetail({ postId }: PostDetailProps) {
 
   const handleVote = async (value: 1 | -1) => {
     const token = localStorage.getItem('auth_token')
-    await votePost(postId, value, token)
+    await votePost(postId, value, token || undefined)
     
     // Update local state optimistically
     setPost(prev => {
@@ -153,7 +153,7 @@ export function PostDetail({ postId }: PostDetailProps) {
 
   const handleSave = async () => {
     const token = localStorage.getItem('auth_token')
-    await savePost(postId, token)
+    await savePost(postId, token || undefined)
     
     // Update local state
     setPost(prev => prev ? { ...prev, isSaved: !prev.isSaved } : prev)

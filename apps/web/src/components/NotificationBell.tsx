@@ -39,7 +39,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useJWTAuth();
-  const socket = useSocket();
+  const { socket } = useSocket();
 
   // Fetch recent notifications
   const fetchNotifications = async () => {

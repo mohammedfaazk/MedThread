@@ -34,7 +34,7 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-6">
               {/* Redirect to patient profile page */}
-              {typeof window !== 'undefined' && window.location.replace('/patients/profile')}
+              {typeof window !== 'undefined' && (() => { window.location.replace('/patients/profile'); return null; })()}
               <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8">
                 <h2 className="text-2xl font-bold mb-4">Redirecting to Patient Profile...</h2>
               </div>

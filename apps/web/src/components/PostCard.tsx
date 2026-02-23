@@ -105,21 +105,21 @@ export function PostCard({
     e.preventDefault()
     e.stopPropagation()
     const token = localStorage.getItem('auth_token')
-    votePost(id, value, token)
+    votePost(id, value, token || undefined)
   }
 
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     const token = localStorage.getItem('auth_token')
-    savePost(id, token)
+    savePost(id, token || undefined)
   }
 
   const handleHide = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     const token = localStorage.getItem('auth_token')
-    hidePost(id, token)
+    hidePost(id, token || undefined)
   }
 
   const handleShare = (e: React.MouseEvent) => {
