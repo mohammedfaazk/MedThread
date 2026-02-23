@@ -18,7 +18,7 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
 
         let availability: any[] = [];
         let bookedSlots: any[] = [];
-        
+
         try {
             // Get existing availability from DB
             availability = await prisma.availability.findMany({
@@ -26,10 +26,10 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
                 orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }]
             });
             console.log(`[API] Found ${availability.length} slots in DB`);
-            
+
             // Get all booked appointments for this doctor
             const bookedAppointments = await prisma.appointment.findMany({
-                where: { 
+                where: {
                     doctorId,
                     status: { in: ['APPROVED', 'PENDING'] }
                 },
@@ -75,7 +75,7 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
                             const bookedStart = new Date(booked.startTime);
                             const bookedEnd = new Date(booked.endTime);
                             return (start >= bookedStart && start < bookedEnd) ||
-                                   (end > bookedStart && end <= bookedEnd);
+                                (end > bookedStart && end <= bookedEnd);
                         });
 
                         if (!isBooked) {
@@ -103,7 +103,7 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
                             const bookedStart = new Date(booked.startTime);
                             const bookedEnd = new Date(booked.endTime);
                             return (start >= bookedStart && start < bookedEnd) ||
-                                   (end > bookedStart && end <= bookedEnd);
+                                (end > bookedStart && end <= bookedEnd);
                         });
 
                         if (!isBooked) {
@@ -135,12 +135,12 @@ router.post('/availability', async (req, res) => {
     try {
         const { doctorId, dayOfWeek, startTime, endTime } = req.body;
         console.log('[API] Creating availability:', { doctorId, dayOfWeek, startTime, endTime });
-        
+
         if (!doctorId || dayOfWeek === undefined || !startTime || !endTime) {
             console.error('[API] Missing required fields');
             return res.status(400).json({ error: 'Missing required fields: doctorId, dayOfWeek, startTime, endTime' });
         }
-        
+
         let availability;
         try {
             availability = await prisma.availability.create({
@@ -169,7 +169,7 @@ router.post('/availability', async (req, res) => {
             saveStore();
             console.log('[API] Availability saved to Mock Store:', availability.id);
         }
-        
+
         res.json(availability);
     } catch (error: any) {
         console.error('[API] Failed to create availability:', error);
@@ -223,26 +223,26 @@ router.post('/book', async (req, res) => {
         } catch (dbError) {
             console.error('[API] DB Save failed, using In-Memory persistence');
             console.log('[API] Mock booking with IDs:', { patientId, doctorId });
-            
+
             // Try to get actual user info from Supabase or use fallback
             let patientUsername = 'Patient';
             let doctorUsername = 'Doctor';
-            
+
             try {
                 // Try to fetch from Supabase auth users (if available)
                 const { createClient } = require('@supabase/supabase-js');
                 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
                 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-                
+
                 if (supabaseUrl && supabaseKey) {
                     const supabase = createClient(supabaseUrl, supabaseKey);
-                    
+
                     // Fetch patient info
                     const { data: patientAuth } = await supabase.auth.admin.getUserById(patientId);
                     if (patientAuth?.user?.email) {
                         patientUsername = patientAuth.user.email.split('@')[0];
                     }
-                    
+
                     // Fetch doctor info
                     const { data: doctorAuth } = await supabase.auth.admin.getUserById(doctorId);
                     if (doctorAuth?.user?.email) {
@@ -252,7 +252,7 @@ router.post('/book', async (req, res) => {
             } catch (authError) {
                 console.log('[API] Could not fetch user info from auth:', authError);
             }
-            
+
             appointment = {
                 id: `app-${Date.now()}`,
                 patientId,

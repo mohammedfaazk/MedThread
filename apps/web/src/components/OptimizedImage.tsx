@@ -1,76 +1,110 @@
 'use client'
 
-import { useState } from 'react'
-import { SkeletonLoader } from './SkeletonLoader'
+import Image from 'next/image';
+import { useState } from 'react';
 
 interface OptimizedImageProps {
-  src: string
-  alt: string
-  width?: number
-  height?: number
-  className?: string
-  priority?: boolean
-  onLoad?: () => void
-  onError?: () => void
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  className?: string;
+  priority?: boolean;
+  fill?: boolean;
+  sizes?: string;
+  quality?: number;
+  placeholder?: 'blur' | 'empty';
+  blurDataURL?: string;
+  objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
 }
 
-export function OptimizedImage({
+export default function OptimizedImage({
   src,
   alt,
   width,
   height,
   className = '',
   priority = false,
-  onLoad,
-  onError
+  fill = false,
+  sizes,
+  quality = 75,
+  placeholder = 'empty',
+  blurDataURL,
+  objectFit = 'cover',
 }: OptimizedImageProps) {
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  const handleLoad = () => {
-    setIsLoading(false)
-    onLoad?.()
-  }
+  // Generate blur placeholder for Cloudinary images
+  const getBlurDataURL = () => {
+    if (blurDataURL) return blurDataURL;
+    
+    // If it's a Cloudinary URL, generate a tiny blur version
+    if (src.includes('cloudinary.com')) {
+      return src.replace('/upload/', '/upload/w_10,q_10,f_auto/');
+    }
+    
+    return undefined;
+  };
 
-  const handleError = () => {
-    setIsLoading(false)
-    setHasError(true)
-    onError?.()
-  }
+  // Optimize Cloudinary URLs
+  const getOptimizedSrc = () => {
+    if (src.includes('cloudinary.com')) {
+      // Add automatic format and quality optimization
+      return src.replace('/upload/', '/upload/f_auto,q_auto/');
+    }
+    return src;
+  };
 
-  if (hasError) {
+  if (error) {
     return (
-      <div 
+      <div
         className={`bg-gray-200 flex items-center justify-center ${className}`}
         style={{ width, height }}
       >
-        <span className="text-gray-400 text-sm">Failed to load</span>
+        <svg
+          className="w-12 h-12 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          />
+        </svg>
       </div>
-    )
+    );
   }
 
-  return (
-    <div className="relative">
-      {isLoading && (
-        <div className="absolute inset-0">
-          <SkeletonLoader 
-            variant="rectangular" 
-            width={width ? `${width}px` : '100%'} 
-            height={height ? `${height}px` : '100%'} 
-          />
-        </div>
-      )}
-      <img
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding="async"
-        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-        onLoad={handleLoad}
-        onError={handleError}
-      />
-    </div>
-  )
+  const imageProps: any = {
+    src: getOptimizedSrc(),
+    alt,
+    className: `${className} ${isLoading ? 'blur-sm' : 'blur-0'} transition-all duration-300`,
+    quality,
+    priority,
+    onLoadingComplete: () => setIsLoading(false),
+    onError: () => setError(true),
+  };
+
+  if (fill) {
+    imageProps.fill = true;
+    imageProps.style = { objectFit };
+    if (sizes) imageProps.sizes = sizes;
+  } else {
+    imageProps.width = width;
+    imageProps.height = height;
+  }
+
+  if (placeholder === 'blur') {
+    const blurURL = getBlurDataURL();
+    if (blurURL) {
+      imageProps.placeholder = 'blur';
+      imageProps.blurDataURL = blurURL;
+    }
+  }
+
+  return <Image {...imageProps} />;
 }

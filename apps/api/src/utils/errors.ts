@@ -39,3 +39,9 @@ export class ConflictError extends AppError {
     super(409, message);
   }
 }
+
+export class BadRequestError extends AppError {
+  constructor(message: string) {
+    super(400, message);
+  }
+}

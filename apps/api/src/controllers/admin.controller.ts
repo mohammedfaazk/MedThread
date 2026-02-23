@@ -1,132 +1,309 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.refactored';
 import { adminService } from '../services/admin.service';
+import { auditLogService } from '../services/audit-log.service';
 import { asyncHandler } from '../middleware/asyncHandler';
 
 export class AdminController {
-  /**
-   * Get platform statistics
-   */
+  // Platform Statistics
   getPlatformStats = asyncHandler(async (req: AuthRequest, res: Response) => {
     const stats = await adminService.getPlatformStats();
 
-    res.status(200).json({
+    res.json({
       success: true,
-      data: stats
+      data: stats,
     });
   });
 
-  /**
-   * Get all users with filters
-   */
+  // User Management
   getUsers = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const filters = {
-      role: req.query.role as string,
-      search: req.query.search as string,
-      isSuspended: req.query.isSuspended === 'true',
-      page: parseInt(req.query.page as string) || 1,
-      limit: parseInt(req.query.limit as string) || 50,
-    };
+    const { role, suspended, search, page, limit } = req.query;
 
-    const result = await adminService.getUsers(filters);
+    const users = await adminService.getUsers({
+      role: role as any,
+      isSuspended: suspended === 'true',
+      search: search as string,
+      page: page ? parseInt(page as string) : undefined,
+      limit: limit ? parseInt(limit as string) : undefined,
+    });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      data: result
+      data: users,
     });
   });
 
-  /**
-   * Suspend user
-   */
   suspendUser = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { userId } = req.params;
+    const { id } = req.params;
     const { reason } = req.body;
 
-    if (!reason || reason.trim().length < 10) {
-      return res.status(400).json({
-        success: false,
-        error: 'Suspension reason must be at least 10 characters'
-      });
-    }
+    const user = await adminService.suspendUser(id, reason);
 
-    const result = await adminService.suspendUser(userId, reason);
+    // Log action
+    await auditLogService.createLog({
+      action: 'USER_SUSPEND',
+      adminId: req.userId!,
+      targetType: 'USER',
+      targetId: id,
+      details: { reason },
+      ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      data: result,
-      message: 'User suspended successfully'
+      data: user,
+      message: 'User suspended successfully',
     });
   });
 
-  /**
-   * Unsuspend user
-   */
   unsuspendUser = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { userId } = req.params;
+    const { id } = req.params;
 
-    const result = await adminService.unsuspendUser(userId);
+    const user = await adminService.unsuspendUser(id);
 
-    res.status(200).json({
+    // Log action
+    await auditLogService.createLog({
+      action: 'USER_UNSUSPEND',
+      adminId: req.userId!,
+      targetType: 'USER',
+      targetId: id,
+      ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
+
+    res.json({
       success: true,
-      data: result,
-      message: 'User unsuspended successfully'
+      data: user,
+      message: 'User unsuspended successfully',
     });
   });
 
-  /**
-   * Delete user
-   */
   deleteUser = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { userId } = req.params;
+    const { id } = req.params;
 
-    const result = await adminService.deleteUser(userId);
+    await adminService.deleteUser(id);
 
-    res.status(200).json({
+    // Log action
+    await auditLogService.createLog({
+      action: 'USER_DELETE',
+      adminId: req.userId!,
+      targetType: 'USER',
+      targetId: id,
+      ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
+
+    res.json({
       success: true,
-      data: result,
-      message: 'User deleted successfully'
+      message: 'User deleted successfully',
     });
   });
 
-  /**
-   * Get reports
-   */
+  // Post Management
+  getPosts = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { communityId, authorId, isRemoved, isPinned, isLocked, search, page, limit } = req.query;
+
+    const posts = await adminService.getPosts({
+      communityId: communityId as string,
+      authorId: authorId as string,
+      isRemoved: isRemoved === 'true',
+      isPinned: isPinned === 'true',
+      isLocked: isLocked === 'true',
+      search: search as string,
+      page: page ? parseInt(page as string) : undefined,
+      limit: limit ? parseInt(limit as string) : undefined,
+    });
+
+    res.json({
+      success: true,
+      data: posts,
+    });
+  });
+
+  deletePost = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    await adminService.deletePost(id);
+
+    // Log action
+    await auditLogService.createLog({
+      action: 'POST_DELETE',
+      adminId: req.userId!,
+      targetType: 'POST',
+      targetId: id,
+      details: { reason },
+      ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
+
+    res.json({
+      success: true,
+      message: 'Post deleted successfully',
+    });
+  });
+
+  togglePinPost = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+
+    const post = await adminService.togglePinPost(id);
+
+    // Log action
+    await auditLogService.createLog({
+      action: (post.isPinned ? 'POST_PIN' : 'POST_UNPIN') as any,
+      adminId: req.userId!,
+      targetType: 'POST',
+      targetId: id,
+      ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
+
+    res.json({
+      success: true,
+      data: post,
+      message: `Post ${post.isPinned ? 'pinned' : 'unpinned'} successfully`,
+    });
+  });
+
+  toggleLockPost = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+
+    const post = await adminService.toggleLockPost(id);
+
+    // Log action
+    await auditLogService.createLog({
+      action: (post.isLocked ? 'POST_LOCK' : 'POST_UNLOCK') as any,
+      adminId: req.userId!,
+      targetType: 'POST',
+      targetId: id,
+      ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
+
+    res.json({
+      success: true,
+      data: post,
+      message: `Post ${post.isLocked ? 'locked' : 'unlocked'} successfully`,
+    });
+  });
+
+  // Comment Management
+  getComments = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { postId, authorId, isRemoved, search, page, limit } = req.query;
+
+    const comments = await adminService.getComments({
+      postId: postId as string,
+      authorId: authorId as string,
+      isRemoved: isRemoved === 'true',
+      search: search as string,
+      page: page ? parseInt(page as string) : undefined,
+      limit: limit ? parseInt(limit as string) : undefined,
+    });
+
+    res.json({
+      success: true,
+      data: comments,
+    });
+  });
+
+  deleteComment = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    await adminService.deleteComment(id);
+
+    // Log action
+    await auditLogService.createLog({
+      action: 'COMMENT_DELETE',
+      adminId: req.userId!,
+      targetType: 'COMMENT',
+      targetId: id,
+      details: { reason },
+      ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
+
+    res.json({
+      success: true,
+      message: 'Comment deleted successfully',
+    });
+  });
+
+  // Report Management
   getReports = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const filters = {
-      status: req.query.status as string,
-      page: parseInt(req.query.page as string) || 1,
-      limit: parseInt(req.query.limit as string) || 50,
-    };
+    const { status, targetType, page, limit } = req.query;
 
-    const result = await adminService.getReports(filters);
+    const reports = await adminService.getReports({
+      status: status as any,
+      targetType: targetType as any,
+      page: page ? parseInt(page as string) : undefined,
+      limit: limit ? parseInt(limit as string) : undefined,
+    });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      data: result
+      data: reports,
     });
   });
 
-  /**
-   * Resolve report
-   */
   resolveReport = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { reportId } = req.params;
+    const { id } = req.params;
     const { action, notes } = req.body;
 
-    if (!['APPROVED', 'REJECTED'].includes(action)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid action. Must be APPROVED or REJECTED'
-      });
-    }
+    const report = await adminService.resolveReport(id, action, notes);
 
-    const result = await adminService.resolveReport(reportId, action, notes);
+    // Log action
+    await auditLogService.createLog({
+      action: 'REPORT_RESOLVE',
+      adminId: req.userId!,
+      targetType: 'REPORT',
+      targetId: id,
+      details: { action, notes },
+      ipAddress: req.headers['x-forwarded-for']?.toString().split(',')[0].trim() || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent'],
+    });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      data: result,
-      message: `Report ${action.toLowerCase()} successfully`
+      data: report,
+      message: 'Report resolved successfully',
+    });
+  });
+
+  // Audit Logs
+  getAuditLogs = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { adminId, action, targetType, targetId, startDate, endDate, page, limit } = req.query;
+
+    const logs = await auditLogService.getLogs({
+      adminId: adminId as string,
+      action: action as any,
+      targetType: targetType as string,
+      targetId: targetId as string,
+      startDate: startDate ? new Date(startDate as string) : undefined,
+      endDate: endDate ? new Date(endDate as string) : undefined,
+      page: page ? parseInt(page as string) : undefined,
+      limit: limit ? parseInt(limit as string) : undefined,
+    });
+
+    res.json({
+      success: true,
+      data: logs,
+    });
+  });
+
+  getAuditLogStats = asyncHandler(async (req: AuthRequest, res: Response) => {
+    const { adminId, startDate, endDate } = req.query;
+
+    const stats = await auditLogService.getStats({
+      adminId: adminId as string,
+      startDate: startDate ? new Date(startDate as string) : undefined,
+      endDate: endDate ? new Date(endDate as string) : undefined,
+    });
+
+    res.json({
+      success: true,
+      data: stats,
     });
   });
 

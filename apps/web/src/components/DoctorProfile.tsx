@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { getImageUrl } from '@/lib/imageUrl'
 import axios from 'axios'
-import { 
-    User, 
-    Mail, 
-    Phone, 
-    MapPin, 
-    Briefcase, 
-    Award, 
+import {
+    User,
+    Mail,
+    Phone,
+    MapPin,
+    Briefcase,
+    Award,
     Calendar,
     Edit2,
     Save,
@@ -25,7 +25,7 @@ export function DoctorProfile() {
     const [isEditing, setIsEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [loading, setLoading] = useState(true)
-    
+
     const [profileData, setProfileData] = useState({
         username: '',
         email: '',
@@ -50,14 +50,14 @@ export function DoctorProfile() {
                 setLoading(false)
                 return
             }
-            
+
             try {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
                 console.log('[DoctorProfile] Fetching profile for user:', user.id)
                 const response = await axios.get(`${API_URL}/api/users/${user.id}`)
-                
+
                 console.log('[DoctorProfile] API Response:', response.data)
-                
+
                 if (response.data.success && response.data.data) {
                     const userData = response.data.data
                     console.log('[DoctorProfile] User data from API:', userData)
@@ -113,12 +113,12 @@ export function DoctorProfile() {
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
             const response = await axios.put(`${API_URL}/api/users/${user?.id}`, profileData)
-            
+
             if (response.data.success) {
                 // Update localStorage with fresh data
                 const updatedUser = { ...user, ...response.data.data }
                 localStorage.setItem('user', JSON.stringify(updatedUser))
-                
+
                 alert('Profile updated successfully!')
                 setIsEditing(false)
             }
@@ -134,11 +134,11 @@ export function DoctorProfile() {
         // Refetch original data from API
         const refetchData = async () => {
             if (!user?.id) return
-            
+
             try {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
                 const response = await axios.get(`${API_URL}/api/users/${user.id}`)
-                
+
                 if (response.data.success && response.data.data) {
                     const userData = response.data.data
                     setProfileData({
@@ -161,7 +161,7 @@ export function DoctorProfile() {
                 console.error('Failed to refetch profile data:', error)
             }
         }
-        
+
         refetchData()
         setIsEditing(false)
     }
@@ -203,7 +203,7 @@ export function DoctorProfile() {
                             </div>
                         </div>
                     </div>
-                    
+
                     {!isEditing ? (
                         <button
                             onClick={() => setIsEditing(true)}
@@ -256,7 +256,7 @@ export function DoctorProfile() {
             {/* Professional Information */}
             <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 mb-6 hover:shadow-xl transition-all">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Professional Information</h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Specialty */}
                     <div>
@@ -359,7 +359,7 @@ export function DoctorProfile() {
             {/* Contact Information */}
             <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 hover:shadow-xl transition-all">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Contact Information</h2>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Email */}
                     <div>

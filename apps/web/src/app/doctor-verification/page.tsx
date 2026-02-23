@@ -33,7 +33,7 @@ export default function DoctorVerificationPage() {
 
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            
+
             const payload = {
                 medicalLicenseNumber: formData.medicalLicenseNumber,
                 licenseIssuingAuthority: formData.licenseIssuingAuthority,
@@ -94,9 +94,9 @@ export default function DoctorVerificationPage() {
                         <Shield className="w-8 h-8 text-blue-600" />
                         <h1 className="text-3xl font-bold text-gray-900">Doctor Verification</h1>
                     </div>
-                    
+
                     <p className="text-gray-600 mb-8">
-                        Please provide your professional details and credentials for verification. 
+                        Please provide your professional details and credentials for verification.
                         Once approved by our admin team, you'll be able to consult with patients.
                     </p>
 

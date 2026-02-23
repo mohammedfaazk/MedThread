@@ -486,6 +486,7 @@ export default function ChatWindow({
             <div className="text-xs text-gray-500 mb-1">
               {message.sender.username}
             </div>
+<<<<<<< HEAD
           )}
           
           {/* Message Bubble */}

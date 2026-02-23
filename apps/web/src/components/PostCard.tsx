@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { UserRound, Stethoscope, Pin, Edit2, Trash2, MoreHorizontal } from 'lucide-react'
 import { AwardButton } from './AwardButton'
 import { AwardDisplay } from './AwardDisplay'
+import ReportButton from './ReportButton'
+import { analytics } from '@/lib/analytics'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 
@@ -95,6 +97,11 @@ export function PostCard({
     console.log('Doctor post:', { author, authorType, verified, specialty })
   }
 
+  // Track post view
+  useEffect(() => {
+    analytics.trackPostView(id);
+  }, [id]);
+
   const severityColors = {
     low: 'bg-green-100 text-green-700 border-green-300',
     moderate: 'bg-yellow-100 text-yellow-700 border-yellow-300',
@@ -106,6 +113,7 @@ export function PostCard({
     e.stopPropagation()
     const token = localStorage.getItem('auth_token')
     votePost(id, value, token || undefined)
+    analytics.trackEvent('post_vote', 'engagement', { postId: id, vote: value })
   }
 
   const handleSave = (e: React.MouseEvent) => {
@@ -113,6 +121,7 @@ export function PostCard({
     e.stopPropagation()
     const token = localStorage.getItem('auth_token')
     savePost(id, token || undefined)
+    analytics.trackEvent('post_save', 'engagement', { postId: id })
   }
 
   const handleHide = (e: React.MouseEvent) => {
@@ -120,6 +129,7 @@ export function PostCard({
     e.stopPropagation()
     const token = localStorage.getItem('auth_token')
     hidePost(id, token || undefined)
+    analytics.trackEvent('post_hide', 'engagement', { postId: id })
   }
 
   const handleShare = (e: React.MouseEvent) => {
@@ -127,6 +137,7 @@ export function PostCard({
     e.stopPropagation()
     navigator.clipboard.writeText(`${window.location.origin}/post/${id}`)
     alert('Link copied to clipboard!')
+    analytics.trackShare('post', id, 'clipboard')
   }
 
   const handleCardClick = () => {
@@ -535,6 +546,12 @@ export function PostCard({
                 </svg>
                 <span>Hide</span>
               </button>
+              <ReportButton 
+                type="post" 
+                targetId={id} 
+                targetTitle={title}
+                className="hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
+              />
             </div>
           </div>
         </div>

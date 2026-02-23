@@ -1,0 +1,6 @@
+[2026-02-16T09:33:35.727Z] Login attempt - Email: "admin@medthread.com", Password Length: 12
+[2026-02-16T09:33:36.235Z] Password match for admin@medthread.com: true
+[2026-02-16T09:39:26.202Z] Login attempt - Email: "admin@medthread.com", Password Length: 12
+[2026-02-16T09:39:26.782Z] Password match for admin@medthread.com: true
+[2026-02-16T09:39:29.017Z] Login attempt - Email: "admin@medthread.com", Password Length: 12
+[2026-02-16T09:39:29.659Z] Password match for admin@medthread.com: true

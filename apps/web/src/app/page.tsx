@@ -1,51 +1,34 @@
 'use client'
-import { NavbarEnhanced } from '@/components/NavbarEnhanced'
+import { Navbar } from '@/components/Navbar'
 import { Sidebar } from '@/components/Sidebar'
+import { PostFeed } from '@/components/PostFeed'
 import { RightSidebar } from '@/components/RightSidebar'
-import { PostFeedWithPresets } from '@/components/PostFeedWithPresets'
-import { ResponsiveContainer } from '@/components/ResponsiveContainer'
-import { usePullToRefresh } from '@/hooks/usePullToRefresh'
-import { PullToRefreshIndicator } from '@/components/PullToRefreshIndicator'
-import { useState } from 'react'
+import { useJWTAuth } from '@/context/JWTAuthContext'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import StructuredData, { structuredDataSchemas } from '@/components/StructuredData'
 
 export default function Home() {
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  const { pullDistance, isRefreshing, shouldTrigger } = usePullToRefresh({
-    onRefresh: async () => {
-      // Simulate refresh
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setRefreshKey(prev => prev + 1)
-    },
-    threshold: 80
-  })
+  const { user, role, loading } = useJWTAuth()
+  const router = useRouter()
 
   return (
-    <div className="min-h-screen-dynamic">
-      <PullToRefreshIndicator 
-        pullDistance={pullDistance}
-        threshold={80}
-        isRefreshing={isRefreshing}
-      />
-      <NavbarEnhanced />
-      <ResponsiveContainer>
-        <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 pb-12">
-          {/* Desktop Sidebar - Hidden on mobile */}
-          <div className="hidden lg:block">
-            <Sidebar />
-          </div>
-          
-          {/* Main Content */}
-          <main className="flex-1 max-w-[640px] mx-auto w-full">
-            <PostFeedWithPresets key={refreshKey} />
+    <>
+      {/* Structured Data for SEO */}
+      <StructuredData data={structuredDataSchemas.organization()} />
+      <StructuredData data={structuredDataSchemas.website()} />
+      <StructuredData data={structuredDataSchemas.medicalOrganization()} />
+      
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
+          <Sidebar />
+          <main className="flex-1 max-w-[640px]">
+            <PostFeed />
           </main>
-          
-          {/* Right Sidebar - Hidden on mobile/tablet */}
-          <div className="hidden xl:block">
-            <RightSidebar />
-          </div>
+          <RightSidebar />
         </div>
-      </ResponsiveContainer>
-    </div>
+      </div>
+    </>
   )
 }

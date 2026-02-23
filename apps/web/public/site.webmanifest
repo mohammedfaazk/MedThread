@@ -1,0 +1,12 @@
+{
+  "name": "MedThread - Medical Community Platform",
+  "short_name": "MedThread",
+  "description": "Connect with verified doctors, share medical experiences, and get expert healthcare advice",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "orientation": "portrait-primary",
+  "icons": [],
+  "categories": ["health", "medical", "lifestyle"]
+}

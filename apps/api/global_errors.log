@@ -1,0 +1,25 @@
+[2026-02-16T09:39:32.969Z] GLOBAL ERROR: 
+Invalid `prisma.user.count()` invocation in
+C:\Users\HP\MedThread_\_MedThread_\MedThread\apps\api\src\services\doctor-verification.service.ts:410:19
+
+  407     doctorVerificationStatus: 'SUSPENDED'
+  408   }
+  409 }),
+→ 410 prisma.user.count(
+Error in connector: Error querying the database: FATAL: MaxClientsInSessionMode: max clients reached - in Session mode max clients are limited to pool_size
+Stack: PrismaClientUnknownRequestError: 
+Invalid `prisma.user.count()` invocation in
+C:\Users\HP\MedThread_\_MedThread_\MedThread\apps\api\src\services\doctor-verification.service.ts:410:19
+
+  407     doctorVerificationStatus: 'SUSPENDED'
+  408   }
+  409 }),
+→ 410 prisma.user.count(
+Error in connector: Error querying the database: FATAL: MaxClientsInSessionMode: max clients reached - in Session mode max clients are limited to pool_size
+    at $n.handleRequestError (C:\Users\HP\MedThread_\_MedThread_\MedThread\node_modules\@prisma\client\runtime\library.js:121:7505)
+    at $n.handleAndLogRequestError (C:\Users\HP\MedThread_\_MedThread_\MedThread\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\HP\MedThread_\_MedThread_\MedThread\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\HP\MedThread_\_MedThread_\MedThread\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async Promise.all (index 5)
+    at async DoctorVerificationService.getVerificationStats (C:\Users\HP\MedThread_\_MedThread_\MedThread\apps\api\src\services\doctor-verification.service.ts:384:9)
+    at async <anonymous> (C:\Users\HP\MedThread_\_MedThread_\MedThread\apps\api\src\controllers\doctor-verification.controller.ts:188:20)

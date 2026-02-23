@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!email || !password) {
       setError('Please fill all fields')
       return
@@ -28,7 +28,8 @@ export default function LoginPage() {
 
     try {
       console.log('🔐 Attempting login with:', email);
-      const response = await axios.post('http://localhost:3001/api/auth/login', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password
       })
@@ -38,9 +39,9 @@ export default function LoginPage() {
       if (response.data.success) {
         // Use the login function from context
         login(response.data.data.token, response.data.data.user);
-        
+
         console.log('✅ Logged in successfully');
-        
+
         // Redirect based on role
         const user = response.data.data.user
         if (user.role === 'ADMIN') {

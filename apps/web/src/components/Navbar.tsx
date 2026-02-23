@@ -10,7 +10,7 @@ export function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const router = useRouter()
   const { user, role, loading, logout } = useJWTAuth()
-  
+
   // Display name helper
   const displayName = user?.username || user?.email?.split('@')[0] || 'User'
   const displayRole = role?.replace('_', ' ')

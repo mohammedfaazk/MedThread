@@ -54,7 +54,7 @@ export default function AdminDashboard() {
     // Check if user is admin
     const user = localStorage.getItem('user')
     const token = localStorage.getItem('auth_token')
-    
+
     if (!user || !token) {
       router.push('/login')
       return
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
 
   const handleReject = async () => {
     if (!selectedDoctor) return
-    
+
     if (!rejectionReason || rejectionReason.length < 10) {
       alert('Please provide a rejection reason (minimum 10 characters)')
       return
@@ -152,12 +152,6 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user')
-    router.push('/login')
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -170,30 +164,14 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Shield className="w-8 h-8 text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-sm text-gray-500">Doctor Verification Management</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Stats Grid */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Doctor Verification Dashboard</h2>
+          <p className="text-gray-600">Review and approve doctor registration requests</p>
+        </div>
+
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -489,7 +467,7 @@ export default function AdminDashboard() {
 
       {/* Document Viewer Modal */}
       {viewingDocument && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-50"
           onClick={() => setViewingDocument(null)}
         >

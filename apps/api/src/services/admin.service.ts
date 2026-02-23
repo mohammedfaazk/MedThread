@@ -274,6 +274,247 @@ export class AdminService {
   }
 
   /**
+   * Get posts with filters (Admin only)
+   */
+  async getPosts(filters: {
+    communityId?: string;
+    authorId?: string;
+    isRemoved?: boolean;
+    isPinned?: boolean;
+    isLocked?: boolean;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const {
+      communityId,
+      authorId,
+      isRemoved,
+      isPinned,
+      isLocked,
+      search,
+      page = 1,
+      limit = 50
+    } = filters;
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (communityId) where.communityId = communityId;
+    if (authorId) where.authorId = authorId;
+    if (isRemoved !== undefined) where.isRemoved = isRemoved;
+    if (isPinned !== undefined) where.isPinned = isPinned;
+    if (isLocked !== undefined) where.isLocked = isLocked;
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              role: true,
+            }
+          },
+          community: {
+            select: {
+              id: true,
+              name: true,
+            }
+          },
+          _count: {
+            select: {
+              comments: true,
+              reports: true,
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.post.count({ where })
+    ]);
+
+    return {
+      posts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
+  }
+
+  /**
+   * Delete post (Admin only)
+   */
+  async deletePost(postId: string) {
+    const post = await prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!post) {
+      throw new NotFoundError('Post not found');
+    }
+
+    await prisma.post.delete({
+      where: { id: postId }
+    });
+
+    return {
+      message: 'Post deleted successfully',
+    };
+  }
+
+  /**
+   * Toggle pin status of post (Admin only)
+   */
+  async togglePinPost(postId: string) {
+    const post = await prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!post) {
+      throw new NotFoundError('Post not found');
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: { id: postId },
+      data: {
+        isPinned: !post.isPinned,
+      }
+    });
+
+    return updatedPost;
+  }
+
+  /**
+   * Toggle lock status of post (Admin only)
+   */
+  async toggleLockPost(postId: string) {
+    const post = await prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!post) {
+      throw new NotFoundError('Post not found');
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: { id: postId },
+      data: {
+        isLocked: !post.isLocked,
+      }
+    });
+
+    return updatedPost;
+  }
+
+  /**
+   * Get comments with filters (Admin only)
+   */
+  async getComments(filters: {
+    postId?: string;
+    authorId?: string;
+    isRemoved?: boolean;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const {
+      postId,
+      authorId,
+      isRemoved,
+      search,
+      page = 1,
+      limit = 50
+    } = filters;
+
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+
+    if (postId) where.postId = postId;
+    if (authorId) where.authorId = authorId;
+    if (isRemoved !== undefined) where.isRemoved = isRemoved;
+    if (search) {
+      where.content = { contains: search, mode: 'insensitive' };
+    }
+
+    const [comments, total] = await Promise.all([
+      prisma.comment.findMany({
+        where,
+        include: {
+          author: {
+            select: {
+              id: true,
+              username: true,
+              role: true,
+            }
+          },
+          post: {
+            select: {
+              id: true,
+              title: true,
+            }
+          },
+          _count: {
+            select: {
+              replies: true,
+              reports: true,
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.comment.count({ where })
+    ]);
+
+    return {
+      comments,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
+  }
+
+  /**
+   * Delete comment (Admin only)
+   */
+  async deleteComment(commentId: string) {
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId }
+    });
+
+    if (!comment) {
+      throw new NotFoundError('Comment not found');
+    }
+
+    await prisma.comment.delete({
+      where: { id: commentId }
+    });
+
+    return {
+      message: 'Comment deleted successfully',
+    };
+  }
+
+  /**
    * Get reported content (Admin only)
    */
   async getReports(filters: {
