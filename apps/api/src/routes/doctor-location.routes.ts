@@ -3,6 +3,7 @@ import { prisma } from '@medthread/database';
 import { authenticate } from '../middleware/auth.refactored';
 import { locationService } from '../services/location.service';
 import { availabilityService } from '../services/availability.service';
+import { geocodingService } from '../services/geocoding.service';
 
 export const doctorLocationRouter = Router();
 
@@ -300,15 +301,38 @@ doctorLocationRouter.post('/doctors/clinics', authenticate, async (req, res) => 
     } = req.body;
 
     // Validate required fields
-    if (!clinicName || !address || !city || !country || !latitude || !longitude) {
+    if (!clinicName || !address || !city || !country) {
       return res.status(400).json({
         success: false,
-        error: 'Missing required fields'
+        error: 'Missing required fields: clinicName, address, city, country'
       });
     }
 
+    let finalLat = latitude;
+    let finalLng = longitude;
+    let formattedAddress = address;
+
+    // If coordinates not provided, geocode the address
+    if (!latitude || !longitude) {
+      const fullAddress = `${address}, ${city}, ${state || ''}, ${country}`.replace(/,\s*,/g, ',');
+      const geocodeResult = await geocodingService.geocodeAddress(fullAddress);
+      
+      if (!geocodeResult) {
+        return res.status(400).json({
+          success: false,
+          error: 'Could not geocode address. Please provide valid latitude and longitude, or check the address format.'
+        });
+      }
+
+      finalLat = geocodeResult.lat;
+      finalLng = geocodeResult.lng;
+      formattedAddress = geocodeResult.formattedAddress;
+      
+      console.log(`[Geocoding] Address "${fullAddress}" → (${finalLat}, ${finalLng})`);
+    }
+
     // Validate coordinates
-    if (!locationService.validateCoordinates(latitude, longitude)) {
+    if (!locationService.validateCoordinates(finalLat, finalLng)) {
       return res.status(400).json({
         success: false,
         error: 'Invalid coordinates'
@@ -330,8 +354,8 @@ doctorLocationRouter.post('/doctors/clinics', authenticate, async (req, res) => 
         doctor_id, clinic_name, address, city, state, country,
         postal_code, latitude, longitude, phone, is_primary
       ) VALUES (
-        ${userId}, ${clinicName}, ${address}, ${city}, ${state || null}, ${country},
-        ${postalCode || null}, ${latitude}, ${longitude}, ${phone || null}, ${isPrimary || false}
+        ${userId}, ${clinicName}, ${formattedAddress}, ${city}, ${state || null}, ${country},
+        ${postalCode || null}, ${finalLat}, ${finalLng}, ${phone || null}, ${isPrimary || false}
       )
       RETURNING *
     `;

@@ -1,8 +1,7 @@
 {
-  "/chat/page": "app/chat/page.js",
   "/dashboard/doctor/page": "app/dashboard/doctor/page.js",
-  "/page": "app/page.js",
+  "/chat/page": "app/chat/page.js",
   "/communities/create/page": "app/communities/create/page.js",
-  "/admin/users/page": "app/admin/users/page.js",
+  "/page": "app/page.js",
   "/admin/posts/page": "app/admin/posts/page.js"
 }
