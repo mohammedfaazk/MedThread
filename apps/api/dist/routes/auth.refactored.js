@@ -4,6 +4,7 @@ exports.authRouter = void 0;
 const express_1 = require("express");
 const auth_controller_1 = require("../controllers/auth.controller");
 const auth_refactored_1 = require("../middleware/auth.refactored");
+const rateLimiter_1 = require("../middleware/rateLimiter");
 const router = (0, express_1.Router)();
 exports.authRouter = router;
 /**
@@ -11,13 +12,13 @@ exports.authRouter = router;
  * @desc    Register a new user
  * @access  Public
  */
-router.post('/register', auth_controller_1.authController.register);
+router.post('/register', rateLimiter_1.authLimiter, auth_controller_1.authController.register);
 /**
  * @route   POST /api/auth/login
  * @desc    Login user
  * @access  Public
  */
-router.post('/login', auth_controller_1.authController.login);
+router.post('/login', rateLimiter_1.authLimiter, auth_controller_1.authController.login);
 /**
  * @route   POST /api/auth/refresh
  * @desc    Refresh access token

@@ -115,8 +115,9 @@ export class DoctorProfileEnhancedService {
     const responseAccuracyRating = totalCases > 0 ? (accurateResponses / totalCases) * 100 : 0;
 
     // Calculate specialization depth (unique topics covered)
-    const uniqueTopics = new Set(doctorReplies.map(r => r.thread.tags).flat()).size;
-    const specializationDepthScore = Math.min(uniqueTopics * 2, 100); // Max 100
+    // Note: tags field doesn't exist on MedicalThread, using status as placeholder
+    const uniqueTopics = new Set(doctorReplies.map(r => r.thread.status)).size;
+    const specializationDepthScore = Math.min(uniqueTopics * 10, 100); // Max 100
 
     // Get patient satisfaction from reviews (placeholder - will implement with reviews)
     const averagePatientSatisfaction = 0; // TODO: Calculate from PatientReview model

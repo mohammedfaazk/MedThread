@@ -1,9 +1,14 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cronJobsService = exports.CronJobsService = void 0;
 // Cron jobs service for scheduled tasks
 const database_1 = require("@medthread/database");
 const email_service_1 = require("./email.service");
+const digest_email_service_1 = require("./digest-email.service");
+const node_cron_1 = __importDefault(require("node-cron"));
 class CronJobsService {
     /**
      * Check for expiring medical licenses and send reminders
@@ -264,25 +269,61 @@ class CronJobsService {
         }
         console.log(`[CRON] Auto-awarded CME credits to ${awarded} replies`);
     }
+    /**
+     * Send daily digest emails
+     * Run daily at 8 AM
+     */
+    async sendDailyDigests() {
+        console.log('[CRON] Sending daily digest emails...');
+        try {
+            const count = await digest_email_service_1.digestEmailService.sendDailyDigests();
+            console.log(`[CRON] Sent ${count} daily digest emails`);
+        }
+        catch (error) {
+            console.error('[CRON] Error sending daily digests:', error);
+        }
+    }
+    /**
+     * Send weekly digest emails
+     * Run weekly on Monday at 8 AM
+     */
+    async sendWeeklyDigests() {
+        console.log('[CRON] Sending weekly digest emails...');
+        try {
+            const count = await digest_email_service_1.digestEmailService.sendWeeklyDigests();
+            console.log(`[CRON] Sent ${count} weekly digest emails`);
+        }
+        catch (error) {
+            console.error('[CRON] Error sending weekly digests:', error);
+        }
+    }
+    /**
+     * Initialize all cron jobs
+     */
+    initializeCronJobs() {
+        console.log('[CRON] Initializing cron jobs...');
+        // Run license check daily at 9 AM
+        node_cron_1.default.schedule('0 9 * * *', async () => {
+            await this.checkExpiringLicenses();
+        });
+        // Run appointment reminders every hour
+        node_cron_1.default.schedule('0 * * * *', async () => {
+            await this.sendAppointmentReminders();
+        });
+        // Run CME auto-award daily at midnight
+        node_cron_1.default.schedule('0 0 * * *', async () => {
+            await this.autoAwardCmeCredits();
+        });
+        // Run daily digest emails at 8 AM
+        node_cron_1.default.schedule('0 8 * * *', async () => {
+            await this.sendDailyDigests();
+        });
+        // Run weekly digest emails on Monday at 8 AM
+        node_cron_1.default.schedule('0 8 * * 1', async () => {
+            await this.sendWeeklyDigests();
+        });
+        console.log('[CRON] All cron jobs initialized');
+    }
 }
 exports.CronJobsService = CronJobsService;
 exports.cronJobsService = new CronJobsService();
-// Setup cron jobs (uncomment when node-cron is installed)
-/*
-const cron = require('node-cron');
-
-// Run license check daily at 9 AM
-cron.schedule('0 9 * * *', async () => {
-  await cronJobsService.checkExpiringLicenses();
-});
-
-// Run appointment reminders every hour
-cron.schedule('0 * * * *', async () => {
-  await cronJobsService.sendAppointmentReminders();
-});
-
-// Run CME auto-award daily at midnight
-cron.schedule('0 0 * * *', async () => {
-  await cronJobsService.autoAwardCmeCredits();
-});
-*/

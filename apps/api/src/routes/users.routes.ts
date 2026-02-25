@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '@medthread/database';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
@@ -11,7 +11,7 @@ const router = Router();
  */
 router.get(
   '/by-username/:username',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { username } = req.params;
 
     const user = await prisma.user.findUnique({

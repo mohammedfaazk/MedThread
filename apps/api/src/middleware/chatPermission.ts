@@ -59,15 +59,6 @@ export const validateChatAccess = async (
               }
             }
           }
-        },
-        patient: {
-          select: { id: true }
-        },
-        doctor: {
-          select: { 
-            id: true, 
-            doctorVerificationStatus: true 
-          }
         }
       }
     });

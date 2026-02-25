@@ -58,8 +58,8 @@ export class AdminService {
       pendingVerifications,
     ] = await Promise.all([
       prisma.user.count(),
-      prisma.post.count(),
-      prisma.comment.count(),
+      prisma.post.count({ where: { isPrivate: false } }), // Exclude private posts from public stats
+      prisma.comment.count({ where: { isPrivateReply: false } }), // Exclude private replies from public stats
       prisma.community.count(),
       prisma.user.count({
         where: {

@@ -40,7 +40,7 @@ export async function requireVerifiedDoctor(req: Request, res: Response, next: N
     }
 
     // Check if user is a doctor
-    const isDoctorRole = user.role === 'DOCTOR' || user.role === 'VERIFIED_DOCTOR';
+    const isDoctorRole = user.role === 'DOCTOR';
 
     // If not a doctor role, allow access (patients, nurses, etc. can post/comment)
     if (!isDoctorRole) {

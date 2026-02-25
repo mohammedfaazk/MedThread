@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { healthInsightsService } from '../services/health-insights.service';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
@@ -12,7 +12,7 @@ export const healthInsightsRouter = Router();
 healthInsightsRouter.get(
   '/dashboard',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const doctorId = req.user.userId;
     const { specialty } = req.query;
     
@@ -31,7 +31,7 @@ healthInsightsRouter.get(
 healthInsightsRouter.get(
   '/trending-symptoms',
   authenticate,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { timeframe = 'week' } = req.query;
     const insights = await healthInsightsService.generateTrendingSymptoms(timeframe as any);
     res.json(insights);
@@ -45,7 +45,7 @@ healthInsightsRouter.get(
 healthInsightsRouter.get(
   '/regional-alerts',
   authenticate,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const alerts = await healthInsightsService.generateRegionalAlerts();
     res.json(alerts);
   })
@@ -58,7 +58,7 @@ healthInsightsRouter.get(
 healthInsightsRouter.get(
   '/medication-patterns',
   authenticate,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const patterns = await healthInsightsService.analyzeMedicationPatterns();
     res.json(patterns);
   })
@@ -71,8 +71,9 @@ healthInsightsRouter.get(
 healthInsightsRouter.get(
   '/diagnostic-patterns',
   authenticate,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const patterns = await healthInsightsService.getDiagnosticPatterns();
     res.json(patterns);
   })
 );
+

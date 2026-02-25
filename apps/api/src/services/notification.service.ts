@@ -1,5 +1,6 @@
 import { prisma } from '@medthread/database';
-import { NotificationType, ContentType, Notification, Prisma } from '@prisma/client';
+import { NotificationType, ContentType, Prisma } from '@prisma/client';
+import type { notifications as Notification } from '@prisma/client';
 import { PreferencesService } from './notification-preferences.service';
 import { sanitizeNotificationMetadata, sanitizeUrl } from '../utils/sanitize';
 
@@ -95,7 +96,7 @@ export class NotificationService {
       // 3. Create notification records
       const notifications = await prisma.$transaction(
         unblockedRecipients.map((recipientId) =>
-          prisma.notification.create({
+          prisma.notifications.create({
             data: {
               type,
               recipientId,
@@ -105,7 +106,7 @@ export class NotificationService {
               metadata: sanitizedMetadata as Prisma.JsonObject,
             },
             include: {
-              actor: {
+              User_notifications_actorIdToUser: {
                 select: {
                   id: true,
                   username: true,
@@ -113,7 +114,7 @@ export class NotificationService {
                   role: true,
                 },
               },
-              recipient: {
+              User_notifications_recipientIdToUser: {
                 select: {
                   id: true,
                   username: true,
@@ -167,7 +168,7 @@ export class NotificationService {
       const skip = (page - 1) * limit;
 
       // Build where clause
-      const where: Prisma.NotificationWhereInput = {
+      const where: Prisma.notificationsWhereInput = {
         recipientId: userId,
         isDeleted: false,
       };
@@ -192,7 +193,7 @@ export class NotificationService {
 
       // Execute queries in parallel
       const [notifications, total] = await Promise.all([
-        prisma.notification.findMany({
+        prisma.notifications.findMany({
           where,
           skip,
           take: limit,
@@ -200,7 +201,7 @@ export class NotificationService {
             createdAt: 'desc',
           },
           include: {
-            actor: {
+            User_notifications_actorIdToUser: {
               select: {
                 id: true,
                 username: true,
@@ -210,7 +211,7 @@ export class NotificationService {
             },
           },
         }),
-        prisma.notification.count({ where }),
+        prisma.notifications.count({ where }),
       ]);
 
       return {
@@ -232,7 +233,7 @@ export class NotificationService {
   async markAsRead(notificationId: string, userId: string): Promise<void> {
     try {
       // Verify the notification belongs to the user
-      const notification = await prisma.notification.findFirst({
+      const notification = await prisma.notifications.findFirst({
         where: {
           id: notificationId,
           recipientId: userId,
@@ -247,7 +248,7 @@ export class NotificationService {
         return; // Already read
       }
 
-      await prisma.notification.update({
+      await prisma.notifications.update({
         where: { id: notificationId },
         data: {
           isRead: true,
@@ -270,7 +271,7 @@ export class NotificationService {
    */
   async markAllAsRead(userId: string): Promise<number> {
     try {
-      const result = await prisma.notification.updateMany({
+      const result = await prisma.notifications.updateMany({
         where: {
           recipientId: userId,
           isRead: false,
@@ -300,7 +301,7 @@ export class NotificationService {
   async deleteNotification(notificationId: string, userId: string): Promise<void> {
     try {
       // Verify the notification belongs to the user
-      const notification = await prisma.notification.findFirst({
+      const notification = await prisma.notifications.findFirst({
         where: {
           id: notificationId,
           recipientId: userId,
@@ -311,7 +312,7 @@ export class NotificationService {
         throw new Error('Notification not found or access denied');
       }
 
-      await prisma.notification.update({
+      await prisma.notifications.update({
         where: { id: notificationId },
         data: {
           isDeleted: true,
@@ -343,7 +344,7 @@ export class NotificationService {
       }
 
       // Fetch from database
-      const count = await prisma.notification.count({
+      const count = await prisma.notifications.count({
         where: {
           recipientId: userId,
           isRead: false,
@@ -474,12 +475,13 @@ export class NotificationService {
           allIds.push(notif.id);
           
           // Only add actors up to the limit of 50
-          if (actorMap.size < 50 && notif.actor) {
+          if (actorMap.size < 50 && (notif as any).User_notifications_actorIdToUser) {
+            const actor = (notif as any).User_notifications_actorIdToUser;
             actorMap.set(notif.actorId, {
-              id: notif.actor.id,
-              username: notif.actor.username,
-              avatar: notif.actor.avatar,
-              role: notif.actor.role,
+              id: actor.id,
+              username: actor.username,
+              avatar: actor.avatar,
+              role: actor.role,
             });
           }
         }
@@ -526,3 +528,6 @@ export class NotificationService {
 
 // Export singleton instance
 export const notificationService = new NotificationService();
+
+
+

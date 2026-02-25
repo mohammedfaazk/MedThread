@@ -43,6 +43,8 @@ model User {
   isShadowBanned                                  Boolean                   @default(false)
   emailVerified                                   Boolean                   @default(false)
   twoFactorEnabled                                Boolean                   @default(false)
+  twoFactorSecret                                 String?
+  consultationFee                                 Decimal?                  @db.Decimal(10, 2)
   createdAt                                       DateTime                  @default(now())
   updatedAt                                       DateTime                  @updatedAt
   AnalyticsEvent                                  AnalyticsEvent[]
@@ -136,6 +138,8 @@ model Post {
   isArchived       Boolean         @default(false)
   isRemoved        Boolean         @default(false)
   isDraft          Boolean         @default(false)
+  isPrivate        Boolean         @default(false)
+  isDeleted        Boolean         @default(false)
   commentsDisabled Boolean         @default(false)
   contestMode      Boolean         @default(false)
   createdAt        DateTime        @default(now())
@@ -174,6 +178,7 @@ model Comment {
   isDistinguished Boolean        @default(false)
   isRemoved       Boolean        @default(false)
   isLocked        Boolean        @default(false)
+  isPrivateReply  Boolean        @default(false)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   editedAt        DateTime?
@@ -348,6 +353,9 @@ model Message {
   subject        String?
   content        String
   isRead         Boolean       @default(false)
+  readAt         DateTime?
+  isDeleted      Boolean       @default(false)
+  isEdited       Boolean       @default(false)
   conversationId String?
   attachment     String?
   type           MessageType   @default(TEXT)
@@ -397,6 +405,7 @@ model Appointment {
   doctorId     String
   startTime    DateTime
   endTime      DateTime
+  scheduledAt  DateTime          @default(now())
   status       AppointmentStatus @default(PENDING)
   reason       String?
   createdAt    DateTime          @default(now())
@@ -412,6 +421,10 @@ model Appointment {
 model Conversation {
   id            String       @id @default(cuid())
   appointmentId String?      @unique
+  patientId     String?
+  doctorId      String?
+  isActive      Boolean      @default(true)
+  lastMessageAt DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   appointment   Appointment? @relation(fields: [appointmentId], references: [id])
@@ -700,7 +713,7 @@ model UserSession {
 }
 
 model email_queue {
-  id             String        @id
+  id             String        @id @default(cuid())
   userId         String
   notificationId String
   type           String
@@ -710,7 +723,7 @@ model email_queue {
   sentAt         DateTime?
   error          String?
   createdAt      DateTime      @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime      @updatedAt
   notifications  notifications @relation(fields: [notificationId], references: [id])
   User           User          @relation(fields: [userId], references: [id])
 
@@ -719,7 +732,7 @@ model email_queue {
 }
 
 model notification_preferences {
-  id              String   @id
+  id              String   @id @default(cuid())
   userId          String   @unique
   inApp           Json
   email           Json
@@ -729,12 +742,12 @@ model notification_preferences {
   digestFrequency String   @default("daily")
   upvoteThreshold Int?
   createdAt       DateTime @default(now())
-  updatedAt       DateTime
+  updatedAt       DateTime @updatedAt
   User            User     @relation(fields: [userId], references: [id])
 }
 
 model notifications {
-  id                                   String           @id
+  id                                   String           @id @default(cuid())
   type                                 NotificationType
   recipientId                          String
   actorId                              String
@@ -746,7 +759,7 @@ model notifications {
   isDeleted                            Boolean          @default(false)
   deletedAt                            DateTime?
   createdAt                            DateTime         @default(now())
-  updatedAt                            DateTime
+  updatedAt                            DateTime         @updatedAt
   email_queue                          email_queue[]
   User_notifications_actorIdToUser     User             @relation("notifications_actorIdToUser", fields: [actorId], references: [id])
   User_notifications_recipientIdToUser User             @relation("notifications_recipientIdToUser", fields: [recipientId], references: [id])
@@ -830,6 +843,9 @@ enum AuditAction {
   DOCTOR_SUSPEND
   SETTINGS_UPDATE
   ROLE_CHANGE
+  PRIVATE_POST_ACCESS
+  PRIVATE_REPLY_ACCESS
+  PRIVATE_POST_CREATED
 }
 
 enum ContentType {
@@ -846,11 +862,21 @@ enum NotificationType {
   FOLLOWER
   APPOINTMENT_REQUEST
   APPOINTMENT_UPDATE
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_RESCHEDULED
+  APPOINTMENT_REMINDER
   VERIFICATION_STATUS
   COMMUNITY_INVITE
   DIRECT_MESSAGE
   SYSTEM_ANNOUNCEMENT
   UPVOTE_MILESTONE
+  COINS_ADDED
+  BADGE_EARNED
+  CME_CREDITS_EARNED
+  CONSULTATION_REQUEST
+  DOCTOR_RESPONSE
+  REVIEW_REQUEST
+  LICENSE_EXPIRY_WARNING
 }
 
 enum PaymentStatus {

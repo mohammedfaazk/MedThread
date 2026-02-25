@@ -21,8 +21,8 @@ describe('Notification Triggers Integration', () => {
       data: {
         email: 'test1@example.com',
         username: 'testuser1',
-        password: 'hashedpassword',
-        role: 'USER',
+        passwordHash: 'hashedpassword',
+        role: 'PATIENT' as any,
       }
     });
 
@@ -30,8 +30,8 @@ describe('Notification Triggers Integration', () => {
       data: {
         email: 'test2@example.com',
         username: 'testuser2',
-        password: 'hashedpassword',
-        role: 'USER',
+        passwordHash: 'hashedpassword',
+        role: 'PATIENT' as any,
       }
     });
 
@@ -41,7 +41,6 @@ describe('Notification Triggers Integration', () => {
         name: 'testcommunity',
         displayName: 'Test Community',
         description: 'Test community for notifications',
-        creatorId: testUser1.id,
       }
     });
 
@@ -56,7 +55,7 @@ describe('Notification Triggers Integration', () => {
 
   afterAll(async () => {
     // Clean up test data
-    await prisma.notification.deleteMany({
+    await prisma.notifications.deleteMany({
       where: {
         OR: [
           { recipientId: testUser1.id },
@@ -87,7 +86,7 @@ describe('Notification Triggers Integration', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Check if notification was created
-      const notifications = await prisma.notification.findMany({
+      const notifications = await prisma.notifications.findMany({
         where: {
           recipientId: testUser1.id,
           type: 'REPLY',
@@ -109,7 +108,7 @@ describe('Notification Triggers Integration', () => {
       });
 
       // Clear previous notifications
-      await prisma.notification.deleteMany({
+      await prisma.notifications.deleteMany({
         where: { recipientId: testUser1.id }
       });
 
@@ -123,7 +122,7 @@ describe('Notification Triggers Integration', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const notifications = await prisma.notification.findMany({
+      const notifications = await prisma.notifications.findMany({
         where: {
           recipientId: testUser1.id,
           type: 'REPLY',
@@ -144,7 +143,7 @@ describe('Notification Triggers Integration', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const notifications = await prisma.notification.findMany({
+      const notifications = await prisma.notifications.findMany({
         where: {
           recipientId: testUser1.id,
           type: 'REPLY',
@@ -166,7 +165,7 @@ describe('Notification Triggers Integration', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const notifications = await prisma.notification.findMany({
+      const notifications = await prisma.notifications.findMany({
         where: {
           recipientId: testUser1.id,
           type: 'MENTION',
@@ -188,7 +187,7 @@ describe('Notification Triggers Integration', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const notifications = await prisma.notification.findMany({
+      const notifications = await prisma.notifications.findMany({
         where: {
           recipientId: testUser2.id,
           type: 'MENTION',
@@ -224,7 +223,7 @@ describe('Notification Triggers Integration', () => {
       });
 
       // Clear notifications
-      await prisma.notification.deleteMany({
+      await prisma.notifications.deleteMany({
         where: { recipientId: testUser1.id }
       });
 
@@ -241,7 +240,7 @@ describe('Notification Triggers Integration', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      const notifications = await prisma.notification.findMany({
+      const notifications = await prisma.notifications.findMany({
         where: {
           recipientId: testUser1.id,
           type: 'UPVOTE_MILESTONE',
@@ -271,3 +270,4 @@ describe('Notification Triggers Integration', () => {
     });
   });
 });
+

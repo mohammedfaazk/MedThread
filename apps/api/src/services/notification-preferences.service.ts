@@ -1,5 +1,6 @@
 import { prisma } from '@medthread/database';
-import { NotificationType, NotificationPreferences } from '@prisma/client';
+import { NotificationType } from '@prisma/client';
+import type { notification_preferences as NotificationPreferences } from '@prisma/client';
 
 export type DeliveryChannel = 'in-app' | 'email' | 'push';
 export type EmailFrequency = 'instant' | 'digest' | 'off';
@@ -21,7 +22,7 @@ export class PreferencesService {
    */
   async getPreferences(userId: string): Promise<NotificationPreferences> {
     try {
-      let preferences = await prisma.notificationPreferences.findUnique({
+      let preferences = await prisma.notification_preferences.findUnique({
         where: { userId },
       });
 
@@ -51,7 +52,7 @@ export class PreferencesService {
       // Validate updates
       this.validatePreferences(updates);
 
-      const preferences = await prisma.notificationPreferences.update({
+      const preferences = await prisma.notification_preferences.update({
         where: { userId },
         data: {
           ...(updates.inApp && { inApp: updates.inApp }),
@@ -193,7 +194,7 @@ export class PreferencesService {
     try {
       const defaults = this.getDefaultPreferencesData();
 
-      const preferences = await prisma.notificationPreferences.create({
+      const preferences = await prisma.notification_preferences.create({
         data: {
           userId,
           inApp: defaults.inApp,
@@ -242,3 +243,4 @@ export class PreferencesService {
 
 // Export singleton instance
 export const preferencesService = new PreferencesService();
+

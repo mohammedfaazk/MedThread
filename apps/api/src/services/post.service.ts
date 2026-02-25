@@ -14,6 +14,7 @@ interface CreatePostInput {
   isNSFW?: boolean;
   isSpoiler?: boolean;
   isDraft?: boolean;
+  isPrivate?: boolean;
 }
 
 interface GetPostsOptions {
@@ -28,6 +29,9 @@ interface GetPostsOptions {
   dateFrom?: Date;
   dateTo?: Date;
   postType?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'POLL';
+  privacyMode?: 'PUBLIC' | 'PRIVATE' | 'ALL';
+  requestingUserId?: string;
+  requestingUserRole?: string;
 }
 
 export const postService = {
@@ -48,6 +52,11 @@ export const postService = {
   },
 
   async createPost(data: CreatePostInput) {
+    // Validate isPrivate is boolean if provided
+    if (data.isPrivate !== undefined && typeof data.isPrivate !== 'boolean') {
+      throw new Error('isPrivate must be a boolean value');
+    }
+
     const post = await prisma.post.create({
       data: {
         title: data.title,
@@ -61,6 +70,7 @@ export const postService = {
         isNSFW: data.isNSFW || false,
         isSpoiler: data.isSpoiler || false,
         isDraft: data.isDraft || false,
+        isPrivate: data.isPrivate || false,
         publishedAt: data.isDraft ? null : new Date(),
       },
       include: {
@@ -168,7 +178,10 @@ export const postService = {
       authorType,
       dateFrom,
       dateTo,
-      postType
+      postType,
+      privacyMode,
+      requestingUserId,
+      requestingUserRole
     } = options;
 
     let orderBy: any;
@@ -194,6 +207,33 @@ export const postService = {
       isArchived: false,
       isDraft: false,
     };
+
+    // Privacy filtering
+    const isDoctor = requestingUserRole === 'DOCTOR';
+    
+    if (privacyMode === 'PUBLIC') {
+      where.isPrivate = false;
+    } else if (privacyMode === 'PRIVATE') {
+      if (!isDoctor) {
+        // Non-doctors can only see their own private posts
+        where.AND = [
+          { isPrivate: true },
+          { authorId: requestingUserId || 'none' }
+        ];
+      } else {
+        where.isPrivate = true;
+      }
+    } else {
+      // ALL or undefined - apply default privacy rules
+      if (!isDoctor) {
+        // Non-doctors see only public posts + their own private posts
+        where.OR = [
+          { isPrivate: false },
+          { AND: [{ isPrivate: true }, { authorId: requestingUserId || 'none' }] }
+        ];
+      }
+      // Doctors see all posts (no filter needed)
+    }
 
     // Filter by community
     if (community) {
@@ -382,6 +422,11 @@ export const postService = {
   },
 
   async updatePost(postId: string, userId: string, data: Partial<CreatePostInput>) {
+    // Prevent privacy mode changes
+    if ('isPrivate' in data) {
+      throw new Error('Privacy mode cannot be changed after post creation');
+    }
+
     // Verify ownership
     const post = await prisma.post.findUnique({
       where: { id: postId },

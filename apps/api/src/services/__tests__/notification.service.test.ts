@@ -138,8 +138,8 @@ describe('NotificationService', () => {
         },
       ];
 
-      (prisma.notification.findMany as any).mockResolvedValue(mockNotifications);
-      (prisma.notification.count as any).mockResolvedValue(1);
+      (prisma.notifications.findMany as any).mockResolvedValue(mockNotifications);
+      (prisma.notifications.count as any).mockResolvedValue(1);
 
       const result = await service.getNotifications('user-1', {
         page: 1,
@@ -154,14 +154,14 @@ describe('NotificationService', () => {
     });
 
     it('should filter by notification type', async () => {
-      (prisma.notification.findMany as any).mockResolvedValue([]);
-      (prisma.notification.count as any).mockResolvedValue(0);
+      (prisma.notifications.findMany as any).mockResolvedValue([]);
+      (prisma.notifications.count as any).mockResolvedValue(0);
 
       await service.getNotifications('user-1', {
         type: NotificationType.MENTION,
       });
 
-      expect(prisma.notification.findMany).toHaveBeenCalledWith(
+      expect(prisma.notifications.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             type: NotificationType.MENTION,
@@ -171,14 +171,14 @@ describe('NotificationService', () => {
     });
 
     it('should filter by read status', async () => {
-      (prisma.notification.findMany as any).mockResolvedValue([]);
-      (prisma.notification.count as any).mockResolvedValue(0);
+      (prisma.notifications.findMany as any).mockResolvedValue([]);
+      (prisma.notifications.count as any).mockResolvedValue(0);
 
       await service.getNotifications('user-1', {
         isRead: false,
       });
 
-      expect(prisma.notification.findMany).toHaveBeenCalledWith(
+      expect(prisma.notifications.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             isRead: false,
@@ -196,8 +196,8 @@ describe('NotificationService', () => {
         isRead: false,
       };
 
-      (prisma.notification.findFirst as any).mockResolvedValue(mockNotification);
-      (prisma.notification.update as any).mockResolvedValue({
+      (prisma.notifications.findFirst as any).mockResolvedValue(mockNotification);
+      (prisma.notifications.update as any).mockResolvedValue({
         ...mockNotification,
         isRead: true,
         readAt: new Date(),
@@ -205,7 +205,7 @@ describe('NotificationService', () => {
 
       await service.markAsRead('notif-1', 'user-1');
 
-      expect(prisma.notification.update).toHaveBeenCalledWith({
+      expect(prisma.notifications.update).toHaveBeenCalledWith({
         where: { id: 'notif-1' },
         data: {
           isRead: true,
@@ -215,7 +215,7 @@ describe('NotificationService', () => {
     });
 
     it('should throw error if notification not found', async () => {
-      (prisma.notification.findFirst as any).mockResolvedValue(null);
+      (prisma.notifications.findFirst as any).mockResolvedValue(null);
 
       await expect(
         service.markAsRead('notif-1', 'user-1')
@@ -229,22 +229,22 @@ describe('NotificationService', () => {
         isRead: true,
       };
 
-      (prisma.notification.findFirst as any).mockResolvedValue(mockNotification);
+      (prisma.notifications.findFirst as any).mockResolvedValue(mockNotification);
 
       await service.markAsRead('notif-1', 'user-1');
 
-      expect(prisma.notification.update).not.toHaveBeenCalled();
+      expect(prisma.notifications.update).not.toHaveBeenCalled();
     });
   });
 
   describe('markAllAsRead', () => {
     it('should mark all unread notifications as read', async () => {
-      (prisma.notification.updateMany as any).mockResolvedValue({ count: 5 });
+      (prisma.notifications.updateMany as any).mockResolvedValue({ count: 5 });
 
       const count = await service.markAllAsRead('user-1');
 
       expect(count).toBe(5);
-      expect(prisma.notification.updateMany).toHaveBeenCalledWith({
+      expect(prisma.notifications.updateMany).toHaveBeenCalledWith({
         where: {
           recipientId: 'user-1',
           isRead: false,
@@ -266,8 +266,8 @@ describe('NotificationService', () => {
         isRead: false,
       };
 
-      (prisma.notification.findFirst as any).mockResolvedValue(mockNotification);
-      (prisma.notification.update as any).mockResolvedValue({
+      (prisma.notifications.findFirst as any).mockResolvedValue(mockNotification);
+      (prisma.notifications.update as any).mockResolvedValue({
         ...mockNotification,
         isDeleted: true,
         deletedAt: new Date(),
@@ -275,7 +275,7 @@ describe('NotificationService', () => {
 
       await service.deleteNotification('notif-1', 'user-1');
 
-      expect(prisma.notification.update).toHaveBeenCalledWith({
+      expect(prisma.notifications.update).toHaveBeenCalledWith({
         where: { id: 'notif-1' },
         data: {
           isDeleted: true,
@@ -285,7 +285,7 @@ describe('NotificationService', () => {
     });
 
     it('should throw error if notification not found', async () => {
-      (prisma.notification.findFirst as any).mockResolvedValue(null);
+      (prisma.notifications.findFirst as any).mockResolvedValue(null);
 
       await expect(
         service.deleteNotification('notif-1', 'user-1')
@@ -295,12 +295,12 @@ describe('NotificationService', () => {
 
   describe('getUnreadCount', () => {
     it('should return unread count from database', async () => {
-      (prisma.notification.count as any).mockResolvedValue(3);
+      (prisma.notifications.count as any).mockResolvedValue(3);
 
       const count = await service.getUnreadCount('user-1');
 
       expect(count).toBe(3);
-      expect(prisma.notification.count).toHaveBeenCalledWith({
+      expect(prisma.notifications.count).toHaveBeenCalledWith({
         where: {
           recipientId: 'user-1',
           isRead: false,
@@ -310,17 +310,17 @@ describe('NotificationService', () => {
     });
 
     it('should use cached value if available', async () => {
-      (prisma.notification.count as any).mockResolvedValue(3);
+      (prisma.notifications.count as any).mockResolvedValue(3);
 
       // First call - should hit database
       const count1 = await service.getUnreadCount('user-1');
       expect(count1).toBe(3);
-      expect(prisma.notification.count).toHaveBeenCalledTimes(1);
+      expect(prisma.notifications.count).toHaveBeenCalledTimes(1);
 
       // Second call - should use cache
       const count2 = await service.getUnreadCount('user-1');
       expect(count2).toBe(3);
-      expect(prisma.notification.count).toHaveBeenCalledTimes(1);
+      expect(prisma.notifications.count).toHaveBeenCalledTimes(1);
     });
 
     it('should invalidate cache after marking as read', async () => {
@@ -330,51 +330,51 @@ describe('NotificationService', () => {
         isRead: false,
       };
 
-      (prisma.notification.count as any).mockResolvedValue(3);
-      (prisma.notification.findFirst as any).mockResolvedValue(mockNotification);
-      (prisma.notification.update as any).mockResolvedValue({
+      (prisma.notifications.count as any).mockResolvedValue(3);
+      (prisma.notifications.findFirst as any).mockResolvedValue(mockNotification);
+      (prisma.notifications.update as any).mockResolvedValue({
         ...mockNotification,
         isRead: true,
       });
 
       // Get count - should cache
       await service.getUnreadCount('user-1');
-      expect(prisma.notification.count).toHaveBeenCalledTimes(1);
+      expect(prisma.notifications.count).toHaveBeenCalledTimes(1);
 
       // Mark as read - should invalidate cache
       await service.markAsRead('notif-1', 'user-1');
 
       // Get count again - should hit database
-      (prisma.notification.count as any).mockResolvedValue(2);
+      (prisma.notifications.count as any).mockResolvedValue(2);
       const count = await service.getUnreadCount('user-1');
       expect(count).toBe(2);
-      expect(prisma.notification.count).toHaveBeenCalledTimes(2);
+      expect(prisma.notifications.count).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('clearCache', () => {
     it('should clear cache for specific user', async () => {
-      (prisma.notification.count as any).mockResolvedValue(3);
+      (prisma.notifications.count as any).mockResolvedValue(3);
 
       // Cache the count
       await service.getUnreadCount('user-1');
-      expect(prisma.notification.count).toHaveBeenCalledTimes(1);
+      expect(prisma.notifications.count).toHaveBeenCalledTimes(1);
 
       // Clear cache
       service.clearCache('user-1');
 
       // Should hit database again
       await service.getUnreadCount('user-1');
-      expect(prisma.notification.count).toHaveBeenCalledTimes(2);
+      expect(prisma.notifications.count).toHaveBeenCalledTimes(2);
     });
 
     it('should clear all cache when no userId provided', async () => {
-      (prisma.notification.count as any).mockResolvedValue(3);
+      (prisma.notifications.count as any).mockResolvedValue(3);
 
       // Cache counts for multiple users
       await service.getUnreadCount('user-1');
       await service.getUnreadCount('user-2');
-      expect(prisma.notification.count).toHaveBeenCalledTimes(2);
+      expect(prisma.notifications.count).toHaveBeenCalledTimes(2);
 
       // Clear all cache
       service.clearCache();
@@ -382,7 +382,7 @@ describe('NotificationService', () => {
       // Should hit database again for both
       await service.getUnreadCount('user-1');
       await service.getUnreadCount('user-2');
-      expect(prisma.notification.count).toHaveBeenCalledTimes(4);
+      expect(prisma.notifications.count).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -733,3 +733,4 @@ describe('NotificationService', () => {
     });
   });
 });
+

@@ -23,12 +23,14 @@ class ChatLifecycleService {
       }
 
       // Deactivate chat if appointment is cancelled, rejected, or completed
-      if ([
+      const terminalStatuses: AppointmentStatus[] = [
         AppointmentStatus.CANCELLED,
         AppointmentStatus.REJECTED,
         AppointmentStatus.COMPLETED
-      ].includes(newStatus)) {
-        const reasons = {
+      ];
+      
+      if (terminalStatuses.includes(newStatus)) {
+        const reasons: Record<string, string> = {
           [AppointmentStatus.CANCELLED]: 'Appointment was cancelled',
           [AppointmentStatus.REJECTED]: 'Appointment was rejected',
           [AppointmentStatus.COMPLETED]: 'Appointment has been completed'
@@ -36,7 +38,7 @@ class ChatLifecycleService {
 
         await chatService.deactivateConversation(
           conversation.id,
-          reasons[newStatus]
+          reasons[newStatus] || 'Appointment status changed'
         );
 
         console.log(`[ChatLifecycle] Deactivated conversation ${conversation.id} due to appointment ${newStatus}`);

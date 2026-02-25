@@ -4,6 +4,8 @@ exports.doctorVerificationService = exports.DoctorVerificationService = void 0;
 const database_1 = require("@medthread/database");
 const errors_1 = require("../utils/errors");
 const email_service_1 = require("./email.service");
+const notification_service_1 = require("./notification.service");
+const client_1 = require("@prisma/client");
 class DoctorVerificationService {
     /**
      * Doctor submits verification request with KYC documents
@@ -230,6 +232,23 @@ class DoctorVerificationService {
                 verifiedAt: true,
             }
         });
+        // Create VERIFICATION_STATUS notification
+        try {
+            await notification_service_1.notificationService.createNotification({
+                type: client_1.NotificationType.VERIFICATION_STATUS,
+                recipientIds: [userId],
+                actorId: adminId,
+                metadata: {
+                    title: 'Verification Approved',
+                    body: 'Your doctor verification has been approved! You can now access all doctor features.',
+                    link: '/doctor-verification',
+                    status: 'APPROVED',
+                }
+            });
+        }
+        catch (notifError) {
+            console.error('Failed to create verification approval notification:', notifError);
+        }
         // Send notification/email to doctor
         try {
             await email_service_1.emailService.sendVerificationApprovedEmail(updatedUser.email, updatedUser.username);
@@ -275,6 +294,25 @@ class DoctorVerificationService {
                 rejectionReason: true,
             }
         });
+        // Create VERIFICATION_STATUS notification
+        try {
+            await notification_service_1.notificationService.createNotification({
+                type: client_1.NotificationType.VERIFICATION_STATUS,
+                recipientIds: [userId],
+                actorId: adminId,
+                metadata: {
+                    title: 'Verification Rejected',
+                    body: 'Your doctor verification request has been rejected.',
+                    preview: reason,
+                    link: '/doctor-verification',
+                    status: 'REJECTED',
+                    reason,
+                }
+            });
+        }
+        catch (notifError) {
+            console.error('Failed to create verification rejection notification:', notifError);
+        }
         // Send notification/email to doctor with rejection reason
         try {
             await email_service_1.emailService.sendVerificationRejectedEmail(updatedUser.email, updatedUser.username, reason);
@@ -329,42 +367,52 @@ class DoctorVerificationService {
      * Get doctor verification statistics (Admin dashboard)
      */
     async getVerificationStats() {
-        const [totalDoctors, pendingVerifications, approvedDoctors, rejectedDoctors, suspendedDoctors, recentApprovals,] = await Promise.all([
-            database_1.prisma.user.count({ where: { role: 'DOCTOR' } }),
-            database_1.prisma.user.count({
-                where: {
-                    role: 'DOCTOR',
-                    doctorVerificationStatus: { in: ['PENDING', 'UNDER_REVIEW'] }
+        // Use a single query with groupBy to reduce database connections
+        const statusCounts = await database_1.prisma.user.groupBy({
+            by: ['doctorVerificationStatus'],
+            where: {
+                role: 'DOCTOR'
+            },
+            _count: {
+                id: true
+            }
+        });
+        // Count recent approvals separately
+        const recentApprovals = await database_1.prisma.user.count({
+            where: {
+                role: 'DOCTOR',
+                doctorVerificationStatus: 'APPROVED',
+                verifiedAt: {
+                    not: null,
+                    gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
                 }
-            }),
-            database_1.prisma.user.count({
-                where: {
-                    role: 'DOCTOR',
-                    doctorVerificationStatus: 'APPROVED'
-                }
-            }),
-            database_1.prisma.user.count({
-                where: {
-                    role: 'DOCTOR',
-                    doctorVerificationStatus: 'REJECTED'
-                }
-            }),
-            database_1.prisma.user.count({
-                where: {
-                    role: 'DOCTOR',
-                    doctorVerificationStatus: 'SUSPENDED'
-                }
-            }),
-            database_1.prisma.user.count({
-                where: {
-                    role: 'DOCTOR',
-                    doctorVerificationStatus: 'APPROVED',
-                    verifiedAt: {
-                        gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) // Last 7 days
-                    }
-                }
-            }),
-        ]);
+            }
+        });
+        // Calculate totals from grouped results
+        let totalDoctors = 0;
+        let pendingVerifications = 0;
+        let approvedDoctors = 0;
+        let rejectedDoctors = 0;
+        let suspendedDoctors = 0;
+        statusCounts.forEach(group => {
+            const count = group._count.id;
+            totalDoctors += count;
+            switch (group.doctorVerificationStatus) {
+                case 'PENDING':
+                case 'UNDER_REVIEW':
+                    pendingVerifications += count;
+                    break;
+                case 'APPROVED':
+                    approvedDoctors += count;
+                    break;
+                case 'REJECTED':
+                    rejectedDoctors += count;
+                    break;
+                case 'SUSPENDED':
+                    suspendedDoctors += count;
+                    break;
+            }
+        });
         return {
             totalDoctors,
             pendingVerifications,

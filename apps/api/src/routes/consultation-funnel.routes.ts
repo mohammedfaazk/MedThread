@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { consultationFunnelService } from '../services/consultation-funnel.service';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
@@ -12,7 +12,7 @@ export const consultationFunnelRouter = Router();
 consultationFunnelRouter.post(
   '/request',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const patientId = req.user.userId;
     const requestData = {
       ...req.body,
@@ -31,7 +31,7 @@ consultationFunnelRouter.post(
 consultationFunnelRouter.post(
   '/:id/respond',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const doctorId = req.user.userId;
     const response = req.body;
@@ -48,7 +48,7 @@ consultationFunnelRouter.post(
 consultationFunnelRouter.post(
   '/:id/schedule',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const patientId = req.user.userId;
     const appointmentData = req.body;
@@ -69,7 +69,7 @@ consultationFunnelRouter.post(
 consultationFunnelRouter.post(
   '/:id/complete',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { id } = req.params;
     const doctorId = req.user.userId;
     const { notes } = req.body;
@@ -86,7 +86,7 @@ consultationFunnelRouter.post(
 consultationFunnelRouter.get(
   '/metrics',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const doctorId = req.user.userId;
     const { timeframe = 'month' } = req.query;
     
@@ -105,7 +105,7 @@ consultationFunnelRouter.get(
 consultationFunnelRouter.get(
   '/top-threads',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const doctorId = req.user.userId;
     const { limit = 10 } = req.query;
     
@@ -116,3 +116,4 @@ consultationFunnelRouter.get(
     res.json(threads);
   })
 );
+

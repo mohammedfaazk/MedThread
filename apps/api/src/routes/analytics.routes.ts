@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { analyticsService } from '../services/analytics.service';
 import { sessionService } from '../services/session.service';
 import { authenticate, AuthRequest } from '../middleware/auth.refactored';
@@ -10,7 +10,7 @@ const router = Router();
  * POST /api/analytics/event
  * Track custom event
  */
-router.post('/event', asyncHandler(async (req: AuthRequest, res) => {
+router.post('/event', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { eventName, eventCategory, properties, sessionId, page } = req.body;
 
   if (!eventName || !eventCategory || !sessionId) {
@@ -45,7 +45,7 @@ router.post('/event', asyncHandler(async (req: AuthRequest, res) => {
  * POST /api/analytics/pageview
  * Track page view
  */
-router.post('/pageview', asyncHandler(async (req: AuthRequest, res) => {
+router.post('/pageview', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { page, title, sessionId, referrer, duration } = req.body;
 
   if (!page || !sessionId) {
@@ -77,7 +77,7 @@ router.post('/pageview', asyncHandler(async (req: AuthRequest, res) => {
  * POST /api/analytics/conversion
  * Track conversion event
  */
-router.post('/conversion', asyncHandler(async (req: AuthRequest, res) => {
+router.post('/conversion', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { conversionType, value, metadata, sessionId } = req.body;
 
   if (!conversionType || !sessionId) {
@@ -102,7 +102,7 @@ router.post('/conversion', asyncHandler(async (req: AuthRequest, res) => {
  * POST /api/analytics/post-view/:postId
  * Track post view
  */
-router.post('/post-view/:postId', asyncHandler(async (req: AuthRequest, res) => {
+router.post('/post-view/:postId', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { postId } = req.params;
 
   await analyticsService.trackPostView(postId, req.userId);
@@ -114,7 +114,7 @@ router.post('/post-view/:postId', asyncHandler(async (req: AuthRequest, res) => 
  * GET /api/analytics/user/:userId
  * Get user analytics
  */
-router.get('/user/:userId', authenticate, asyncHandler(async (req: AuthRequest, res) => {
+router.get('/user/:userId', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
   const { userId } = req.params;
 
   // Only allow users to view their own analytics or admins
@@ -137,7 +137,7 @@ router.get('/user/:userId', authenticate, asyncHandler(async (req: AuthRequest, 
  * GET /api/analytics/post/:postId
  * Get post analytics
  */
-router.get('/post/:postId', asyncHandler(async (req: AuthRequest, res) => {
+router.get('/post/:postId', asyncHandler(async (req: AuthRequest, res: Response) => {
   const { postId } = req.params;
 
   const analytics = await analyticsService.getPostAnalytics(postId);
@@ -152,7 +152,7 @@ router.get('/post/:postId', asyncHandler(async (req: AuthRequest, res) => {
  * GET /api/analytics/dashboard
  * Get dashboard analytics (Admin only)
  */
-router.get('/dashboard', authenticate, asyncHandler(async (req: AuthRequest, res) => {
+router.get('/dashboard', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
   if (req.userRole !== 'ADMIN') {
     return res.status(403).json({
       success: false,
@@ -174,3 +174,5 @@ router.get('/dashboard', authenticate, asyncHandler(async (req: AuthRequest, res
 }));
 
 export { router as analyticsRouter };
+
+

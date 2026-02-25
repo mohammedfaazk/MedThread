@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.communityService = exports.CommunityService = void 0;
 const database_1 = require("@medthread/database");
 const errors_1 = require("../utils/errors");
+const notification_service_1 = require("./notification.service");
+const client_1 = require("@prisma/client");
 class CommunityService {
     async createCommunity(data) {
         // Validate community name
@@ -316,6 +318,81 @@ class CommunityService {
             permissions: m.permissions,
             addedAt: m.addedAt,
         }));
+    }
+    async inviteModerator(communityId, inviterId, inviteeId, permissions) {
+        // Check if inviter is a moderator with permission
+        const inviterMod = await database_1.prisma.communityModerator.findUnique({
+            where: {
+                userId_communityId: {
+                    userId: inviterId,
+                    communityId
+                }
+            }
+        });
+        if (!inviterMod) {
+            throw new errors_1.ForbiddenError('Must be a moderator to invite others');
+        }
+        const inviterPerms = inviterMod.permissions;
+        if (!inviterPerms.all && !inviterPerms.users) {
+            throw new errors_1.ForbiddenError('Insufficient permissions to invite moderators');
+        }
+        // Check if invitee is already a moderator
+        const existingMod = await database_1.prisma.communityModerator.findUnique({
+            where: {
+                userId_communityId: {
+                    userId: inviteeId,
+                    communityId
+                }
+            }
+        });
+        if (existingMod) {
+            throw new errors_1.ConflictError('User is already a moderator');
+        }
+        // Get community and invitee details
+        const [community, invitee] = await Promise.all([
+            database_1.prisma.community.findUnique({ where: { id: communityId } }),
+            database_1.prisma.user.findUnique({ where: { id: inviteeId } })
+        ]);
+        if (!community) {
+            throw new errors_1.NotFoundError('Community not found');
+        }
+        if (!invitee) {
+            throw new errors_1.NotFoundError('User not found');
+        }
+        // Add as moderator
+        const defaultPermissions = permissions || {
+            all: false,
+            posts: true,
+            comments: true,
+            users: false,
+            settings: false,
+            flair: true,
+        };
+        await database_1.prisma.communityModerator.create({
+            data: {
+                userId: inviteeId,
+                communityId,
+                permissions: defaultPermissions
+            }
+        });
+        // Create COMMUNITY_INVITE notification
+        try {
+            await notification_service_1.notificationService.createNotification({
+                type: client_1.NotificationType.COMMUNITY_INVITE,
+                recipientIds: [inviteeId],
+                actorId: inviterId,
+                metadata: {
+                    title: 'Community Moderator Invite',
+                    body: `You've been invited to moderate m/${community.name}`,
+                    link: `/m/${community.name}`,
+                    communityName: community.displayName || community.name,
+                }
+            });
+        }
+        catch (notifError) {
+            console.error('Failed to create community invite notification:', notifError);
+        }
+        return { message: 'Moderator invited successfully' };
     }
 }
 exports.CommunityService = CommunityService;

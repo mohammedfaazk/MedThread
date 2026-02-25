@@ -18,7 +18,8 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
     medications: [] as string[],
     primarySymptoms: [] as string[],
     duration: '',
-    description: ''
+    description: '',
+    isPrivate: false // Privacy mode
   })
 
   const commonSymptoms = [
@@ -170,6 +171,63 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           className="space-y-6"
         >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Additional Details</h2>
+
+          {/* Privacy Mode Selector */}
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
+            <label className="block text-sm font-medium mb-3 text-charcoal">Post Privacy</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, isPrivate: false })}
+                className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                  !formData.isPrivate
+                    ? 'border-cyan-500 bg-cyan-50 shadow-soft'
+                    : 'border-gray-200 bg-white/50 hover:bg-white/80'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-2xl">🌐</span>
+                  <span className="font-semibold text-charcoal">Public</span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Visible to all users and doctors
+                </p>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, isPrivate: true })}
+                className={`flex-1 p-4 rounded-xl border-2 transition-all ${
+                  formData.isPrivate
+                    ? 'border-red-500 bg-red-50 shadow-soft'
+                    : 'border-gray-200 bg-white/50 hover:bg-white/80'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <span className="text-2xl">🔒</span>
+                  <span className="font-semibold text-charcoal">Private</span>
+                </div>
+                <p className="text-xs text-gray-600">
+                  Only visible to doctors
+                </p>
+              </button>
+            </div>
+            
+            {/* Privacy Warning */}
+            {formData.isPrivate && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg"
+              >
+                <p className="text-sm text-red-800">
+                  <strong>⚠️ Private Post:</strong> Only approved doctors can see this post. 
+                  Each doctor's reply will be private and isolated from other doctors' replies. 
+                  Only you will see all replies.
+                </p>
+              </motion.div>
+            )}
+          </div>
 
           <div>
             <label className="block text-sm font-medium mb-2 text-charcoal">

@@ -35,12 +35,12 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(mockPreferences);
 
       const result = await service.getPreferences('user-1');
 
       expect(result).toEqual(mockPreferences);
-      expect(prisma.notificationPreferences.findUnique).toHaveBeenCalledWith({
+      expect(prisma.notification_preferences.findUnique).toHaveBeenCalledWith({
         where: { userId: 'user-1' },
       });
     });
@@ -58,13 +58,13 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(null);
-      (prisma.notificationPreferences.create as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(null);
+      (prisma.notification_preferences.create as any).mockResolvedValue(mockPreferences);
 
       const result = await service.getPreferences('user-1');
 
       expect(result).toEqual(mockPreferences);
-      expect(prisma.notificationPreferences.create).toHaveBeenCalled();
+      expect(prisma.notification_preferences.create).toHaveBeenCalled();
     });
   });
 
@@ -86,15 +86,15 @@ describe('PreferencesService', () => {
         digestFrequency: 'weekly',
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(existingPreferences);
-      (prisma.notificationPreferences.update as any).mockResolvedValue(updatedPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(existingPreferences);
+      (prisma.notification_preferences.update as any).mockResolvedValue(updatedPreferences);
 
       const result = await service.updatePreferences('user-1', {
         digestFrequency: 'weekly',
       });
 
       expect(result.digestFrequency).toBe('weekly');
-      expect(prisma.notificationPreferences.update).toHaveBeenCalled();
+      expect(prisma.notification_preferences.update).toHaveBeenCalled();
     });
 
     it('should validate quiet hours format', async () => {
@@ -109,7 +109,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(existingPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(existingPreferences);
 
       await expect(
         service.updatePreferences('user-1', {
@@ -130,7 +130,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(existingPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(existingPreferences);
 
       await expect(
         service.updatePreferences('user-1', {
@@ -151,7 +151,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(existingPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(existingPreferences);
 
       await expect(
         service.updatePreferences('user-1', {
@@ -177,7 +177,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(mockPreferences);
 
       const enabled = await service.isNotificationEnabled(
         'user-1',
@@ -209,7 +209,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(mockPreferences);
 
       const enabled = await service.isNotificationEnabled(
         'user-1',
@@ -241,7 +241,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(mockPreferences);
 
       const enabled = await service.isNotificationEnabled(
         'user-1',
@@ -270,7 +270,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(mockPreferences);
 
       const enabled = await service.isNotificationEnabled(
         'user-1',
@@ -297,7 +297,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(mockPreferences);
 
       const result = await service.isInQuietHours('user-1');
 
@@ -326,7 +326,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(mockPreferences);
 
       const result = await service.isInQuietHours('user-1');
 
@@ -347,7 +347,7 @@ describe('PreferencesService', () => {
         updatedAt: new Date(),
       };
 
-      (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+      (prisma.notification_preferences.findUnique as any).mockResolvedValue(mockPreferences);
 
       // This test will pass or fail depending on current time
       // In a real test, we'd mock the Date object
@@ -407,3 +407,4 @@ describe('PreferencesService', () => {
     });
   });
 });
+

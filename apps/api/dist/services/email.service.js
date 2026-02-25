@@ -1,316 +1,217 @@
 "use strict";
-// Email service for sending notifications
-// This is a basic implementation - you can integrate with SendGrid, AWS SES, or other providers
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.emailService = exports.EmailService = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const email_1 = require("../config/email");
 class EmailService {
+    constructor() {
+        this.templatesPath = path_1.default.join(__dirname, '../templates/email');
+    }
     /**
-     * Send email with multiple provider support
+     * Load email template
+     */
+    loadTemplate(templateName) {
+        const templatePath = path_1.default.join(this.templatesPath, `${templateName}.html`);
+        return fs_1.default.readFileSync(templatePath, 'utf-8');
+    }
+    /**
+     * Replace template variables
+     */
+    replaceVariables(template, data) {
+        let result = template;
+        Object.keys(data).forEach(key => {
+            const regex = new RegExp(`{{${key}}}`, 'g');
+            result = result.replace(regex, data[key] || '');
+        });
+        return result;
+    }
+    /**
+     * Send email
      */
     async sendEmail(options) {
-        const provider = process.env.EMAIL_PROVIDER || 'console';
         try {
-            switch (provider) {
-                case 'sendgrid':
-                    return await this.sendWithSendGrid(options);
-                case 'ses':
-                    return await this.sendWithSES(options);
-                case 'smtp':
-                    return await this.sendWithSMTP(options);
-                default:
-                    // Console logging for development
-                    console.log('[EMAIL] Sending email:', {
-                        to: options.to,
-                        subject: options.subject
-                    });
-                    console.log('[EMAIL] Email content:', options.html);
-                    return true;
+            if (!email_1.transporter) {
+                // Log to console if no transporter configured
+                console.log('\n📧 EMAIL (Console Mode):');
+                console.log('To:', options.to);
+                console.log('Subject:', options.subject);
+                console.log('Content:', options.text || 'HTML email');
+                console.log('---\n');
+                return true;
             }
+            await email_1.transporter.sendMail({
+                from: email_1.EMAIL_CONFIG.from,
+                to: options.to,
+                subject: options.subject,
+                html: options.html,
+                text: options.text,
+            });
+            console.log(`✅ Email sent to ${options.to}: ${options.subject}`);
+            return true;
         }
         catch (error) {
-            console.error('[EMAIL] Failed to send email:', error);
-            // Fallback to console logging
-            console.log('[EMAIL] Email would have been sent to:', options.to);
+            console.error('❌ Failed to send email:', error);
             return false;
         }
     }
     /**
-     * Send with SendGrid
+     * Send welcome email
      */
-    async sendWithSendGrid(options) {
-        if (!process.env.SENDGRID_API_KEY) {
-            throw new Error('SENDGRID_API_KEY not configured');
-        }
-        // Uncomment when SendGrid is installed
-        /*
-        const sgMail = require('@sendgrid/mail');
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-        
-        await sgMail.send({
-          to: options.to,
-          from: process.env.EMAIL_FROM || 'noreply@medthread.com',
-          subject: options.subject,
-          html: options.html,
-          text: options.text
+    async sendWelcomeEmail(data) {
+        const template = this.loadTemplate('welcome');
+        const html = this.replaceVariables(template, {
+            username: data.username,
+            loginUrl: data.loginUrl || 'http://localhost:3000/login',
+            unsubscribeUrl: 'http://localhost:3000/unsubscribe',
         });
-        */
-        console.log('[EMAIL] SendGrid: Email sent to', options.to);
-        return true;
+        return this.sendEmail({
+            to: data.email,
+            subject: 'Welcome to MedThread!',
+            html,
+            text: `Hi ${data.username}, Welcome to MedThread! Your account has been successfully created.`,
+        });
     }
     /**
-     * Send with AWS SES
+     * Send verification email
      */
-    async sendWithSES(options) {
-        if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-            throw new Error('AWS credentials not configured');
-        }
-        // Uncomment when AWS SDK is installed
-        /*
-        const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
-        
-        const client = new SESClient({
-          region: process.env.AWS_REGION || 'us-east-1',
-          credentials: {
-            accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-            secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-          }
+    async sendVerificationEmail(data) {
+        const template = this.loadTemplate('verification');
+        const html = this.replaceVariables(template, {
+            username: data.username,
+            verificationUrl: data.verificationUrl,
         });
-    
-        const command = new SendEmailCommand({
-          Source: process.env.EMAIL_FROM || 'noreply@medthread.com',
-          Destination: { ToAddresses: [options.to] },
-          Message: {
-            Subject: { Data: options.subject },
-            Body: {
-              Html: { Data: options.html },
-              Text: { Data: options.text || '' }
-            }
-          }
+        return this.sendEmail({
+            to: data.email,
+            subject: 'Verify Your Email - MedThread',
+            html,
+            text: `Hi ${data.username}, Please verify your email: ${data.verificationUrl}`,
         });
-    
-        await client.send(command);
-        */
-        console.log('[EMAIL] AWS SES: Email sent to', options.to);
-        return true;
     }
     /**
-     * Send with SMTP (Nodemailer)
+     * Send password reset email
      */
-    async sendWithSMTP(options) {
-        if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-            throw new Error('SMTP credentials not configured');
+    async sendPasswordResetEmail(data) {
+        const template = this.loadTemplate('password-reset');
+        const html = this.replaceVariables(template, {
+            username: data.username,
+            resetUrl: data.resetUrl,
+        });
+        return this.sendEmail({
+            to: data.email,
+            subject: 'Reset Your Password - MedThread',
+            html,
+            text: `Hi ${data.username}, Reset your password: ${data.resetUrl}`,
+        });
+    }
+    /**
+     * Send appointment reminder
+     */
+    async sendAppointmentReminder(data) {
+        const template = this.loadTemplate('appointment-reminder');
+        const html = this.replaceVariables(template, {
+            patientName: data.patientName,
+            doctorName: data.doctorName,
+            appointmentDate: data.appointmentDate,
+            appointmentTime: data.appointmentTime,
+            appointmentType: data.appointmentType,
+            appointmentUrl: data.appointmentUrl,
+        });
+        return this.sendEmail({
+            to: data.email,
+            subject: 'Appointment Reminder - MedThread',
+            html,
+            text: `Hi ${data.patientName}, Reminder: You have an appointment with Dr. ${data.doctorName} on ${data.appointmentDate} at ${data.appointmentTime}.`,
+        });
+    }
+    /**
+     * Send notification email
+     */
+    async sendNotificationEmail(data) {
+        const template = this.loadTemplate('notification');
+        const html = this.replaceVariables(template, {
+            username: data.username,
+            title: data.title,
+            content: data.content,
+            actionUrl: data.actionUrl || '',
+            actionText: data.actionText || 'View Details',
+        });
+        return this.sendEmail({
+            to: data.email,
+            subject: data.title,
+            html,
+            text: `Hi ${data.username}, ${data.content}`,
+        });
+    }
+    /**
+     * Send new comment notification
+     */
+    async sendNewCommentNotification(data) {
+        const privacyBadge = data.isPrivate
+            ? '<span style="background-color: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 8px;">🔒 PRIVATE</span>'
+            : '';
+        const privacyNote = data.isPrivate
+            ? '<p style="color: #dc3545; font-size: 14px; margin-top: 10px;"><strong>Note:</strong> This is a private post. Only you and approved doctors can see this content.</p>'
+            : '';
+        return this.sendNotificationEmail({
+            username: data.username,
+            email: data.email,
+            title: `New Comment on Your Post${data.isPrivate ? ' (Private)' : ''}`,
+            content: `${data.commenterName} commented on your post "${data.postTitle}"${privacyBadge}: "${data.commentPreview}"${privacyNote}`,
+            actionUrl: data.postUrl,
+            actionText: 'View Comment',
+        });
+    }
+    /**
+     * Send new reply notification
+     */
+    async sendNewReplyNotification(data) {
+        const privacyBadge = data.isPrivateReply
+            ? '<span style="background-color: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 8px;">🔒 PRIVATE REPLY</span>'
+            : '';
+        let privacyNote = '';
+        if (data.isPrivateReply && data.isDoctor) {
+            privacyNote = '<p style="color: #dc3545; font-size: 14px; margin-top: 10px;"><strong>Note:</strong> This is a private reply. Only you and the post author can see this reply. Other doctors cannot see your response.</p>';
         }
-        // Uncomment when Nodemailer is installed
-        /*
-        const nodemailer = require('nodemailer');
-        
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT || '587'),
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
-          }
+        else if (data.isPrivateReply) {
+            privacyNote = '<p style="color: #dc3545; font-size: 14px; margin-top: 10px;"><strong>Note:</strong> This is a private reply from a doctor. Only you and the doctor can see this conversation.</p>';
+        }
+        return this.sendNotificationEmail({
+            username: data.username,
+            email: data.email,
+            title: `New Reply to Your Comment${data.isPrivateReply ? ' (Private)' : ''}`,
+            content: `${data.replierName} replied to your comment${privacyBadge}: "${data.replyPreview}"${privacyNote}`,
+            actionUrl: data.postUrl,
+            actionText: 'View Reply',
         });
-    
-        await transporter.sendMail({
-          from: process.env.EMAIL_FROM || 'noreply@medthread.com',
-          to: options.to,
-          subject: options.subject,
-          html: options.html,
-          text: options.text
-        });
-        */
-        console.log('[EMAIL] SMTP: Email sent to', options.to);
-        return true;
     }
     /**
      * Send doctor verification approved email
      */
-    async sendVerificationApprovedEmail(doctorEmail, doctorName) {
-        const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Congratulations! Your Doctor Verification is Approved</h2>
-        <p>Dear Dr. ${doctorName},</p>
-        <p>We're pleased to inform you that your doctor verification has been approved.</p>
-        <p>You can now:</p>
-        <ul>
-          <li>Reply to medical threads with a verified badge</li>
-          <li>Earn CME credits for quality answers</li>
-          <li>Accept consultation requests from patients</li>
-          <li>Build your professional profile</li>
-        </ul>
-        <p>
-          <a href="${process.env.FRONTEND_URL}/dashboard/doctor" 
-             style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            Go to Dashboard
-          </a>
-        </p>
-        <p>Thank you for joining MedThread!</p>
-        <p>Best regards,<br>The MedThread Team</p>
-      </div>
-    `;
-        return this.sendEmail({
-            to: doctorEmail,
-            subject: 'Doctor Verification Approved - MedThread',
-            html,
-            text: `Congratulations Dr. ${doctorName}! Your doctor verification has been approved.`
+    async sendDoctorVerificationApproved(data) {
+        return this.sendNotificationEmail({
+            username: data.username,
+            email: data.email,
+            title: 'Doctor Verification Approved',
+            content: 'Congratulations! Your doctor verification has been approved. You can now access all doctor features on MedThread.',
+            actionUrl: 'http://localhost:3000/dashboard/doctor',
+            actionText: 'Go to Dashboard',
         });
     }
     /**
      * Send doctor verification rejected email
      */
-    async sendVerificationRejectedEmail(doctorEmail, doctorName, reason) {
-        const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #dc2626;">Doctor Verification Update</h2>
-        <p>Dear Dr. ${doctorName},</p>
-        <p>We regret to inform you that your doctor verification request has been rejected.</p>
-        <p><strong>Reason:</strong></p>
-        <p style="background-color: #fef2f2; padding: 12px; border-left: 4px solid #dc2626;">
-          ${reason}
-        </p>
-        <p>You can resubmit your verification with the correct documents.</p>
-        <p>
-          <a href="${process.env.FRONTEND_URL}/doctor/verification" 
-             style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            Resubmit Verification
-          </a>
-        </p>
-        <p>If you have any questions, please contact our support team.</p>
-        <p>Best regards,<br>The MedThread Team</p>
-      </div>
-    `;
-        return this.sendEmail({
-            to: doctorEmail,
-            subject: 'Doctor Verification Update - MedThread',
-            html,
-            text: `Your doctor verification request has been rejected. Reason: ${reason}`
-        });
-    }
-    /**
-     * Send consultation request notification to doctor
-     */
-    async sendConsultationRequestEmail(doctorEmail, doctorName, patientName, consultationId) {
-        const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">New Consultation Request</h2>
-        <p>Dear Dr. ${doctorName},</p>
-        <p>You have received a new consultation request from ${patientName}.</p>
-        <p>
-          <a href="${process.env.FRONTEND_URL}/dashboard/doctor/consultations/${consultationId}" 
-             style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            View Request
-          </a>
-        </p>
-        <p>Please respond within 24 hours to maintain your response rate.</p>
-        <p>Best regards,<br>The MedThread Team</p>
-      </div>
-    `;
-        return this.sendEmail({
-            to: doctorEmail,
-            subject: 'New Consultation Request - MedThread',
-            html,
-            text: `You have a new consultation request from ${patientName}.`
-        });
-    }
-    /**
-     * Send appointment reminder email
-     */
-    async sendAppointmentReminderEmail(email, name, appointmentTime, doctorName) {
-        const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Appointment Reminder</h2>
-        <p>Dear ${name},</p>
-        <p>This is a reminder of your upcoming appointment:</p>
-        <div style="background-color: #eff6ff; padding: 16px; border-radius: 8px; margin: 16px 0;">
-          <p><strong>Doctor:</strong> Dr. ${doctorName}</p>
-          <p><strong>Date & Time:</strong> ${appointmentTime.toLocaleString()}</p>
-        </div>
-        <p>Please join the consultation on time.</p>
-        <p>
-          <a href="${process.env.FRONTEND_URL}/appointments" 
-             style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            View Appointment
-          </a>
-        </p>
-        <p>Best regards,<br>The MedThread Team</p>
-      </div>
-    `;
-        return this.sendEmail({
-            to: email,
-            subject: 'Appointment Reminder - MedThread',
-            html,
-            text: `Reminder: Your appointment with Dr. ${doctorName} is at ${appointmentTime.toLocaleString()}`
-        });
-    }
-    /**
-     * Send CME credits earned notification
-     */
-    async sendCmeCreditsEarnedEmail(doctorEmail, doctorName, credits, activityType) {
-        const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #10b981;">CME Credits Earned!</h2>
-        <p>Dear Dr. ${doctorName},</p>
-        <p>Congratulations! You've earned <strong>${credits} CME credits</strong> for your ${activityType.replace(/_/g, ' ').toLowerCase()}.</p>
-        <p>
-          <a href="${process.env.FRONTEND_URL}/dashboard/doctor/cme" 
-             style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-            View CME Dashboard
-          </a>
-        </p>
-        <p>Keep up the great work!</p>
-        <p>Best regards,<br>The MedThread Team</p>
-      </div>
-    `;
-        return this.sendEmail({
-            to: doctorEmail,
-            subject: `You earned ${credits} CME credits - MedThread`,
-            html,
-            text: `Congratulations! You've earned ${credits} CME credits.`
-        });
-    }
-    /**
-     * Send welcome email to new user
-     */
-    async sendWelcomeEmail(email, name, role) {
-        const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2563eb;">Welcome to MedThread!</h2>
-        <p>Dear ${name},</p>
-        <p>Thank you for joining MedThread as a ${role.toLowerCase()}.</p>
-        ${role === 'DOCTOR' ? `
-          <p>To start helping patients, please complete your doctor verification:</p>
-          <p>
-            <a href="${process.env.FRONTEND_URL}/doctor/verification" 
-               style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-              Complete Verification
-            </a>
-          </p>
-        ` : `
-          <p>You can now:</p>
-          <ul>
-            <li>Ask medical questions</li>
-            <li>Get answers from verified doctors</li>
-            <li>Book consultations</li>
-            <li>Join health communities</li>
-          </ul>
-          <p>
-            <a href="${process.env.FRONTEND_URL}/threads" 
-               style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-              Explore Threads
-            </a>
-          </p>
-        `}
-        <p>Best regards,<br>The MedThread Team</p>
-      </div>
-    `;
-        return this.sendEmail({
-            to: email,
-            subject: 'Welcome to MedThread!',
-            html,
-            text: `Welcome to MedThread, ${name}!`
+    async sendDoctorVerificationRejected(data) {
+        return this.sendNotificationEmail({
+            username: data.username,
+            email: data.email,
+            title: 'Doctor Verification Update',
+            content: `Your doctor verification request has been reviewed. ${data.reason || 'Please contact support for more information.'}`,
+            actionUrl: 'http://localhost:3000/doctor-verification',
+            actionText: 'Resubmit Application',
         });
     }
 }

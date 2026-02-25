@@ -35,8 +35,26 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.postService = void 0;
 const database_1 = require("@medthread/database");
+const notification_service_1 = require("./notification.service");
 exports.postService = {
+    /**
+     * Parse @mentions from post content
+     * Returns array of unique mentioned usernames
+     */
+    parseMentions(content) {
+        const mentionRegex = /@(\w+)/g;
+        const mentions = new Set();
+        let match;
+        while ((match = mentionRegex.exec(content)) !== null) {
+            mentions.add(match[1]);
+        }
+        return Array.from(mentions);
+    },
     async createPost(data) {
+        // Validate isPrivate is boolean if provided
+        if (data.isPrivate !== undefined && typeof data.isPrivate !== 'boolean') {
+            throw new Error('isPrivate must be a boolean value');
+        }
         const post = await database_1.prisma.post.create({
             data: {
                 title: data.title,
@@ -50,6 +68,7 @@ exports.postService = {
                 isNSFW: data.isNSFW || false,
                 isSpoiler: data.isSpoiler || false,
                 isDraft: data.isDraft || false,
+                isPrivate: data.isPrivate || false,
                 publishedAt: data.isDraft ? null : new Date(),
             },
             include: {
@@ -80,10 +99,68 @@ exports.postService = {
                 }
             }
         });
+        // Trigger MENTION notifications for published posts
+        if (!data.isDraft && data.content) {
+            try {
+                const mentionedUsernames = this.parseMentions(data.content);
+                if (mentionedUsernames.length > 0) {
+                    // Find users by username
+                    const mentionedUsers = await database_1.prisma.user.findMany({
+                        where: {
+                            username: {
+                                in: mentionedUsernames,
+                                mode: 'insensitive'
+                            }
+                        },
+                        select: {
+                            id: true,
+                            username: true
+                        }
+                    });
+                    // Filter out the post author (don't notify self)
+                    const recipientIds = mentionedUsers
+                        .filter(user => user.id !== data.authorId)
+                        .map(user => user.id);
+                    if (recipientIds.length > 0) {
+                        await notification_service_1.notificationService.createNotification({
+                            type: 'MENTION',
+                            recipientIds,
+                            actorId: data.authorId,
+                            contentId: post.id,
+                            contentType: 'POST',
+                            metadata: {
+                                title: 'You were mentioned',
+                                body: `${post.author.username} mentioned you in a post`,
+                                preview: data.title,
+                                link: `/post/${post.id}`,
+                                communityName: post.community.displayName,
+                                postTitle: data.title,
+                            }
+                        });
+                    }
+                }
+            }
+            catch (error) {
+                console.error('Error creating MENTION notifications:', error);
+                // Don't fail post creation if notification fails
+            }
+        }
+        // Check engagement badges in background
+        if (!data.isDraft) {
+            try {
+                const { badgeService } = await Promise.resolve().then(() => __importStar(require('./badge.service')));
+                badgeService.checkEngagementBadges(data.authorId).catch(err => {
+                    console.error('Error checking engagement badges:', err);
+                });
+            }
+            catch (error) {
+                console.error('Error importing badge service:', error);
+            }
+        }
         return post;
     },
     async getPosts(options) {
-        const { community, sort = 'hot', limit = 20, offset = 0, authorId, tags, specialty, authorType, dateFrom, dateTo, postType } = options;
+        const { community, sort = 'hot', limit = 20, offset = 0, authorId, tags, specialty, authorType, dateFrom, dateTo, postType, privacyMode, requestingUserId, requestingUserRole } = options;
         let orderBy;
         switch (sort) {
             case 'new':
@@ -105,6 +182,34 @@ exports.postService = {
             isArchived: false,
             isDraft: false,
         };
+        // Privacy filtering
+        const isDoctor = requestingUserRole === 'DOCTOR';
+        if (privacyMode === 'PUBLIC') {
+            where.isPrivate = false;
+        }
+        else if (privacyMode === 'PRIVATE') {
+            if (!isDoctor) {
+                // Non-doctors can only see their own private posts
+                where.AND = [
+                    { isPrivate: true },
+                    { authorId: requestingUserId || 'none' }
+                ];
+            }
+            else {
+                where.isPrivate = true;
+            }
+        }
+        else {
+            // ALL or undefined - apply default privacy rules
+            if (!isDoctor) {
+                // Non-doctors see only public posts + their own private posts
+                where.OR = [
+                    { isPrivate: false },
+                    { AND: [{ isPrivate: true }, { authorId: requestingUserId || 'none' }] }
+                ];
+            }
+            // Doctors see all posts (no filter needed)
+        }
         // Filter by community
         if (community) {
             where.community = { name: community };
@@ -277,6 +382,10 @@ exports.postService = {
         };
     },
     async updatePost(postId, userId, data) {
+        // Prevent privacy mode changes
+        if ('isPrivate' in data) {
+            throw new Error('Privacy mode cannot be changed after post creation');
+        }
         // Verify ownership
         const post = await database_1.prisma.post.findUnique({
             where: { id: postId },
@@ -380,6 +489,14 @@ exports.postService = {
                 score: true,
                 upvotes: true,
                 downvotes: true,
+                authorId: true,
+                title: true,
+                community: {
+                    select: {
+                        name: true,
+                        displayName: true
+                    }
+                }
             }
         });
         // Update author karma
@@ -391,6 +508,45 @@ exports.postService = {
             // Use centralized karma service
             const { karmaService } = await Promise.resolve().then(() => __importStar(require('./karma.service')));
             await karmaService.updateUserKarma(postAuthor.authorId);
+        }
+        // Trigger UPVOTE_MILESTONE notification
+        if (value === 1 && voteChange > 0) {
+            try {
+                // Get user's upvote threshold preference
+                const { PreferencesService } = await Promise.resolve().then(() => __importStar(require('./notification-preferences.service')));
+                const preferencesService = new PreferencesService();
+                const preferences = await preferencesService.getPreferences(post.authorId);
+                const threshold = preferences.upvoteThreshold || 10; // Default to 10
+                // Check if we just hit a milestone
+                const previousUpvotes = post.upvotes - 1;
+                const currentUpvotes = post.upvotes;
+                // Trigger notification if we crossed a threshold (10, 25, 50, 100, 250, 500, 1000, etc.)
+                const milestones = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+                const crossedMilestone = milestones.find(milestone => previousUpvotes < milestone && currentUpvotes >= milestone && milestone >= threshold);
+                if (crossedMilestone && post.authorId !== userId) {
+                    await notification_service_1.notificationService.createNotification({
+                        type: 'UPVOTE_MILESTONE',
+                        recipientIds: [post.authorId],
+                        actorId: userId,
+                        contentId: postId,
+                        contentType: 'POST',
+                        metadata: {
+                            title: 'Milestone reached!',
+                            body: `Your post reached ${crossedMilestone} upvotes`,
+                            preview: post.title,
+                            link: `/post/${postId}`,
+                            communityName: post.community.displayName,
+                            postTitle: post.title,
+                            milestone: crossedMilestone,
+                            upvotes: currentUpvotes,
+                        }
+                    });
+                }
+            }
+            catch (error) {
+                console.error('Error creating UPVOTE_MILESTONE notification:', error);
+                // Don't fail vote if notification fails
+            }
         }
         return post;
     },

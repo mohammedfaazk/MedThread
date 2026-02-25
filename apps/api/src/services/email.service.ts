@@ -208,12 +208,21 @@ export class EmailService {
     commenterName: string;
     commentPreview: string;
     postUrl: string;
+    isPrivate?: boolean; // Privacy indicator
   }): Promise<boolean> {
+    const privacyBadge = data.isPrivate 
+      ? '<span style="background-color: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 8px;">🔒 PRIVATE</span>' 
+      : '';
+    
+    const privacyNote = data.isPrivate
+      ? '<p style="color: #dc3545; font-size: 14px; margin-top: 10px;"><strong>Note:</strong> This is a private post. Only you and approved doctors can see this content.</p>'
+      : '';
+    
     return this.sendNotificationEmail({
       username: data.username,
       email: data.email,
-      title: 'New Comment on Your Post',
-      content: `${data.commenterName} commented on your post "${data.postTitle}": "${data.commentPreview}"`,
+      title: `New Comment on Your Post${data.isPrivate ? ' (Private)' : ''}`,
+      content: `${data.commenterName} commented on your post "${data.postTitle}"${privacyBadge}: "${data.commentPreview}"${privacyNote}`,
       actionUrl: data.postUrl,
       actionText: 'View Comment',
     });
@@ -228,12 +237,25 @@ export class EmailService {
     replierName: string;
     replyPreview: string;
     postUrl: string;
+    isPrivateReply?: boolean; // Privacy indicator
+    isDoctor?: boolean; // Is recipient a doctor
   }): Promise<boolean> {
+    const privacyBadge = data.isPrivateReply 
+      ? '<span style="background-color: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 8px;">🔒 PRIVATE REPLY</span>' 
+      : '';
+    
+    let privacyNote = '';
+    if (data.isPrivateReply && data.isDoctor) {
+      privacyNote = '<p style="color: #dc3545; font-size: 14px; margin-top: 10px;"><strong>Note:</strong> This is a private reply. Only you and the post author can see this reply. Other doctors cannot see your response.</p>';
+    } else if (data.isPrivateReply) {
+      privacyNote = '<p style="color: #dc3545; font-size: 14px; margin-top: 10px;"><strong>Note:</strong> This is a private reply from a doctor. Only you and the doctor can see this conversation.</p>';
+    }
+    
     return this.sendNotificationEmail({
       username: data.username,
       email: data.email,
-      title: 'New Reply to Your Comment',
-      content: `${data.replierName} replied to your comment: "${data.replyPreview}"`,
+      title: `New Reply to Your Comment${data.isPrivateReply ? ' (Private)' : ''}`,
+      content: `${data.replierName} replied to your comment${privacyBadge}: "${data.replyPreview}"${privacyNote}`,
       actionUrl: data.postUrl,
       actionText: 'View Reply',
     });

@@ -137,7 +137,7 @@ export class PaymentService {
     });
 
     const invoice = subscription.latest_invoice as Stripe.Invoice;
-    const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+    const paymentIntent = (invoice as any).payment_intent as Stripe.PaymentIntent;
 
     // Save subscription to database
     await prisma.$executeRaw`
@@ -153,8 +153,8 @@ export class PaymentService {
         'ACTIVE'::"SubscriptionStatus",
         ${subscription.id},
         ${customer.id},
-        to_timestamp(${subscription.current_period_start}),
-        to_timestamp(${subscription.current_period_end})
+        to_timestamp(${(subscription as any).current_period_start}),
+        to_timestamp(${(subscription as any).current_period_end})
       )
     `;
 

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.awardService = exports.AwardService = void 0;
 const database_1 = require("@medthread/database");
 const errors_1 = require("../utils/errors");
+const notification_service_1 = require("./notification.service");
 // Predefined award types
 const DEFAULT_AWARDS = [
     {
@@ -196,36 +197,84 @@ class AwardService {
                     }
                 }
             });
-            // Get recipient ID
+            // Get recipient ID and content details
             let recipientId = null;
+            let contentTitle = null;
+            let contentPreview = null;
+            let communityName = null;
+            let link = null;
             if (postId) {
                 const post = await tx.post.findUnique({
                     where: { id: postId },
-                    select: { authorId: true }
+                    select: {
+                        authorId: true,
+                        title: true,
+                        community: {
+                            select: {
+                                displayName: true
+                            }
+                        }
+                    }
                 });
                 recipientId = post?.authorId || null;
+                contentTitle = post?.title || null;
+                communityName = post?.community.displayName || null;
+                link = `/post/${postId}`;
             }
             else if (commentId) {
                 const comment = await tx.comment.findUnique({
                     where: { id: commentId },
-                    select: { authorId: true }
+                    select: {
+                        authorId: true,
+                        content: true,
+                        postId: true,
+                        post: {
+                            select: {
+                                title: true,
+                                community: {
+                                    select: {
+                                        displayName: true
+                                    }
+                                }
+                            }
+                        }
+                    }
                 });
                 recipientId = comment?.authorId || null;
+                contentPreview = comment?.content.substring(0, 100) || null;
+                contentTitle = comment?.post.title || null;
+                communityName = comment?.post.community.displayName || null;
+                link = `/post/${comment?.postId}?comment=${commentId}`;
             }
-            // Create notification for recipient
-            if (recipientId && recipientId !== giverId) {
-                await tx.notification.create({
-                    data: {
-                        userId: recipientId,
-                        type: 'AWARD_RECEIVED',
-                        content: `You received a ${award.name} award!`,
-                        link: postId ? `/post/${postId}` : `/comment/${commentId}`
+            return { awardGiven, recipientId, contentTitle, contentPreview, communityName, link };
+        });
+        // Trigger AWARD notification (outside transaction to avoid blocking)
+        if (result.recipientId && result.recipientId !== giverId) {
+            try {
+                await notification_service_1.notificationService.createNotification({
+                    type: 'AWARD',
+                    recipientIds: [result.recipientId],
+                    actorId: giverId,
+                    contentId: postId || commentId || undefined,
+                    contentType: postId ? 'POST' : 'COMMENT',
+                    metadata: {
+                        title: 'You received an award!',
+                        body: `${result.awardGiven.giver.username} gave you a ${award.name} award`,
+                        preview: result.contentPreview || result.contentTitle || '',
+                        link: result.link || '/',
+                        communityName: result.communityName || undefined,
+                        postTitle: result.contentTitle || undefined,
+                        awardName: award.name,
+                        awardIcon: award.icon,
                     }
                 });
             }
-            return awardGiven;
-        });
-        return result;
+            catch (error) {
+                console.error('Error creating AWARD notification:', error);
+                // Don't fail award giving if notification fails
+            }
+        }
+        return result.awardGiven;
     }
     /**
      * Get awards given to a post

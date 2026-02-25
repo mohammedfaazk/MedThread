@@ -112,7 +112,7 @@ export const notificationHandler = (io: Server, socket: AuthenticatedSocket) => 
       const { notificationId } = data;
       
       // Mark as read in database
-      await notificationService.markAsRead([notificationId], userId);
+      await notificationService.markAsRead(notificationId, userId);
       
       // Broadcast to all user's connected clients (cross-tab sync)
       const roomName = `notifications:${userId}`;

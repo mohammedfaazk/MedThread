@@ -50,13 +50,14 @@ export const commentService = {
       }
     }
 
-    // Get post details for notifications
+    // Get post details for notifications and privacy check
     const post = await prisma.post.findUnique({
       where: { id: data.postId },
       select: {
         id: true,
         title: true,
         authorId: true,
+        isPrivate: true,
         community: {
           select: {
             name: true,
@@ -70,6 +71,9 @@ export const commentService = {
       throw new Error('Post not found');
     }
 
+    // Automatically set isPrivateReply based on post privacy
+    const isPrivateReply = post.isPrivate;
+
     const comment = await prisma.comment.create({
       data: {
         content: data.content,
@@ -77,6 +81,7 @@ export const commentService = {
         postId: data.postId,
         parentId: data.parentId,
         depth,
+        isPrivateReply,
       },
       include: {
         author: {
@@ -191,12 +196,25 @@ export const commentService = {
     return comment;
   },
 
-  async getCommentsByPost(postId: string, userId?: string) {
+  async getCommentsByPost(
+    postId: string, 
+    userId?: string,
+    filterForPrivacy?: { isPostPrivate: boolean; isAuthor: boolean; shouldFilterReplies: boolean }
+  ) {
+    const where: any = {
+      postId,
+      isRemoved: false,
+    };
+
+    // Apply privacy filtering for private posts
+    if (filterForPrivacy?.isPostPrivate && filterForPrivacy.shouldFilterReplies) {
+      // Doctor viewing private post - only show their own comments
+      where.authorId = userId;
+    }
+    // If isAuthor or public post, no filtering needed (show all comments)
+
     const comments = await prisma.comment.findMany({
-      where: {
-        postId,
-        isRemoved: false,
-      },
+      where,
       include: {
         author: {
           select: {

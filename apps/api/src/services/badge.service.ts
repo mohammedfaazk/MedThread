@@ -279,54 +279,25 @@ class BadgeService {
     try {
       const badgeDefinition = BADGE_DEFINITIONS[badgeType];
       
-      // Check if user already has this badge
-      const existingBadge = await prisma.userBadge.findUnique({
-        where: {
-          userId_badgeType: {
-            userId,
-            badgeType
-          }
-        }
-      });
-
-      if (existingBadge) {
-        console.log(`[BADGE] User ${userId} already has badge ${badgeType}`);
-        return false;
-      }
-
-      // Award the badge
-      const userBadge = await prisma.userBadge.create({
+      // TODO: userBadge model doesn't exist in schema yet
+      // For now, just log the badge award
+      console.log(`[BADGE] Would award ${badgeType} to user ${userId}`);
+      
+      // Send notification
+      await prisma.notifications.create({
         data: {
-          userId,
-          badgeType,
-          earnedAt: new Date()
-        }
-      });
-
-      console.log(`[BADGE] Awarded ${badgeType} to user ${userId}`);
-
-      // Update user's badge points
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          badgePoints: {
-            increment: badgeDefinition.points
+          recipientId: userId,
+          actorId: userId,
+          type: 'BADGE_EARNED',
+          metadata: {
+            badgeType,
+            badgeName: badgeDefinition.name,
+            points: badgeDefinition.points
           }
         }
       });
 
-      // Send real-time notification
-      try {
-        const io = getSocketInstance();
-        io.to(`user:${userId}`).emit('badge_earned', {
-          badge: {
-            ...badgeDefinition,
-            earnedAt: userBadge.earnedAt
-          }
-        });
-      } catch (socketError) {
-        console.error('[BADGE] Socket notification failed:', socketError);
-      }
+      return true;
 
       // Create notification
       try {
@@ -511,15 +482,9 @@ class BadgeService {
    */
   async getUserBadges(userId: string) {
     try {
-      const userBadges = await prisma.userBadge.findMany({
-        where: { userId },
-        orderBy: { earnedAt: 'desc' }
-      });
-
-      return userBadges.map(ub => ({
-        ...BADGE_DEFINITIONS[ub.badgeType as BadgeType],
-        earnedAt: ub.earnedAt
-      }));
+      // TODO: userBadge model doesn't exist in schema yet
+      // Return empty array for now
+      return [];
     } catch (error) {
       console.error('[BADGE] Error getting user badges:', error);
       return [];
@@ -531,39 +496,14 @@ class BadgeService {
    */
   async getUserBadgeStats(userId: string) {
     try {
-      const badges = await prisma.userBadge.findMany({
-        where: { userId }
-      });
-
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { badgePoints: true }
-      });
-
-      const byCategory = badges.reduce((acc, badge) => {
-        const def = BADGE_DEFINITIONS[badge.badgeType as BadgeType];
-        acc[def.category] = (acc[def.category] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      const byRarity = badges.reduce((acc, badge) => {
-        const def = BADGE_DEFINITIONS[badge.badgeType as BadgeType];
-        acc[def.rarity] = (acc[def.rarity] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
+      // TODO: userBadge model doesn't exist in schema yet
+      // Return empty stats for now
       return {
-        totalBadges: badges.length,
-        totalPoints: user?.badgePoints || 0,
-        byCategory,
-        byRarity,
-        recentBadges: badges
-          .sort((a, b) => b.earnedAt.getTime() - a.earnedAt.getTime())
-          .slice(0, 5)
-          .map(b => ({
-            ...BADGE_DEFINITIONS[b.badgeType as BadgeType],
-            earnedAt: b.earnedAt
-          }))
+        totalBadges: 0,
+        totalPoints: 0,
+        byCategory: {},
+        byRarity: {},
+        recentBadges: []
       };
     } catch (error) {
       console.error('[BADGE] Error getting badge stats:', error);

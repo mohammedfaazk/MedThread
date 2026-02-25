@@ -44,6 +44,16 @@ import { followRouter } from './routes/follow';
 import { badgeRouter } from './routes/badge.routes';
 import { blockRouter } from './routes/block.routes';
 import { usersRouter } from './routes/users.routes';
+import { doctorLocationRouter } from './routes/doctor-location.routes';
+import { doctorRankingRouter } from './routes/doctor-ranking.routes';
+import { seoRouter } from './routes/seo.routes';
+import { doctorBusinessRouter } from './routes/doctor-business.routes';
+import { patientJourneyRouter } from './routes/patient-journey.routes';
+import { smartMatchingRouter } from './routes/smart-matching.routes';
+import { revenueRouter } from './routes/revenue.routes';
+import { trustSafetyRouter } from './routes/trust-safety.routes';
+import { gamificationRouter } from './routes/gamification.routes';
+import { cronJobsRouter } from './routes/cron-jobs.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
 import { sanitizeInput } from './middleware/sanitize';
@@ -157,6 +167,36 @@ app.use('/api/block', blockRouter);
 
 // Users System (v2)
 app.use('/api/v2/users', usersRouter);
+
+// Doctor Location & Area-Wise Replies
+app.use('/api', doctorLocationRouter);
+
+// Doctor Ranking & Reviews
+app.use('/api', doctorRankingRouter);
+
+// SEO Rating Website
+app.use('/api', seoRouter);
+
+// Doctor Business Dashboard
+app.use('/api', doctorBusinessRouter);
+
+// Patient Journey Optimization
+app.use('/api', patientJourneyRouter);
+
+// Smart Matching Algorithm
+app.use('/api', smartMatchingRouter);
+
+// Revenue Streams
+app.use('/api', revenueRouter);
+
+// Trust & Safety
+app.use('/api', trustSafetyRouter);
+
+// Doctor Gamification
+app.use('/api/gamification', gamificationRouter);
+
+// Cron Jobs Management
+app.use('/api/cron-jobs', cronJobsRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

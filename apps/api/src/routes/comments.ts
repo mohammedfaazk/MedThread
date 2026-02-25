@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { authenticate as auth } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { commentService } from '../services/comment.service';
+import { checkPrivatePostAccess } from '../utils/privacyCheck';
+import { prisma } from '@medthread/database';
 
 const router = Router();
 
@@ -12,6 +14,29 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
 
     if (!content || !postId) {
       return res.status(400).json({ error: 'Content and postId are required' });
+    }
+
+    // Check if post exists and get privacy status
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { id: true, isPrivate: true, authorId: true }
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Check privacy access for private posts
+    if (post.isPrivate) {
+      const userId = req.userId!;
+      const userRole = (req as any).userRole || 'PATIENT'; // Get from auth middleware
+      
+      const user = { id: userId, role: userRole };
+      const accessResult = checkPrivatePostAccess(user, post);
+      
+      if (!accessResult.hasAccess) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
     }
 
     const comment = await commentService.createComment({

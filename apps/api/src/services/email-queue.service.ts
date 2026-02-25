@@ -2,7 +2,7 @@ import { prisma } from '@medthread/database';
 import { EmailService } from './email.service';
 import { NotificationService } from './notification.service';
 import { PreferencesService } from './notification-preferences.service';
-import { Notification } from '@prisma/client';
+import type { notifications as Notification } from '@prisma/client';
 
 interface EmailQueueJob {
   id: string;
@@ -56,7 +56,7 @@ export class EmailQueueService {
   async enqueueInstantEmail(notificationId: string, userId: string): Promise<void> {
     try {
       // Check if user has instant email enabled for this notification type
-      const notification = await prisma.notification.findUnique({
+      const notification = await prisma.notifications.findUnique({
         where: { id: notificationId }
       });
 
@@ -66,7 +66,7 @@ export class EmailQueueService {
       }
 
       const preferences = await this.preferencesService.getPreferences(userId);
-      const emailPreference = preferences.email[notification.type];
+      const emailPreference = (preferences.email as any)?.[notification.type];
 
       if (emailPreference !== 'instant') {
         console.log(`[EMAIL_QUEUE] User ${userId} does not have instant email enabled for ${notification.type}`);
@@ -74,7 +74,7 @@ export class EmailQueueService {
       }
 
       // Create email queue job
-      await prisma.emailQueue.create({
+      await prisma.email_queue.create({
         data: {
           userId,
           notificationId,
@@ -99,7 +99,7 @@ export class EmailQueueService {
 
       for (const notification of notifications) {
         const preferences = await this.preferencesService.getPreferences(notification.recipientId);
-        const emailPreference = preferences.email[notification.type];
+        const emailPreference = (preferences.email as any)?.[notification.type];
 
         if (emailPreference === 'instant') {
           jobs.push({
@@ -112,7 +112,7 @@ export class EmailQueueService {
       }
 
       if (jobs.length > 0) {
-        await prisma.emailQueue.createMany({
+        await prisma.email_queue.createMany({
           data: jobs
         });
 
@@ -170,7 +170,7 @@ export class EmailQueueService {
 
     try {
       // Fetch pending jobs that haven't exceeded max attempts
-      const jobs = await prisma.emailQueue.findMany({
+      const jobs = await prisma.email_queue.findMany({
         where: {
           status: 'pending',
           attempts: {
@@ -182,16 +182,16 @@ export class EmailQueueService {
           createdAt: 'asc'
         },
         include: {
-          user: {
+          User: {
             select: {
               id: true,
               email: true,
               username: true
             }
           },
-          notification: {
+          notifications: {
             include: {
-              actor: {
+              User_notifications_actorIdToUser: {
                 select: {
                   id: true,
                   username: true,
@@ -241,7 +241,7 @@ export class EmailQueueService {
       console.log(`[EMAIL_QUEUE] Processing job ${job.id} (attempt ${attempts}/${this.MAX_ATTEMPTS})`);
 
       // Update attempt count
-      await prisma.emailQueue.update({
+      await prisma.email_queue.update({
         where: { id: job.id },
         data: {
           attempts,
@@ -252,12 +252,17 @@ export class EmailQueueService {
       // Send email based on type
       let success = false;
       if (job.type === 'instant') {
-        success = await this.emailService.sendNotificationEmail(job.user, job.notification);
+        success = await this.emailService.sendNotificationEmail({
+          username: job.User.username,
+          email: job.User.email,
+          title: 'New Notification',
+          content: 'You have a new notification'
+        });
       }
 
       if (success) {
         // Mark as sent
-        await prisma.emailQueue.update({
+        await prisma.email_queue.update({
           where: { id: job.id },
           data: {
             status: 'sent',
@@ -278,7 +283,7 @@ export class EmailQueueService {
       // Update job with error
       if (attempts >= this.MAX_ATTEMPTS) {
         // Max attempts reached, mark as failed
-        await prisma.emailQueue.update({
+        await prisma.email_queue.update({
           where: { id: job.id },
           data: {
             status: 'failed',
@@ -289,7 +294,7 @@ export class EmailQueueService {
         console.error(`[EMAIL_QUEUE] Job ${job.id} failed after ${this.MAX_ATTEMPTS} attempts`);
       } else {
         // Will retry
-        await prisma.emailQueue.update({
+        await prisma.email_queue.update({
           where: { id: job.id },
           data: {
             error: errorMessage
@@ -391,10 +396,10 @@ export class EmailQueueService {
     total: number;
   }> {
     const [pending, sent, failed, total] = await Promise.all([
-      prisma.emailQueue.count({ where: { status: 'pending' } }),
-      prisma.emailQueue.count({ where: { status: 'sent' } }),
-      prisma.emailQueue.count({ where: { status: 'failed' } }),
-      prisma.emailQueue.count()
+      prisma.email_queue.count({ where: { status: 'pending' } }),
+      prisma.email_queue.count({ where: { status: 'sent' } }),
+      prisma.email_queue.count({ where: { status: 'failed' } }),
+      prisma.email_queue.count()
     ]);
 
     return { pending, sent, failed, total };
@@ -404,7 +409,7 @@ export class EmailQueueService {
    * Retry failed jobs (manual intervention)
    */
   async retryFailedJobs(): Promise<number> {
-    const result = await prisma.emailQueue.updateMany({
+    const result = await prisma.email_queue.updateMany({
       where: {
         status: 'failed'
       },
@@ -423,3 +428,6 @@ export class EmailQueueService {
 
 // Export singleton instance
 export const emailQueueService = new EmailQueueService();
+
+
+

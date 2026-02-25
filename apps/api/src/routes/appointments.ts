@@ -313,12 +313,18 @@ router.post('/appointments/:id/cancel', async (req, res) => {
         const notifyUser = cancelledBy === 'patient' ? appointment.doctorId : appointment.patientId;
         const notifyEmail = cancelledBy === 'patient' ? appointment.doctor.email : appointment.patient.email;
 
-        await prisma.notification.create({
+        await prisma.notifications.create({
             data: {
-                userId: notifyUser,
+                recipientId: notifyUser,
+                actorId: req.userId || notifyUser,
                 type: 'APPOINTMENT_CANCELLED',
-                content: `Appointment cancelled by ${cancelledBy}. Reason: ${reason}`,
-                link: `/appointments/${id}`
+                contentType: 'APPOINTMENT',
+                contentId: id,
+                metadata: {
+                  title: 'Appointment Cancelled',
+                  body: `Appointment cancelled by ${cancelledBy}. Reason: ${reason}`,
+                  link: `/appointments/${id}`
+                }
             }
         });
 
@@ -385,12 +391,18 @@ router.post('/appointments/:id/reschedule', async (req, res) => {
         const notifyUser = rescheduledBy === 'patient' ? appointment.doctorId : appointment.patientId;
         const notifyEmail = rescheduledBy === 'patient' ? appointment.doctor.email : appointment.patient.email;
 
-        await prisma.notification.create({
+        await prisma.notifications.create({
             data: {
-                userId: notifyUser,
+                recipientId: notifyUser,
+                actorId: req.userId || notifyUser,
                 type: 'APPOINTMENT_RESCHEDULED',
-                content: `Appointment rescheduled to ${new Date(newStartTime).toLocaleString()}`,
-                link: `/appointments/${id}`
+                contentType: 'APPOINTMENT',
+                contentId: id,
+                metadata: {
+                  title: 'Appointment Rescheduled',
+                  body: `Appointment rescheduled to ${new Date(newStartTime).toLocaleString()}`,
+                  link: `/appointments/${id}`
+                }
             }
         });
 
@@ -630,3 +642,4 @@ router.get('/debug/conversation/:id', async (req, res) => {
 });
 
 export { router as appointmentRouter };
+

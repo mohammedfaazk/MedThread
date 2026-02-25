@@ -294,7 +294,10 @@ export class DoctorVerificationService {
 
     // Send notification/email to doctor
     try {
-      await emailService.sendVerificationApprovedEmail(updatedUser.email, updatedUser.username);
+      await emailService.sendWelcomeEmail({
+        username: updatedUser.username,
+        email: updatedUser.email
+      });
     } catch (emailError) {
       console.error('Failed to send approval email:', emailError);
     }
@@ -364,7 +367,12 @@ export class DoctorVerificationService {
 
     // Send notification/email to doctor with rejection reason
     try {
-      await emailService.sendVerificationRejectedEmail(updatedUser.email, updatedUser.username, reason);
+      await emailService.sendNotificationEmail({
+        username: updatedUser.username,
+        email: updatedUser.email,
+        title: 'Verification Rejected',
+        content: `Your verification was rejected. Reason: ${reason}`
+      });
     } catch (emailError) {
       console.error('Failed to send rejection email:', emailError);
     }

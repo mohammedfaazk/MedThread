@@ -431,15 +431,21 @@ export class CmeCreditsService {
   }
 
   private async notifyCreditsEarned(doctorId: string, credits: number, activityType: string) {
-    await prisma.notification.create({
+    await prisma.notifications.create({
       data: {
-        userId: doctorId,
+        recipientId: doctorId, 
+        actorId: doctorId,
         type: 'CME_CREDITS_EARNED',
-        content: `You earned ${credits} CME credits for ${activityType.replace(/_/g, ' ').toLowerCase()}`,
-        link: '/dashboard/doctor/cme'
+        metadata: {
+          credits,
+          activityType,
+          link: '/dashboard/doctor/cme'
+        }
       }
     });
   }
 }
 
 export const cmeCreditsService = new CmeCreditsService();
+
+

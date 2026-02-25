@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import { authenticate } from '../middleware/auth';
+import { Router, Response } from 'express';
+import { authenticate, AuthRequest } from '../middleware/auth';
 import { accountService } from '../services/account.service';
 import { asyncHandler } from '../middleware/asyncHandler';
 
@@ -9,7 +9,7 @@ const router = Router();
  * GET /api/v1/account/deletion-preview
  * Get preview of what will be deleted
  */
-router.get('/deletion-preview', authenticate, asyncHandler(async (req, res) => {
+router.get('/deletion-preview', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
   const preview = await accountService.getAccountDeletionPreview(req.userId!);
   
   res.json({
@@ -22,7 +22,7 @@ router.get('/deletion-preview', authenticate, asyncHandler(async (req, res) => {
  * POST /api/v1/account/deactivate
  * Deactivate account (reversible)
  */
-router.post('/deactivate', authenticate, asyncHandler(async (req, res) => {
+router.post('/deactivate', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
   const result = await accountService.deactivateAccount(req.userId!);
   
   res.json({
@@ -39,7 +39,7 @@ router.post('/deactivate', authenticate, asyncHandler(async (req, res) => {
  * POST /api/v1/account/reactivate
  * Reactivate account
  */
-router.post('/reactivate', authenticate, asyncHandler(async (req, res) => {
+router.post('/reactivate', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
   const result = await accountService.reactivateAccount(req.userId!);
   
   res.json({
@@ -55,7 +55,7 @@ router.post('/reactivate', authenticate, asyncHandler(async (req, res) => {
  * DELETE /api/v1/account/delete-permanently
  * Permanently delete account and all data
  */
-router.delete('/delete-permanently', authenticate, asyncHandler(async (req, res) => {
+router.delete('/delete-permanently', authenticate, asyncHandler(async (req: AuthRequest, res: Response) => {
   const { confirmation } = req.body;
 
   // Require explicit confirmation
@@ -79,3 +79,4 @@ router.delete('/delete-permanently', authenticate, asyncHandler(async (req, res)
 }));
 
 export default router;
+

@@ -1,5 +1,5 @@
 import { Server } from 'socket.io';
-import { Notification } from '@prisma/client';
+import type { notifications as Notification } from '@prisma/client';
 import { getSocketInstance } from '../socket';
 
 /**

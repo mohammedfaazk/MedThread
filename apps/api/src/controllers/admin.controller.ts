@@ -232,11 +232,10 @@ export class AdminController {
 
   // Report Management
   getReports = asyncHandler(async (req: AuthRequest, res: Response) => {
-    const { status, targetType, page, limit } = req.query;
+    const { status, page, limit } = req.query;
 
     const reports = await adminService.getReports({
       status: status as any,
-      targetType: targetType as any,
       page: page ? parseInt(page as string) : undefined,
       limit: limit ? parseInt(limit as string) : undefined,
     });

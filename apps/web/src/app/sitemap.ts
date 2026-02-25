@@ -51,5 +51,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
+  // NOTE: If adding dynamic post URLs to sitemap in the future,
+  // ensure private posts (isPrivate: true) are excluded from the sitemap
+  // Example: where: { isPrivate: false, isDraft: false }
+
   return staticPages;
 }

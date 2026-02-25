@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { doctorProfileEnhancedService } from '../services/doctor-profile-enhanced.service';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
@@ -11,7 +11,7 @@ export const doctorProfileEnhancedRouter = Router();
  */
 doctorProfileEnhancedRouter.get(
   '/:username',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { username } = req.params;
     const profile = await doctorProfileEnhancedService.getPublicProfile(username);
     res.json(profile);
@@ -25,7 +25,7 @@ doctorProfileEnhancedRouter.get(
 doctorProfileEnhancedRouter.put(
   '/professional',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const doctorId = req.user.userId;
     const profileData = req.body;
     
@@ -48,7 +48,7 @@ doctorProfileEnhancedRouter.put(
 doctorProfileEnhancedRouter.get(
   '/metrics/performance',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const doctorId = req.user.userId;
     const metrics = await doctorProfileEnhancedService.calculatePerformanceMetrics(doctorId);
     res.json(metrics);
@@ -62,7 +62,7 @@ doctorProfileEnhancedRouter.get(
 doctorProfileEnhancedRouter.get(
   '/stats/contribution',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const doctorId = req.user.userId;
     const stats = await doctorProfileEnhancedService.getContributionStats(doctorId);
     res.json(stats);
@@ -76,7 +76,7 @@ doctorProfileEnhancedRouter.get(
 doctorProfileEnhancedRouter.post(
   '/badge',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     // TODO: Add admin check
     const { doctorId, badge } = req.body;
     const awarded = await doctorProfileEnhancedService.awardBadge(doctorId, badge);
@@ -86,3 +86,4 @@ doctorProfileEnhancedRouter.post(
     });
   })
 );
+

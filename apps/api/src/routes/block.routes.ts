@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { blockService } from '../services/block.service';
@@ -12,7 +12,7 @@ const router = Router();
 router.post(
   '/:userId',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const blockerId = req.userId!;
     const { userId: blockedId } = req.params;
 
@@ -40,7 +40,7 @@ router.post(
 router.delete(
   '/:userId',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const blockerId = req.userId!;
     const { userId: blockedId } = req.params;
 
@@ -67,7 +67,7 @@ router.delete(
 router.get(
   '/:userId/check',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const currentUserId = req.userId!;
     const { userId: targetUserId } = req.params;
 
@@ -91,7 +91,7 @@ router.get(
 router.get(
   '/list',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     const { cursor, limit } = req.query;
 

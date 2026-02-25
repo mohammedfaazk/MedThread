@@ -77,7 +77,7 @@ async function deleteDrNavin() {
     await prisma.$transaction(async (tx) => {
       // Delete in order to respect foreign key constraints
       
-      const notifications = await tx.notification.deleteMany({ where: { userId: user.id } });
+      const notifications = await tx.notifications.deleteMany({ where: { recipientId: user.id } });
       console.log(`   ✓ Deleted ${notifications.count} notifications`);
 
       const reports = await tx.report.deleteMany({ where: { userId: user.id } });
@@ -160,3 +160,5 @@ deleteDrNavin()
     console.error('\n💥 Failed:', error);
     process.exit(1);
   });
+
+

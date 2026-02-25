@@ -36,8 +36,13 @@ async function deleteUser(username: string) {
     // Delete in order to respect foreign key constraints
     
     // 1. Delete notifications
-    const notifications = await prisma.notification.deleteMany({
-      where: { userId: user.id }
+    const notifications = await prisma.notifications.deleteMany({
+      where: { 
+        OR: [
+          { recipientId: user.id },
+          { actorId: user.id }
+        ]
+      }
     });
     console.log(`   ✓ Deleted ${notifications.count} notifications`);
 
@@ -194,3 +199,4 @@ deleteUser(username)
     console.error('\n💥 Failed:', error);
     process.exit(1);
   });
+

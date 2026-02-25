@@ -58,7 +58,6 @@ async function testNotificationTriggers() {
           name: 'test-notifications',
           displayName: 'Test Notifications',
           description: 'Community for testing notifications',
-          creatorId: user1.id,
         }
       });
     }
@@ -90,14 +89,14 @@ async function testNotificationTriggers() {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     // Check notifications
-    const mentionNotifs = await prisma.notification.findMany({
+    const mentionNotifs = await prisma.notifications.findMany({
       where: {
         recipientId: user2.id,
         type: 'MENTION',
         contentId: post.id,
       },
       include: {
-        actor: {
+        User_notifications_actorIdToUser: {
           select: { username: true }
         }
       }
@@ -105,7 +104,7 @@ async function testNotificationTriggers() {
 
     console.log(`  Found ${mentionNotifs.length} MENTION notification(s)`);
     if (mentionNotifs.length > 0) {
-      console.log(`  ✅ Notification created by ${mentionNotifs[0].actor.username}\n`);
+      console.log(`  ✅ Notification created by ${mentionNotifs[0].User_notifications_actorIdToUser.username}\n`);
     } else {
       console.log(`  ⚠️  No notification found (check preferences or blocked users)\n`);
     }
@@ -122,14 +121,14 @@ async function testNotificationTriggers() {
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const replyNotifs = await prisma.notification.findMany({
+    const replyNotifs = await prisma.notifications.findMany({
       where: {
         recipientId: user1.id,
         type: 'REPLY',
         contentId: comment.id,
       },
       include: {
-        actor: {
+        User_notifications_actorIdToUser: {
           select: { username: true }
         }
       }
@@ -137,7 +136,7 @@ async function testNotificationTriggers() {
 
     console.log(`  Found ${replyNotifs.length} REPLY notification(s)`);
     if (replyNotifs.length > 0) {
-      console.log(`  ✅ Notification created by ${replyNotifs[0].actor.username}\n`);
+      console.log(`  ✅ Notification created by ${replyNotifs[0].User_notifications_actorIdToUser.username}\n`);
     } else {
       console.log(`  ⚠️  No notification found (check preferences or blocked users)\n`);
     }
@@ -154,7 +153,7 @@ async function testNotificationTriggers() {
 
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const commentMentionNotifs = await prisma.notification.findMany({
+    const commentMentionNotifs = await prisma.notifications.findMany({
       where: {
         recipientId: user1.id,
         type: 'MENTION',
@@ -192,3 +191,5 @@ async function testNotificationTriggers() {
 
 // Run tests
 testNotificationTriggers();
+
+

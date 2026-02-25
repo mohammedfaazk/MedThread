@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { badgeService } from '../services/badge.service';
@@ -11,7 +11,7 @@ const router = Router();
  */
 router.get(
   '/',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const badges = badgeService.getAllBadges();
     
     res.json({
@@ -27,7 +27,7 @@ router.get(
  */
 router.get(
   '/user/:userId',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     
     const badges = await badgeService.getUserBadges(userId);
@@ -46,7 +46,7 @@ router.get(
 router.get(
   '/me',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     
     const badges = await badgeService.getUserBadges(userId);
@@ -64,7 +64,7 @@ router.get(
  */
 router.get(
   '/user/:userId/stats',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { userId } = req.params;
     
     const stats = await badgeService.getUserBadgeStats(userId);
@@ -83,7 +83,7 @@ router.get(
 router.get(
   '/me/stats',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     
     const stats = await badgeService.getUserBadgeStats(userId);
@@ -102,7 +102,7 @@ router.get(
 router.post(
   '/evaluate',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     
     // Run in background

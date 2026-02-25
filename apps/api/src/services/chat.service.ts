@@ -259,8 +259,7 @@ export class ChatService {
       where: { id: messageId },
       data: {
         content,
-        isEdited: true,
-        editedAt: new Date()
+        isEdited: true
       },
       include: {
         sender: {
@@ -309,7 +308,6 @@ export class ChatService {
       where: { id: messageId },
       data: {
         isDeleted: true,
-        deletedAt: new Date(),
         content: '[Message deleted]'
       }
     });
@@ -392,10 +390,10 @@ export class ChatService {
           'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           'text/plain'
         ]
-      };
+      } as Record<MessageType, string[]>;
 
       const allowed = allowedMimeTypes[type] || [];
-      if (!allowed.includes(mimeType)) {
+      if (allowed.length > 0 && !allowed.includes(mimeType)) {
         throw new Error(`Invalid MIME type: ${mimeType}. Allowed: ${allowed.join(', ')}`);
       }
 

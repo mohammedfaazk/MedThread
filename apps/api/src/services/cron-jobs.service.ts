@@ -99,20 +99,21 @@ export class CronJobsService {
       </div>
     `;
 
-    await emailService.sendEmail({
-      to: doctor.email,
-      subject: `Medical License Expiring in ${daysUntilExpiry} Days - Action Required`,
-      html,
-      text: `Your medical license will expire in ${daysUntilExpiry} days. Please renew and update your documents.`
+    await emailService.sendWelcomeEmail({
+      username: doctor.username,
+      email: doctor.email
     });
 
     // Create notification
-    await prisma.notification.create({
+    await prisma.notifications.create({
       data: {
-        userId: doctor.id,
+        recipientId: doctor.id, 
+        actorId: doctor.id,
         type: 'LICENSE_EXPIRY_WARNING',
-        content: `Your medical license expires in ${daysUntilExpiry} days. Please update your documents.`,
-        link: '/doctor/verification'
+        metadata: {
+          daysUntilExpiry,
+          link: '/doctor/verification'
+        }
       }
     });
   }
@@ -161,11 +162,9 @@ export class CronJobsService {
         </div>
       `;
 
-      await emailService.sendEmail({
-        to: doctor.email,
-        subject: 'Account Suspended - Medical License Expired',
-        html,
-        text: 'Your account has been suspended due to expired medical license. Please update your documents.'
+      await emailService.sendWelcomeEmail({
+        username: doctor.username,
+        email: doctor.email
       });
     }
 
@@ -229,35 +228,51 @@ export class CronJobsService {
    */
   private async sendAppointmentReminder(appointment: any, timeUntil: string) {
     // Send to patient
-    await emailService.sendAppointmentReminderEmail(
-      appointment.patient.email,
-      appointment.patient.username,
-      new Date(appointment.startTime),
-      appointment.doctor.username
-    );
+    await emailService.sendAppointmentReminder({
+      patientName: appointment.patient.username,
+      email: appointment.patient.email,
+      doctorName: appointment.doctor.username,
+      appointmentDate: new Date(appointment.startTime).toLocaleDateString(),
+      appointmentTime: new Date(appointment.startTime).toLocaleTimeString(),
+      appointmentType: 'Consultation',
+      appointmentUrl: `${process.env.FRONTEND_URL}/appointments/${appointment.id}`
+    });
 
     // Send to doctor
-    await emailService.sendAppointmentReminderEmail(
-      appointment.doctor.email,
-      appointment.doctor.username,
-      new Date(appointment.startTime),
-      appointment.patient.username
-    );
+    await emailService.sendAppointmentReminder({
+      patientName: appointment.doctor.username,
+      email: appointment.doctor.email,
+      doctorName: appointment.patient.username,
+      appointmentDate: new Date(appointment.startTime).toLocaleDateString(),
+      appointmentTime: new Date(appointment.startTime).toLocaleTimeString(),
+      appointmentType: 'Consultation',
+      appointmentUrl: `${process.env.FRONTEND_URL}/appointments/${appointment.id}`
+    });
 
     // Create notifications
-    await prisma.notification.createMany({
+    await prisma.notifications.createMany({
       data: [
         {
-          userId: appointment.patientId,
+          recipientId: appointment.patientId,
+          actorId: appointment.doctorId,
           type: 'APPOINTMENT_REMINDER',
-          content: `Reminder: Your appointment with Dr. ${appointment.doctor.username} is in ${timeUntil}`,
-          link: `/appointments/${appointment.id}`
+          contentId: appointment.id,
+          contentType: 'APPOINTMENT',
+          metadata: {
+            timeUntil,
+            link: `/appointments/${appointment.id}`
+          }
         },
         {
-          userId: appointment.doctorId,
+          recipientId: appointment.doctorId,
+          actorId: appointment.patientId,
           type: 'APPOINTMENT_REMINDER',
-          content: `Reminder: Your appointment with ${appointment.patient.username} is in ${timeUntil}`,
-          link: `/appointments/${appointment.id}`
+          contentId: appointment.id,
+          contentType: 'APPOINTMENT',
+          metadata: {
+            timeUntil,
+            link: `/appointments/${appointment.id}`
+          }
         }
       ]
     });
@@ -338,38 +353,389 @@ export class CronJobsService {
   }
 
   /**
+   * Update leaderboards
+   * Run every 6 hours
+   */
+  async updateLeaderboards() {
+    console.log('[CRON] Updating leaderboards...');
+    
+    try {
+      await prisma.$executeRaw`SELECT update_leaderboards()`;
+      console.log('[CRON] Leaderboards updated successfully');
+    } catch (error) {
+      console.error('[CRON] Error updating leaderboards:', error);
+    }
+  }
+
+  /**
+   * Check and award badges for all active doctors
+   * Run daily at 2 AM
+   */
+  async checkAllBadges() {
+    console.log('[CRON] Checking badges for all doctors...');
+    
+    try {
+      const doctors = await prisma.user.findMany({
+        where: {
+          role: 'DOCTOR',
+          doctorVerificationStatus: 'APPROVED',
+          isSuspended: false
+        },
+        select: { id: true }
+      });
+
+      let checked = 0;
+      for (const doctor of doctors) {
+        try {
+          await prisma.$executeRaw`SELECT check_and_award_badges(${doctor.id})`;
+          checked++;
+        } catch (error) {
+          console.error(`[CRON] Failed to check badges for doctor ${doctor.id}:`, error);
+        }
+      }
+
+      console.log(`[CRON] Checked badges for ${checked} doctors`);
+    } catch (error) {
+      console.error('[CRON] Error checking badges:', error);
+    }
+  }
+
+  /**
+   * Clean up old notifications
+   * Run weekly on Sunday at 3 AM
+   */
+  async cleanupOldNotifications() {
+    console.log('[CRON] Cleaning up old notifications...');
+    
+    try {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const result = await prisma.notifications.deleteMany({
+        where: {
+          createdAt: { lt: sixMonthsAgo },
+          isRead: true
+        }
+      });
+
+      console.log(`[CRON] Deleted ${result.count} old notifications`);
+    } catch (error) {
+      console.error('[CRON] Error cleaning notifications:', error);
+    }
+  }
+
+  /**
+   * Clean up old sessions
+   * Run daily at 4 AM
+   */
+  async cleanupOldSessions() {
+    console.log('[CRON] Cleaning up old sessions...');
+    
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const result = await prisma.userSession.deleteMany({
+        where: {
+          startTime: { lt: thirtyDaysAgo }
+        }
+      });
+
+      console.log(`[CRON] Deleted ${result.count} old sessions`);
+    } catch (error) {
+      console.error('[CRON] Error cleaning sessions:', error);
+    }
+  }
+
+  /**
+   * Archive old posts
+   * Run weekly on Sunday at 2 AM
+   */
+  async archiveOldPosts() {
+    console.log('[CRON] Archiving old posts...');
+    
+    try {
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const result = await prisma.post.updateMany({
+        where: {
+          createdAt: { lt: oneYearAgo },
+          isArchived: false,
+          commentCount: { lt: 5 }
+        },
+        data: {
+          isArchived: true
+        }
+      });
+
+      console.log(`[CRON] Archived ${result.count} old posts`);
+    } catch (error) {
+      console.error('[CRON] Error archiving posts:', error);
+    }
+  }
+
+  /**
+   * Check subscription renewals
+   * Run daily at 6 AM
+   */
+  async checkSubscriptionRenewals() {
+    console.log('[CRON] Checking subscription renewals...');
+    
+    try {
+      const threeDaysFromNow = new Date();
+      threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
+
+      const expiringSubscriptions = await prisma.subscription.findMany({
+        where: {
+          status: 'ACTIVE',
+          currentPeriodEnd: {
+            lte: threeDaysFromNow,
+            gte: new Date()
+          }
+        },
+        include: {
+          User: { select: { email: true, username: true } }
+        }
+      });
+
+      for (const sub of expiringSubscriptions) {
+        // Send renewal reminder
+        await prisma.notifications.create({
+          data: {
+            recipientId: sub.userId,
+            actorId: sub.userId,
+            type: 'SYSTEM_ANNOUNCEMENT',
+            metadata: {
+              message: `Your ${sub.planName} subscription expires in 3 days`,
+              link: '/subscription'
+            }
+          }
+        });
+      }
+
+      console.log(`[CRON] Sent ${expiringSubscriptions.length} subscription renewal reminders`);
+    } catch (error) {
+      console.error('[CRON] Error checking subscriptions:', error);
+    }
+  }
+
+  /**
+   * Auto-resolve old pending reports
+   * Run daily at 5 AM
+   */
+  async autoResolveOldReports() {
+    console.log('[CRON] Auto-resolving old reports...');
+    
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const result = await prisma.report.updateMany({
+        where: {
+          status: 'PENDING',
+          createdAt: { lt: thirtyDaysAgo }
+        },
+        data: {
+          status: 'AUTO_RESOLVED'
+        }
+      });
+
+      console.log(`[CRON] Auto-resolved ${result.count} old reports`);
+    } catch (error) {
+      console.error('[CRON] Error auto-resolving reports:', error);
+    }
+  }
+
+  /**
+   * Clean up failed email queue entries
+   * Run daily at 3 AM
+   */
+  async cleanupFailedEmails() {
+    console.log('[CRON] Cleaning up failed emails...');
+    
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const result = await prisma.email_queue.deleteMany({
+        where: {
+          status: 'failed',
+          attempts: { gte: 3 },
+          createdAt: { lt: sevenDaysAgo }
+        }
+      });
+
+      console.log(`[CRON] Deleted ${result.count} failed email entries`);
+    } catch (error) {
+      console.error('[CRON] Error cleaning failed emails:', error);
+    }
+  }
+
+  /**
+   * Update doctor analytics
+   * Run daily at 1 AM
+   */
+  async updateDoctorAnalytics() {
+    console.log('[CRON] Updating doctor analytics...');
+    
+    try {
+      // Update response times, ratings, etc.
+      await prisma.$executeRaw`
+        INSERT INTO "DoctorRating" (doctor_id, total_replies_count, helpful_replies_count, updated_at)
+        SELECT 
+          "authorId" as doctor_id,
+          COUNT(*) as total_replies_count,
+          SUM(CASE WHEN "isHelpful" = true THEN 1 ELSE 0 END) as helpful_replies_count,
+          CURRENT_TIMESTAMP as updated_at
+        FROM "ThreadReply"
+        WHERE "authorRole" = 'DOCTOR'
+        GROUP BY "authorId"
+        ON CONFLICT (doctor_id) DO UPDATE
+        SET total_replies_count = EXCLUDED.total_replies_count,
+            helpful_replies_count = EXCLUDED.helpful_replies_count,
+            updated_at = CURRENT_TIMESTAMP
+      `;
+
+      console.log('[CRON] Doctor analytics updated');
+    } catch (error) {
+      console.error('[CRON] Error updating doctor analytics:', error);
+    }
+  }
+
+  /**
+   * Warn inactive users
+   * Run weekly on Wednesday at 10 AM
+   */
+  async warnInactiveUsers() {
+    console.log('[CRON] Warning inactive users...');
+    
+    try {
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+      const inactiveUsers = await prisma.user.findMany({
+        where: {
+          updatedAt: { lt: sixtyDaysAgo },
+          isSuspended: false,
+          role: { in: ['DOCTOR', 'PATIENT'] }
+        },
+        select: { id: true, email: true, username: true }
+      });
+
+      for (const user of inactiveUsers) {
+        await prisma.notifications.create({
+          data: {
+            recipientId: user.id,
+            actorId: user.id,
+            type: 'SYSTEM_ANNOUNCEMENT',
+            metadata: {
+              message: 'We miss you! Come back and check what\'s new on MedThread',
+              link: '/dashboard'
+            }
+          }
+        });
+      }
+
+      console.log(`[CRON] Sent ${inactiveUsers.length} inactive user reminders`);
+    } catch (error) {
+      console.error('[CRON] Error warning inactive users:', error);
+    }
+  }
+
+  /**
+   * Generate monthly reports
+   * Run on 1st of each month at 7 AM
+   */
+  async generateMonthlyReports() {
+    console.log('[CRON] Generating monthly reports...');
+    
+    try {
+      const lastMonth = new Date();
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const startOfLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+      const endOfLastMonth = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0);
+
+      // Count new users
+      const newUsers = await prisma.user.count({
+        where: {
+          createdAt: {
+            gte: startOfLastMonth,
+            lte: endOfLastMonth
+          }
+        }
+      });
+
+      // Count new posts
+      const newPosts = await prisma.post.count({
+        where: {
+          createdAt: {
+            gte: startOfLastMonth,
+            lte: endOfLastMonth
+          }
+        }
+      });
+
+      // Count appointments
+      const appointments = await prisma.appointment.count({
+        where: {
+          createdAt: {
+            gte: startOfLastMonth,
+            lte: endOfLastMonth
+          }
+        }
+      });
+
+      console.log(`[CRON] Monthly Report - Users: ${newUsers}, Posts: ${newPosts}, Appointments: ${appointments}`);
+      
+      // Store report in database or send to admins
+      // TODO: Implement report storage/notification
+    } catch (error) {
+      console.error('[CRON] Error generating monthly reports:', error);
+    }
+  }
+
+  /**
    * Initialize all cron jobs
    */
   initializeCronJobs() {
     console.log('[CRON] Initializing cron jobs...');
 
-    // Run license check daily at 9 AM
-    cron.schedule('0 9 * * *', async () => {
-      await this.checkExpiringLicenses();
-    });
+    // Daily jobs
+    cron.schedule('0 0 * * *', () => this.autoAwardCmeCredits()); // Midnight
+    cron.schedule('0 1 * * *', () => this.updateDoctorAnalytics()); // 1 AM
+    cron.schedule('0 2 * * *', () => this.checkAllBadges()); // 2 AM
+    cron.schedule('0 3 * * *', () => this.cleanupFailedEmails()); // 3 AM
+    cron.schedule('0 4 * * *', () => this.cleanupOldSessions()); // 4 AM
+    cron.schedule('0 5 * * *', () => this.autoResolveOldReports()); // 5 AM
+    cron.schedule('0 6 * * *', () => this.checkSubscriptionRenewals()); // 6 AM
+    cron.schedule('0 8 * * *', () => this.sendDailyDigests()); // 8 AM
+    cron.schedule('0 9 * * *', () => this.checkExpiringLicenses()); // 9 AM
 
-    // Run appointment reminders every hour
-    cron.schedule('0 * * * *', async () => {
-      await this.sendAppointmentReminders();
-    });
+    // Hourly jobs
+    cron.schedule('0 * * * *', () => this.sendAppointmentReminders()); // Every hour
 
-    // Run CME auto-award daily at midnight
-    cron.schedule('0 0 * * *', async () => {
-      await this.autoAwardCmeCredits();
-    });
+    // Every 6 hours
+    cron.schedule('0 */6 * * *', () => this.updateLeaderboards()); // Every 6 hours
 
-    // Run daily digest emails at 8 AM
-    cron.schedule('0 8 * * *', async () => {
-      await this.sendDailyDigests();
-    });
+    // Weekly jobs
+    cron.schedule('0 8 * * 1', () => this.sendWeeklyDigests()); // Monday 8 AM
+    cron.schedule('0 2 * * 0', () => this.archiveOldPosts()); // Sunday 2 AM
+    cron.schedule('0 3 * * 0', () => this.cleanupOldNotifications()); // Sunday 3 AM
+    cron.schedule('0 10 * * 3', () => this.warnInactiveUsers()); // Wednesday 10 AM
 
-    // Run weekly digest emails on Monday at 8 AM
-    cron.schedule('0 8 * * 1', async () => {
-      await this.sendWeeklyDigests();
-    });
+    // Monthly jobs
+    cron.schedule('0 7 1 * *', () => this.generateMonthlyReports()); // 1st of month 7 AM
 
     console.log('[CRON] All cron jobs initialized');
+    console.log('[CRON] Schedules:');
+    console.log('  - Hourly: Appointment reminders, Leaderboards (6h)');
+    console.log('  - Daily: CME awards, Analytics, Badges, Cleanups, Digests, Licenses');
+    console.log('  - Weekly: Digests, Archives, Notifications, Inactive users');
+    console.log('  - Monthly: Reports');
   }
 }
 
 export const cronJobsService = new CronJobsService();
+
+

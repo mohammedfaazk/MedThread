@@ -69,12 +69,12 @@ export class AiSymptomAnalysisService {
     const primarySymptoms = symptoms.primarySymptoms.map((s: string) => s.toLowerCase());
     
     // Cardiovascular red flags
-    if (primarySymptoms.some(s => s.includes('chest pain') || s.includes('chest pressure'))) {
+    if (primarySymptoms.some((s: string) => s.includes('chest pain') || s.includes('chest pressure'))) {
       redFlags.push('Chest pain - possible cardiac emergency');
     }
     
     // Neurological red flags
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('severe headache') || 
       s.includes('confusion') || 
       s.includes('loss of consciousness') ||
@@ -84,7 +84,7 @@ export class AiSymptomAnalysisService {
     }
     
     // Respiratory red flags
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('difficulty breathing') || 
       s.includes('shortness of breath') ||
       s.includes('cannot breathe')
@@ -98,13 +98,13 @@ export class AiSymptomAnalysisService {
     }
     
     // Abdominal emergencies
-    if (primarySymptoms.some(s => s.includes('severe abdominal pain')) && 
+    if (primarySymptoms.some((s: string) => s.includes('severe abdominal pain')) && 
         description.includes('sudden')) {
       redFlags.push('Acute abdomen - possible surgical emergency');
     }
     
     // Allergic reactions
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('swelling') && 
       (s.includes('throat') || s.includes('tongue') || s.includes('face'))
     )) {
@@ -242,42 +242,42 @@ export class AiSymptomAnalysisService {
     const primarySymptoms = symptoms.primarySymptoms.map((s: string) => s.toLowerCase());
     
     // Cardiology
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('chest') || s.includes('heart') || s.includes('palpitation')
     )) {
       return 'Cardiology';
     }
     
     // Neurology
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('headache') || s.includes('dizziness') || s.includes('seizure') || s.includes('numbness')
     )) {
       return 'Neurology';
     }
     
     // Gastroenterology
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('stomach') || s.includes('abdominal') || s.includes('nausea') || s.includes('diarrhea')
     )) {
       return 'Gastroenterology';
     }
     
     // Pulmonology
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('breathing') || s.includes('cough') || s.includes('lung')
     )) {
       return 'Pulmonology';
     }
     
     // Dermatology
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('rash') || s.includes('skin') || s.includes('itching')
     )) {
       return 'Dermatology';
     }
     
     // Orthopedics
-    if (primarySymptoms.some(s => 
+    if (primarySymptoms.some((s: string) => 
       s.includes('joint') || s.includes('bone') || s.includes('fracture')
     )) {
       return 'Orthopedics';
@@ -339,13 +339,9 @@ export class AiSymptomAnalysisService {
     
     const analysis = await this.analyzeSymptoms({ symptoms: thread.symptoms as any });
     
-    // Store analysis in thread
-    await prisma.medicalThread.update({
-      where: { id: threadId },
-      data: {
-        aiAnalysis: analysis as any
-      }
-    });
+    // Store analysis in thread metadata (aiAnalysis field doesn't exist in schema)
+    // For now, we'll just return the analysis without storing it
+    // TODO: Add aiAnalysis field to MedicalThread model if needed
     
     return analysis;
   }

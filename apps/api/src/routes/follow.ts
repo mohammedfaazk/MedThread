@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { followService } from '../services/follow.service';
@@ -12,7 +12,7 @@ const router = Router();
 router.post(
   '/:userId',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const currentUserId = req.userId!;
     const { userId } = req.params;
 
@@ -40,7 +40,7 @@ router.post(
 router.delete(
   '/:userId',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const currentUserId = req.userId!;
     const { userId } = req.params;
 
@@ -67,7 +67,7 @@ router.delete(
 router.get(
   '/:userId/check',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const currentUserId = req.userId!;
     const { userId } = req.params;
 
@@ -86,7 +86,7 @@ router.get(
  */
 router.get(
   '/:userId/followers',
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
     const { cursor, limit } = req.query;
 
@@ -110,7 +110,7 @@ router.get(
  */
 router.get(
   '/:userId/following',
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
     const { cursor, limit } = req.query;
 
@@ -134,7 +134,7 @@ router.get(
  */
 router.get(
   '/:userId/counts',
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
 
     const counts = await followService.getFollowCounts(userId);
@@ -153,7 +153,7 @@ router.get(
 router.get(
   '/feed',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const currentUserId = req.userId!;
     const { cursor, limit } = req.query;
 
@@ -178,7 +178,7 @@ router.get(
 router.get(
   '/discover',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const currentUserId = req.userId!;
     const { specialty, cursor, limit } = req.query;
 
@@ -204,7 +204,7 @@ router.get(
 router.post(
   '/check-multiple',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const currentUserId = req.userId!;
     const { userIds } = req.body;
 
@@ -225,3 +225,4 @@ router.post(
 );
 
 export { router as followRouter };
+

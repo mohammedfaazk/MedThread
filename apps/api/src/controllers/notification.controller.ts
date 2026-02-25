@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import { notificationService } from '../services/notification.service';
 import { preferencesService } from '../services/notification-preferences.service';
@@ -224,7 +224,7 @@ export class NotificationController {
 
     const preferences = await preferencesService.updatePreferences(
       req.userId,
-      validatedData
+      validatedData as any
     );
 
     res.status(200).json({
@@ -238,7 +238,7 @@ export class NotificationController {
    * Handle email unsubscribe via token
    * @route POST /api/notifications/unsubscribe/:token
    */
-  unsubscribe = asyncHandler(async (req, res: Response) => {
+  unsubscribe = asyncHandler(async (req: Request, res: Response) => {
     const { token } = req.params;
 
     if (!token) {

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.notificationController = exports.NotificationController = void 0;
 const notification_service_1 = require("../services/notification.service");
 const notification_preferences_service_1 = require("../services/notification-preferences.service");
+const email_queue_service_1 = require("../services/email-queue.service");
 const asyncHandler_1 = require("../middleware/asyncHandler");
 const zod_1 = require("zod");
 const client_1 = require("@prisma/client");
@@ -243,6 +244,65 @@ class NotificationController {
                 }
                 throw error;
             }
+        });
+        /**
+         * Get email queue statistics (admin only)
+         * @route GET /api/notifications/queue/stats
+         */
+        this.getQueueStats = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            if (!req.userId) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'Authentication required'
+                });
+            }
+            // Admin check is handled by requireAdmin middleware
+            const stats = await email_queue_service_1.emailQueueService.getQueueStats();
+            const circuitBreakerStatus = email_queue_service_1.emailQueueService.getCircuitBreakerStatus();
+            res.status(200).json({
+                success: true,
+                data: {
+                    queue: stats,
+                    circuitBreaker: circuitBreakerStatus
+                }
+            });
+        });
+        /**
+         * Retry failed email jobs (admin only)
+         * @route POST /api/notifications/queue/retry-failed
+         */
+        this.retryFailedJobs = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            if (!req.userId) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'Authentication required'
+                });
+            }
+            // Admin check is handled by requireAdmin middleware
+            const count = await email_queue_service_1.emailQueueService.retryFailedJobs();
+            res.status(200).json({
+                success: true,
+                data: { count },
+                message: `${count} failed jobs reset for retry`
+            });
+        });
+        /**
+         * Reset circuit breaker (admin only)
+         * @route POST /api/notifications/queue/reset-circuit-breaker
+         */
+        this.resetCircuitBreaker = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+            if (!req.userId) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'Authentication required'
+                });
+            }
+            // Admin check is handled by requireAdmin middleware
+            email_queue_service_1.emailQueueService.resetCircuitBreaker();
+            res.status(200).json({
+                success: true,
+                message: 'Circuit breaker reset successfully'
+            });
         });
     }
     /**

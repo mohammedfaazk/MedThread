@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { fileUploadService } from '../services/file-upload.service';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
@@ -12,7 +12,7 @@ export const fileUploadRouter = Router();
 fileUploadRouter.post(
   '/avatar',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { base64Data } = req.body;
     const userId = req.user.userId;
 
@@ -37,7 +37,7 @@ fileUploadRouter.post(
 fileUploadRouter.post(
   '/document',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { base64Data, filename } = req.body;
 
     // Validate file
@@ -70,7 +70,7 @@ fileUploadRouter.post(
 fileUploadRouter.post(
   '/medical',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { base64Data, filename } = req.body;
 
     // Validate file
@@ -90,7 +90,7 @@ fileUploadRouter.post(
 fileUploadRouter.post(
   '/verification-documents',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const documents = req.body;
 
     // Validate all required documents
@@ -110,7 +110,7 @@ fileUploadRouter.post(
 fileUploadRouter.post(
   '/multiple',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { files, folder } = req.body;
 
     if (!Array.isArray(files) || files.length === 0) {
@@ -129,7 +129,7 @@ fileUploadRouter.post(
 fileUploadRouter.delete(
   '/:filepath',
   authenticate,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { filepath } = req.params;
     const success = await fileUploadService.deleteFile(filepath);
     
@@ -140,3 +140,4 @@ fileUploadRouter.delete(
     }
   })
 );
+

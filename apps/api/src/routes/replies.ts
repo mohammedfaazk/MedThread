@@ -54,9 +54,13 @@ replyRouter.post('/', async (req, res) => {
     await prisma.caseTimelineEvent.create({
       data: {
         threadId: data.threadId,
+        userId: author.id,
         eventType: 'REPLY_ADDED',
-        description: `${isDoctorVerified ? 'Verified doctor' : 'User'} replied`,
-        metadata: { replyId: reply.id, authorRole: author.role }
+        data: { 
+          replyId: reply.id, 
+          authorRole: author.role,
+          description: `${isDoctorVerified ? 'Verified doctor' : 'User'} replied`
+        }
       }
     });
     
@@ -216,9 +220,12 @@ replyRouter.post('/:id/helpful', async (req, res) => {
       await prisma.caseTimelineEvent.create({
         data: {
           threadId: reply.threadId,
+          userId: req.userId!,
           eventType: 'HELPFUL_MARKED',
-          description: 'Reply marked as helpful',
-          metadata: { replyId: id }
+          data: { 
+            replyId: id,
+            description: 'Reply marked as helpful'
+          }
         }
       });
     }
@@ -269,8 +276,7 @@ replyRouter.post('/:id/best-answer', async (req, res) => {
       where: { id: reply.threadId },
       data: {
         isResolved: true,
-        status: 'RESOLVED',
-        resolvedAt: new Date()
+        status: 'RESOLVED'
       }
     });
     
@@ -278,9 +284,12 @@ replyRouter.post('/:id/best-answer', async (req, res) => {
     await prisma.caseTimelineEvent.create({
       data: {
         threadId: reply.threadId,
+        userId: req.userId!,
         eventType: 'BEST_ANSWER',
-        description: 'Best answer selected',
-        metadata: { replyId: id }
+        data: { 
+          replyId: id,
+          description: 'Best answer selected'
+        }
       }
     });
     

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { cmeCreditsService } from '../services/cme-credits.service';
 import { authenticate } from '../middleware/auth';
 import { asyncHandler } from '../middleware/asyncHandler';
@@ -12,7 +12,7 @@ export const cmeCreditsRouter = Router();
 cmeCreditsRouter.get(
   '/my-credits',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const doctorId = req.user.userId;
     const credits = await cmeCreditsService.getDoctorCmeCredits(doctorId);
     res.json(credits);
@@ -25,7 +25,7 @@ cmeCreditsRouter.get(
  */
 cmeCreditsRouter.get(
   '/leaderboard',
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { timeframe = 'month', limit = 10 } = req.query;
     const leaderboard = await cmeCreditsService.getCmeLeaderboard(
       timeframe as any,
@@ -42,7 +42,7 @@ cmeCreditsRouter.get(
 cmeCreditsRouter.get(
   '/opportunities',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const doctorId = req.user.userId;
     const opportunities = await cmeCreditsService.getCmeOpportunities(doctorId);
     res.json(opportunities);
@@ -56,7 +56,7 @@ cmeCreditsRouter.get(
 cmeCreditsRouter.post(
   '/award',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const activity = req.body;
     const result = await cmeCreditsService.awardCredits(activity);
     res.json(result);
@@ -70,7 +70,7 @@ cmeCreditsRouter.post(
 cmeCreditsRouter.post(
   '/check-reply/:replyId',
   authenticate,
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req: Request, res: Response) => {
     const { replyId } = req.params;
     const result = await cmeCreditsService.checkAndAwardForReply(replyId);
     res.json(result || { message: 'Reply does not qualify for CME credits yet' });
@@ -84,7 +84,7 @@ cmeCreditsRouter.post(
 cmeCreditsRouter.post(
   '/certificate/:activityId',
   authenticate,
-  asyncHandler(async (req: any, res) => {
+  asyncHandler(async (req: any, res: Response) => {
     const { activityId } = req.params;
     const doctorId = req.user.userId;
     
@@ -92,3 +92,4 @@ cmeCreditsRouter.post(
     res.json(certificate);
   })
 );
+

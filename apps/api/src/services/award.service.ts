@@ -537,11 +537,15 @@ export class AwardService {
     });
 
     // Create notification
-    await prisma.notification.create({
+    await prisma.notifications.create({
       data: {
-        userId,
+        recipientId: userId,
+        actorId: userId, // System action
         type: 'COINS_ADDED',
-        content: `You received ${amount} coins! Reason: ${reason}`
+        metadata: {
+          amount,
+          reason
+        }
       }
     });
 
@@ -615,3 +619,5 @@ export class AwardService {
 }
 
 export const awardService = new AwardService();
+
+

@@ -35,26 +35,43 @@ export class KarmaService {
    * Update user's karma based on all their votes
    */
   async updateUserKarma(userId: string): Promise<KarmaBreakdown> {
-    // Calculate post karma
+    // Calculate post karma (exclude private posts)
     const postKarma = await prisma.vote.aggregate({
       _sum: { value: true },
       where: {
-        post: { authorId: userId }
+        post: { 
+          authorId: userId,
+          isPrivate: false // Exclude private posts from karma
+        }
       }
     });
 
-    // Calculate comment karma
+    // Calculate comment karma (exclude private replies)
     const commentKarma = await prisma.vote.aggregate({
       _sum: { value: true },
       where: {
-        comment: { authorId: userId }
+        comment: { 
+          authorId: userId,
+          isPrivateReply: false // Exclude private replies from karma
+        }
       }
     });
 
-    // Get post and comment counts
+    // Get post and comment counts (exclude private)
     const [postCount, commentCount] = await Promise.all([
-      prisma.post.count({ where: { authorId: userId, isDraft: false } }),
-      prisma.comment.count({ where: { authorId: userId } })
+      prisma.post.count({ 
+        where: { 
+          authorId: userId, 
+          isDraft: false,
+          isPrivate: false // Exclude private posts from count
+        } 
+      }),
+      prisma.comment.count({ 
+        where: { 
+          authorId: userId,
+          isPrivateReply: false // Exclude private replies from count
+        } 
+      })
     ]);
 
     const postKarmaValue = postKarma._sum.value || 0;

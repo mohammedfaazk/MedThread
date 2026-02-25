@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { validateChatAccess } from '../middleware/chatPermission';
 import { chatService } from '../services/chat.service';
@@ -14,7 +14,7 @@ const router = Router();
 router.get(
   '/conversations',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     
     const conversations = await chatService.getUserConversations(userId);
@@ -34,7 +34,7 @@ router.get(
   '/conversations/:conversationId',
   authenticate,
   validateChatAccess,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const { conversationId } = req.params;
     
     const conversation = await chatService.getConversation(conversationId);
@@ -62,7 +62,7 @@ router.get(
   '/conversations/:conversationId/messages',
   authenticate,
   validateChatAccess,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const { conversationId } = req.params;
     const { limit, cursor } = req.query;
     
@@ -90,7 +90,7 @@ router.get(
 router.post(
   '/messages',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     const { conversationId, content, type, attachment } = req.body;
     
@@ -147,7 +147,7 @@ router.post(
 router.put(
   '/messages/:messageId',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     const { messageId } = req.params;
     const { content } = req.body;
@@ -197,7 +197,7 @@ router.put(
 router.delete(
   '/messages/:messageId',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     const { messageId } = req.params;
     
@@ -229,7 +229,7 @@ router.post(
   '/conversations/:conversationId/read',
   authenticate,
   validateChatAccess,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     const { conversationId } = req.params;
     
@@ -250,7 +250,7 @@ router.get(
   '/conversations/:conversationId/unread',
   authenticate,
   validateChatAccess,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     const { conversationId } = req.params;
     
@@ -270,7 +270,7 @@ router.get(
 router.get(
   '/unread',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     
     const counts = await chatService.getAllUnreadCounts(userId);
@@ -289,7 +289,7 @@ router.get(
 router.post(
   '/upload',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const { base64Data, filename, mimeType } = req.body;
     
     if (!base64Data || !filename || !mimeType) {
@@ -354,7 +354,7 @@ router.post(
 router.get(
   '/conversations/:conversationId/access',
   authenticate,
-  asyncHandler(async (req: AuthRequest, res) => {
+  asyncHandler(async (req: AuthRequest, res: Response) => {
     const userId = req.userId!;
     const { conversationId } = req.params;
     
@@ -373,3 +373,4 @@ router.get(
 );
 
 export { router as chatRouterV2 };
+

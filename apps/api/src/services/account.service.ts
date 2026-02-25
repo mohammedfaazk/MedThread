@@ -99,7 +99,7 @@ export class AccountService {
       // Delete in order to respect foreign key constraints
       
       // 1. Notifications
-      await tx.notification.deleteMany({ where: { userId } });
+      await tx.notifications.deleteMany({ where: { recipientId: userId } });
 
       // 2. Reports
       await tx.report.deleteMany({ where: { userId } });
@@ -230,7 +230,7 @@ export class AccountService {
           ]
         } 
       }),
-      prisma.notification.count({ where: { userId } }),
+      prisma.notifications.count({ where: { recipientId: userId } }),
     ]);
 
     return {
@@ -263,3 +263,5 @@ export class AccountService {
 }
 
 export const accountService = new AccountService();
+
+

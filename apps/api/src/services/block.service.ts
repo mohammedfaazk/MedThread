@@ -211,7 +211,7 @@ export class BlockService {
    */
   private async deleteNotificationsBetweenUsers(userId1: string, userId2: string) {
     try {
-      await prisma.notification.deleteMany({
+      await prisma.notifications.deleteMany({
         where: {
           OR: [
             { recipientId: userId1, actorId: userId2 },
@@ -277,3 +277,4 @@ export class BlockService {
 }
 
 export const blockService = new BlockService();
+

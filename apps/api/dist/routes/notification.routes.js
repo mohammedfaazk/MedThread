@@ -4,6 +4,7 @@ exports.notificationRouter = void 0;
 const express_1 = require("express");
 const notification_controller_1 = require("../controllers/notification.controller");
 const auth_1 = require("../middleware/auth");
+const requireAdmin_1 = require("../middleware/requireAdmin");
 const rateLimit_1 = require("../middleware/rateLimit");
 const router = (0, express_1.Router)();
 exports.notificationRouter = router;
@@ -61,3 +62,21 @@ router.put('/preferences', auth_1.authenticate, rateLimit_1.notificationRateLimi
  * @access  Public (token-based authentication)
  */
 router.post('/unsubscribe/:token', notification_controller_1.notificationController.unsubscribe);
+/**
+ * @route   GET /api/notifications/queue/stats
+ * @desc    Get email queue statistics
+ * @access  Private (Admin only)
+ */
+router.get('/queue/stats', auth_1.authenticate, requireAdmin_1.requireAdmin, notification_controller_1.notificationController.getQueueStats);
+/**
+ * @route   POST /api/notifications/queue/retry-failed
+ * @desc    Retry failed email jobs
+ * @access  Private (Admin only)
+ */
+router.post('/queue/retry-failed', auth_1.authenticate, requireAdmin_1.requireAdmin, notification_controller_1.notificationController.retryFailedJobs);
+/**
+ * @route   POST /api/notifications/queue/reset-circuit-breaker
+ * @desc    Reset email service circuit breaker
+ * @access  Private (Admin only)
+ */
+router.post('/queue/reset-circuit-breaker', auth_1.authenticate, requireAdmin_1.requireAdmin, notification_controller_1.notificationController.resetCircuitBreaker);

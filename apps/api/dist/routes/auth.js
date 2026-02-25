@@ -92,4 +92,33 @@ exports.authRouter.post('/login', async (req, res) => {
         res.status(400).json({ success: false, error: 'Login failed' });
     }
 });
+// Password verification endpoint for chat access
+exports.authRouter.post('/verify-password', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ success: false, error: 'Authentication required' });
+        }
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'secret');
+        const { password } = req.body;
+        if (!password) {
+            return res.status(400).json({ success: false, error: 'Password required' });
+        }
+        const user = await database_1.prisma.user.findUnique({
+            where: { id: decoded.userId }
+        });
+        if (!user) {
+            return res.status(404).json({ success: false, error: 'User not found' });
+        }
+        const isValid = await bcrypt_1.default.compare(password, user.passwordHash);
+        if (!isValid) {
+            return res.status(401).json({ success: false, error: 'Invalid password' });
+        }
+        res.json({ success: true, message: 'Password verified' });
+    }
+    catch (error) {
+        console.error('Password verification error:', error);
+        res.status(500).json({ success: false, error: 'Verification failed' });
+    }
+});
 exports.default = exports.authRouter;

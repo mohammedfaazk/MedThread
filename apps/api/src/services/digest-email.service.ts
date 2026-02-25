@@ -23,12 +23,12 @@ export class DigestEmailService {
       // Find users with daily digest preference
       const users = await prisma.user.findMany({
         where: {
-          notificationPreferences: {
+          notification_preferences: {
             digestFrequency: 'daily'
           }
         },
         include: {
-          notificationPreferences: true
+          notification_preferences: true
         }
       });
 
@@ -67,12 +67,12 @@ export class DigestEmailService {
       // Find users with weekly digest preference
       const users = await prisma.user.findMany({
         where: {
-          notificationPreferences: {
+          notification_preferences: {
             digestFrequency: 'weekly'
           }
         },
         include: {
-          notificationPreferences: true
+          notification_preferences: true
         }
       });
 
@@ -132,7 +132,7 @@ export class DigestEmailService {
 
       // Get unread notifications for the period
       // Only include notification types where user has digest email enabled
-      const digestEnabledTypes = Object.entries(preferences.email)
+      const digestEnabledTypes = Object.entries((preferences.email as any) || {})
         .filter(([_, value]) => value === 'digest')
         .map(([type, _]) => type);
 
@@ -141,7 +141,7 @@ export class DigestEmailService {
         return false;
       }
 
-      const notifications = await prisma.notification.findMany({
+      const notifications = await prisma.notifications.findMany({
         where: {
           recipientId: userId,
           isDeleted: false,
@@ -154,7 +154,7 @@ export class DigestEmailService {
           }
         },
         include: {
-          actor: {
+          User_notifications_actorIdToUser: {
             select: {
               id: true,
               username: true,
@@ -175,17 +175,18 @@ export class DigestEmailService {
       }
 
       // Send digest email
-      const success = await this.emailService.sendDigestEmail(
-        user,
-        notifications,
-        frequency
-      );
+      const success = await this.emailService.sendNotificationEmail({
+        username: user.username,
+        email: user.email,
+        title: `Your ${frequency} digest`,
+        content: `You have ${notifications.length} new notifications`
+      });
 
       if (success) {
         console.log(`[DIGEST] Sent ${frequency} digest to ${user.email} with ${notifications.length} notifications`);
         
         // Create email queue record for tracking
-        await prisma.emailQueue.create({
+        await prisma.email_queue.create({
           data: {
             userId: user.id,
             notificationId: notifications[0].id, // Use first notification as reference
@@ -228,11 +229,11 @@ export class DigestEmailService {
         : startOfDay(subWeeks(now, 1));
       const endDate = endOfDay(now);
 
-      const digestEnabledTypes = Object.entries(preferences.email)
+      const digestEnabledTypes = Object.entries((preferences.email as any) || {})
         .filter(([_, value]) => value === 'digest')
         .map(([type, _]) => type);
 
-      const notifications = await prisma.notification.findMany({
+      const notifications = await prisma.notifications.findMany({
         where: {
           recipientId: userId,
           isDeleted: false,
@@ -245,7 +246,7 @@ export class DigestEmailService {
           }
         },
         include: {
-          actor: {
+          User_notifications_actorIdToUser: {
             select: {
               id: true,
               username: true,
@@ -273,3 +274,7 @@ export class DigestEmailService {
 
 // Export singleton instance
 export const digestEmailService = new DigestEmailService();
+
+
+
+

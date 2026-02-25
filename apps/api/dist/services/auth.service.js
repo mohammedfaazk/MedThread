@@ -46,6 +46,10 @@ class AuthService {
                 email: true,
                 role: true,
                 doctorVerificationStatus: true,
+                avatar: true,
+                banner: true,
+                bio: true,
+                specialty: true,
             }
         });
         // Generate token
@@ -58,10 +62,19 @@ class AuthService {
                 email: user.email,
                 role: user.role,
                 doctorVerificationStatus: user.doctorVerificationStatus || undefined,
+                avatar: user.avatar || undefined,
+                banner: user.banner || undefined,
+                bio: user.bio || undefined,
+                specialty: user.specialty || undefined,
             },
         };
     }
     async login(input) {
+        // Log the login attempt (without password)
+        console.log('🔐 Login attempt:', {
+            email: input.email,
+            timestamp: new Date().toISOString()
+        });
         // Find user
         const user = await database_1.prisma.user.findUnique({
             where: { email: input.email },
@@ -73,17 +86,37 @@ class AuthService {
                 passwordHash: true,
                 isSuspended: true,
                 doctorVerificationStatus: true,
+                avatar: true,
+                banner: true,
+                bio: true,
+                specialty: true,
             }
         });
         if (!user) {
+            console.log('❌ User not found:', input.email);
             throw new errors_1.UnauthorizedError('Invalid email or password');
         }
+        console.log('✅ User found:', {
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            hasPasswordHash: !!user.passwordHash,
+            passwordHashLength: user.passwordHash?.length || 0
+        });
         // Check if user is suspended
         if (user.isSuspended) {
+            console.log('⛔ User suspended:', user.email);
             throw new errors_1.UnauthorizedError('Account suspended. Please contact support.');
         }
+        // Check if passwordHash exists
+        if (!user.passwordHash) {
+            console.log('❌ No password hash for user:', user.email);
+            throw new errors_1.UnauthorizedError('Invalid email or password');
+        }
         // Verify password
+        console.log('🔍 Comparing password...');
         const isValidPassword = await bcrypt_1.default.compare(input.password, user.passwordHash);
+        console.log('🔐 Password validation result:', isValidPassword ? '✅ VALID' : '❌ INVALID');
         if (!isValidPassword) {
             throw new errors_1.UnauthorizedError('Invalid email or password');
         }
@@ -97,6 +130,10 @@ class AuthService {
                 email: user.email,
                 role: user.role,
                 doctorVerificationStatus: user.doctorVerificationStatus || undefined,
+                avatar: user.avatar || undefined,
+                banner: user.banner || undefined,
+                bio: user.bio || undefined,
+                specialty: user.specialty || undefined,
             },
         };
     }

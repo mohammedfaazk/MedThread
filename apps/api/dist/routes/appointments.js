@@ -1,10 +1,45 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.appointmentRouter = void 0;
 const express_1 = require("express");
 const database_1 = require("@medthread/database");
 const auth_1 = require("../middleware/auth");
 const requireVerifiedDoctor_1 = require("../middleware/requireVerifiedDoctor");
+const notification_service_1 = require("../services/notification.service");
+const client_1 = require("@prisma/client");
 const router = (0, express_1.Router)();
 exports.appointmentRouter = router;
 const prisma = new database_1.PrismaClient();
@@ -179,11 +214,31 @@ router.post('/book', async (req, res) => {
                     status: 'PENDING'
                 },
                 include: {
-                    patient: { select: { username: true, avatar: true } },
-                    doctor: { select: { username: true, avatar: true, specialty: true } }
+                    patient: { select: { id: true, username: true, avatar: true } },
+                    doctor: { select: { id: true, username: true, avatar: true, specialty: true } }
                 }
             });
             console.log('[API] Saved to DB');
+            // Create APPOINTMENT_REQUEST notification for doctor
+            try {
+                await notification_service_1.notificationService.createNotification({
+                    type: client_1.NotificationType.APPOINTMENT_REQUEST,
+                    recipientIds: [doctorId],
+                    actorId: patientId,
+                    contentId: appointment.id,
+                    contentType: client_1.ContentType.APPOINTMENT,
+                    metadata: {
+                        title: 'New Appointment Request',
+                        body: `${appointment.patient.username} requested an appointment`,
+                        preview: reason,
+                        link: `/appointments`,
+                        appointmentTime: startTime,
+                    }
+                });
+            }
+            catch (notifError) {
+                console.error('Failed to create appointment request notification:', notifError);
+            }
         }
         catch (dbError) {
             console.error('[API] DB Save failed, using In-Memory persistence');
@@ -369,17 +424,41 @@ router.put('/appointments/:id', auth_1.authenticate, requireVerifiedDoctor_1.req
         console.log(`[API] Update status: id=${id}, status=${status}`);
         try {
             const appointment = await prisma.appointment.findUnique({
-                where: { id }
+                where: { id },
+                include: {
+                    patient: { select: { id: true, username: true, avatar: true } },
+                    doctor: { select: { id: true, username: true, avatar: true } }
+                }
             });
             if (appointment && appointment.doctorId === doctorId) {
                 const updated = await prisma.appointment.update({
                     where: { id },
                     data: { status },
                     include: {
-                        patient: { select: { username: true, avatar: true } },
-                        doctor: { select: { username: true, avatar: true } }
+                        patient: { select: { id: true, username: true, avatar: true } },
+                        doctor: { select: { id: true, username: true, avatar: true } }
                     }
                 });
+                // Create APPOINTMENT_UPDATE notification for patient
+                try {
+                    const statusText = status === 'APPROVED' ? 'approved' : 'rejected';
+                    await notification_service_1.notificationService.createNotification({
+                        type: client_1.NotificationType.APPOINTMENT_UPDATE,
+                        recipientIds: [appointment.patientId],
+                        actorId: doctorId,
+                        contentId: id,
+                        contentType: client_1.ContentType.APPOINTMENT,
+                        metadata: {
+                            title: `Appointment ${statusText}`,
+                            body: `Dr. ${updated.doctor.username} ${statusText} your appointment request`,
+                            link: `/appointments`,
+                            appointmentStatus: status,
+                        }
+                    });
+                }
+                catch (notifError) {
+                    console.error('Failed to create appointment update notification:', notifError);
+                }
                 // If approved, create a conversation
                 if (status === 'APPROVED') {
                     // Even if DB update succeeded, we might want to ensure mock store has it for testing
@@ -388,6 +467,8 @@ router.put('/appointments/:id', auth_1.authenticate, requireVerifiedDoctor_1.req
                         await prisma.conversation.create({
                             data: {
                                 appointmentId: id,
+                                patientId: appointment.patientId,
+                                doctorId: appointment.doctorId,
                                 participants: {
                                     connect: [
                                         { id: appointment.patientId },
@@ -399,6 +480,16 @@ router.put('/appointments/:id', auth_1.authenticate, requireVerifiedDoctor_1.req
                     }
                     catch (pError) {
                         console.warn('[API] DB Conversation create failed (expected during mock testing)');
+                    }
+                }
+                // Handle chat lifecycle
+                if (status === 'REJECTED') {
+                    try {
+                        const { chatLifecycleService } = await Promise.resolve().then(() => __importStar(require('../services/chat-lifecycle.service')));
+                        await chatLifecycleService.handleAppointmentStatusChange(id, status);
+                    }
+                    catch (lifecycleError) {
+                        console.error('Chat lifecycle error:', lifecycleError);
                     }
                 }
                 return res.json(updated);
@@ -496,4 +587,28 @@ router.get('/debug', (req, res) => {
         // conversations: conversationsStore, // Need to import if we want to see it here
         // messages: messagesStore
     });
+});
+// Debug route to check conversation and appointment details
+router.get('/debug/conversation/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const conversation = await prisma.conversation.findUnique({
+            where: { id },
+            include: {
+                appointment: {
+                    include: {
+                        patient: true,
+                        doctor: true
+                    }
+                }
+            }
+        });
+        res.json({
+            conversation,
+            now: new Date().toISOString()
+        });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch conversation details' });
+    }
 });

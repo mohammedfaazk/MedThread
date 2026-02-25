@@ -10,7 +10,7 @@ export async function ensureAllUsersHavePasswords() {
     // Find users without passwords
     const usersWithoutPasswords = await prisma.user.findMany({
       where: {
-        passwordHash: null
+        passwordHash: ''
       },
       select: {
         id: true,

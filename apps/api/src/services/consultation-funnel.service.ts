@@ -385,37 +385,51 @@ export class ConsultationFunnelService {
   }
 
   private async notifyDoctor(doctorId: string, consultationId: string) {
-    await prisma.notification.create({
+    await prisma.notifications.create({
       data: {
-        userId: doctorId,
+        recipientId: doctorId, 
+        actorId: doctorId,
         type: 'CONSULTATION_REQUEST',
-        content: 'You have a new consultation request',
-        link: `/dashboard/doctor/consultations/${consultationId}`
+        contentId: consultationId,
+        contentType: 'APPOINTMENT',
+        metadata: {
+          link: `/dashboard/doctor/consultations/${consultationId}`
+        }
       }
     });
   }
 
   private async notifyPatient(patientId: string, consultationId: string) {
-    await prisma.notification.create({
+    await prisma.notifications.create({
       data: {
-        userId: patientId,
+        recipientId: patientId, 
+        actorId: patientId,
         type: 'DOCTOR_RESPONSE',
-        content: 'Doctor has responded to your consultation request',
-        link: `/consultations/${consultationId}`
+        contentId: consultationId,
+        contentType: 'APPOINTMENT',
+        metadata: {
+          link: `/consultations/${consultationId}`
+        }
       }
     });
   }
 
   private async requestReview(patientId: string, consultationId: string) {
-    await prisma.notification.create({
+    await prisma.notifications.create({
       data: {
-        userId: patientId,
+        recipientId: patientId, 
+        actorId: patientId,
         type: 'REVIEW_REQUEST',
-        content: 'Please review your consultation experience',
-        link: `/consultations/${consultationId}/review`
+        contentId: consultationId,
+        contentType: 'APPOINTMENT',
+        metadata: {
+          link: `/consultations/${consultationId}/review`
+        }
       }
     });
   }
 }
 
 export const consultationFunnelService = new ConsultationFunnelService();
+
+
