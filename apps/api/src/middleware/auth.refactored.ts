@@ -63,10 +63,14 @@ export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction
       const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
       req.userId = decoded.userId;
       req.userRole = decoded.role;
+      console.log('[OptionalAuth] Authenticated user:', { userId: req.userId, userRole: req.userRole });
+    } else {
+      console.log('[OptionalAuth] No auth header provided - guest user');
     }
     
     next();
   } catch (error) {
+    console.log('[OptionalAuth] Token verification failed:', error);
     // Silently fail for optional auth
     next();
   }

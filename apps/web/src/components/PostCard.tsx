@@ -63,7 +63,7 @@ export function PostCard({
   editedAt
 }: PostCardProps) {
   const { votePost, savePost, hidePost } = useStore()
-  const { user } = useJWTAuth()
+  const { user, role, verified: isVerified } = useJWTAuth()
   const [postAwards, setPostAwards] = useState<any[]>([])
   const [awardsLoading, setAwardsLoading] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -73,6 +73,10 @@ export function PostCard({
   const [isDeleting, setIsDeleting] = useState(false)
 
   const isAuthor = user?.username === author
+  
+  // Check if user can interact (not guest and not unverified doctor)
+  const canInteract = user && (role !== 'DOCTOR' || isVerified)
+  const isReadOnly = !canInteract
 
   useEffect(() => {
     fetchPostAwards()
@@ -111,6 +115,17 @@ export function PostCard({
   const handleVote = (e: React.MouseEvent, value: 1 | -1) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    // Check if user can interact
+    if (isReadOnly) {
+      if (!user) {
+        alert('Please sign up or log in to vote on posts')
+      } else if (role === 'DOCTOR' && !isVerified) {
+        alert('Your doctor account is pending verification. You can vote once verified by an admin.')
+      }
+      return
+    }
+    
     const token = localStorage.getItem('auth_token')
     votePost(id, value, token || undefined)
     analytics.trackEvent('post_vote', 'engagement', { postId: id, vote: value })
@@ -119,6 +134,17 @@ export function PostCard({
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    // Check if user can interact
+    if (isReadOnly) {
+      if (!user) {
+        alert('Please sign up or log in to save posts')
+      } else if (role === 'DOCTOR' && !isVerified) {
+        alert('Your doctor account is pending verification. You can save posts once verified by an admin.')
+      }
+      return
+    }
+    
     const token = localStorage.getItem('auth_token')
     savePost(id, token || undefined)
     analytics.trackEvent('post_save', 'engagement', { postId: id })
@@ -127,6 +153,17 @@ export function PostCard({
   const handleHide = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    // Check if user can interact
+    if (isReadOnly) {
+      if (!user) {
+        alert('Please sign up or log in to hide posts')
+      } else if (role === 'DOCTOR' && !isVerified) {
+        alert('Your doctor account is pending verification. You can hide posts once verified by an admin.')
+      }
+      return
+    }
+    
     const token = localStorage.getItem('auth_token')
     hidePost(id, token || undefined)
     analytics.trackEvent('post_hide', 'engagement', { postId: id })
@@ -230,8 +267,11 @@ export function PostCard({
           <div className="w-10 bg-neutral-300/10 backdrop-blur-sm flex flex-col items-center py-2 rounded-l-2xl border-r border-neutral-400/20">
             <button
               onClick={(e) => handleVote(e, 1)}
-              className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${userVote === 1 ? 'text-[#FF4500]' : 'text-gray-400'
-                }`}
+              disabled={isReadOnly}
+              className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${
+                userVote === 1 ? 'text-[#FF4500]' : 'text-gray-400'
+              } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              title={isReadOnly ? (user ? 'Pending verification' : 'Sign in to vote') : 'Upvote'}
             >
               <svg className="w-5 h-5" fill={userVote === 1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -243,8 +283,11 @@ export function PostCard({
             </span>
             <button
               onClick={(e) => handleVote(e, -1)}
-              className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${userVote === -1 ? 'text-[#7193ff]' : 'text-gray-400'
-                }`}
+              disabled={isReadOnly}
+              className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${
+                userVote === -1 ? 'text-[#7193ff]' : 'text-gray-400'
+              } ${isReadOnly ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              title={isReadOnly ? (user ? 'Pending verification' : 'Sign in to vote') : 'Downvote'}
             >
               <svg className="w-5 h-5" fill={userVote === -1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -500,18 +543,35 @@ export function PostCard({
             {/* Actions */}
             <div className="flex items-center gap-4 text-xs text-gray-600">
               <Link 
-                href={`/post/${id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
+                href={isReadOnly ? '#' : `/post/${id}`}
+                onClick={(e) => {
+                  if (isReadOnly) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    if (!user) {
+                      alert('Please sign up or log in to comment on posts')
+                    } else if (role === 'DOCTOR' && !isVerified) {
+                      alert('Your doctor account is pending verification. You can comment once verified by an admin.')
+                    }
+                  } else {
+                    e.stopPropagation()
+                  }
+                }}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg transition-all ${
+                  isReadOnly ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-300/20 cursor-pointer'
+                }`}
+                title={isReadOnly ? (user ? 'Pending verification' : 'Sign in to comment') : 'View comments'}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 <span className="font-semibold">{comments} Comments</span>
               </Link>
-              <div onClick={(e) => e.stopPropagation()}>
-                <AwardButton postId={id} currentAwards={postAwards} onAwardGiven={fetchPostAwards} />
-              </div>
+              {!isReadOnly && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <AwardButton postId={id} currentAwards={postAwards} onAwardGiven={fetchPostAwards} />
+                </div>
+              )}
               {doctorReplies > 0 && (
                 <span className="flex items-center gap-1 text-blue-600 font-semibold">
                   <Stethoscope className="w-4 h-4" />
@@ -527,31 +587,35 @@ export function PostCard({
                 </svg>
                 <span>Share</span>
               </button>
-              <button
-                onClick={handleSave}
-                className={`flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all ${isSaved ? 'text-[#FF4500] font-semibold' : ''
-                  }`}
-              >
-                <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                </svg>
-                <span>{isSaved ? 'Saved' : 'Save'}</span>
-              </button>
-              <button
-                onClick={handleHide}
-                className="flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
-                <span>Hide</span>
-              </button>
-              <ReportButton 
-                type="post" 
-                targetId={id} 
-                targetTitle={title}
-                className="hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
-              />
+              {!isReadOnly && (
+                <>
+                  <button
+                    onClick={handleSave}
+                    className={`flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all ${isSaved ? 'text-[#FF4500] font-semibold' : ''
+                      }`}
+                  >
+                    <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                    </svg>
+                    <span>{isSaved ? 'Saved' : 'Save'}</span>
+                  </button>
+                  <button
+                    onClick={handleHide}
+                    className="flex items-center gap-1 hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                    <span>Hide</span>
+                  </button>
+                  <ReportButton 
+                    type="post" 
+                    targetId={id} 
+                    targetTitle={title}
+                    className="hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>

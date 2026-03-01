@@ -1,6 +1,6 @@
 'use client'
 
-import { Navbar } from '@/components/Navbar'
+import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
@@ -30,7 +30,7 @@ export default function SymptomCheckerPage() {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <NavbarEnhanced />
       <div className="flex max-w-[1400px] mx-auto">
         <Sidebar />
         <div className="flex-1 px-6 py-8">

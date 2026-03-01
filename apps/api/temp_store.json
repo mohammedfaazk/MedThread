@@ -90,6 +90,36 @@
       },
       "createdAt": "2026-02-16T12:31:27.138Z",
       "updatedAt": "2026-02-16T12:31:27.138Z"
+    },
+    {
+      "id": "conv-cmm1o83bx000zo6ntyehg7r0f",
+      "appointmentId": "cmm1o83bx000zo6ntyehg7r0f",
+      "participants": [
+        {
+          "id": "cmm1lc1gc000065icrrpchta7",
+          "username": "navin_7",
+          "avatar": "/uploads/avatars/1771999319615-avatar-cmm1lc1gc000065icrrpchta7.jpg",
+          "role": "PATIENT"
+        },
+        {
+          "id": "cmm1lm87q000165icwxcv2m4w",
+          "username": "dr_navin",
+          "avatar": "/uploads/avatars/1771998631907-avatar-cmm1lm87q000165icwxcv2m4w.png",
+          "role": "VERIFIED_DOCTOR"
+        }
+      ],
+      "participantIds": [
+        "cmm1lc1gc000065icrrpchta7",
+        "cmm1lm87q000165icwxcv2m4w"
+      ],
+      "messages": [],
+      "appointment": {
+        "status": "APPROVED",
+        "startTime": "2026-02-25T11:30:00.000Z",
+        "endTime": "2026-02-25T12:30:00.000Z"
+      },
+      "createdAt": "2026-02-25T06:47:30.840Z",
+      "updatedAt": "2026-02-25T06:47:30.840Z"
     }
   ],
   "messages": [
@@ -147,6 +177,182 @@
         "id": "cmlp4p7dz0000yp0bcrux7v6w",
         "username": "Rifa",
         "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772002824324",
+      "conversationId": "conv-cmm1o83bx000zo6ntyehg7r0f",
+      "content": "hello",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:00:24.324Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772003154686",
+      "conversationId": "conv-cmm1o83bx000zo6ntyehg7r0f",
+      "content": "hello navin",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:05:54.686Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772003165495",
+      "conversationId": "conv-cmm1o83bx000zo6ntyehg7r0f",
+      "content": "hey",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:06:05.495Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772003655163",
+      "conversationId": "conv-cmm1o83bx000zo6ntyehg7r0f",
+      "content": "hy",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:14:15.163Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772003675304",
+      "conversationId": "conv-cmm1o83bx000zo6ntyehg7r0f",
+      "content": "hy",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:14:35.304Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772004175425",
+      "conversationId": "conv-cmm1o83bx000zo6ntyehg7r0f",
+      "content": "hi",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:22:55.425Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772004314391",
+      "conversationId": "cmm1o9p280017o6ntsq8q6clh",
+      "content": "hello",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:25:14.391Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772004458188",
+      "conversationId": "cmm1o9p280017o6ntsq8q6clh",
+      "content": "hey",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:27:38.188Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772004549278",
+      "conversationId": "cmm1o9p280017o6ntsq8q6clh",
+      "content": "hello doctor",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:29:09.278Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "msg-1772005904204",
+      "conversationId": "cmm1o9p280017o6ntsq8q6clh",
+      "content": "ney",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:51:44.204Z",
+      "sender": {
+        "username": "User",
+        "avatar": null
+      }
+    },
+    {
+      "id": "cmm1qqxin000112of7nnvg15p",
+      "conversationId": "cmm1o9p280017o6ntsq8q6clh",
+      "senderId": "cmm1lm87q000165icwxcv2m4w",
+      "content": "hi",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:56:54.191Z",
+      "sender": {
+        "id": "cmm1lm87q000165icwxcv2m4w",
+        "username": "dr_navin",
+        "avatar": "/uploads/avatars/1771998631907-avatar-cmm1lm87q000165icwxcv2m4w.png"
+      }
+    },
+    {
+      "id": "cmm1qrcpw000312of3q00jhzq",
+      "conversationId": "cmm1o9p280017o6ntsq8q6clh",
+      "senderId": "cmm1lc1gc000065icrrpchta7",
+      "content": "hey doc",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T07:57:13.892Z",
+      "sender": {
+        "id": "cmm1lc1gc000065icrrpchta7",
+        "username": "navin_7",
+        "avatar": "/uploads/avatars/1771999319615-avatar-cmm1lc1gc000065icrrpchta7.jpg"
+      }
+    },
+    {
+      "id": "cmm1r1i96000b12of9b3baqbz",
+      "conversationId": "cmm1o9p280017o6ntsq8q6clh",
+      "senderId": "cmm1lc1gc000065icrrpchta7",
+      "content": "hello again",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T08:05:07.626Z",
+      "sender": {
+        "id": "cmm1lc1gc000065icrrpchta7",
+        "username": "navin_7",
+        "avatar": "/uploads/avatars/1771999319615-avatar-cmm1lc1gc000065icrrpchta7.jpg"
+      }
+    },
+    {
+      "id": "cmm1r32dh000d12ofi1nyndj1",
+      "conversationId": "cmm1o9p280017o6ntsq8q6clh",
+      "senderId": "cmm1lm87q000165icwxcv2m4w",
+      "content": "hello again",
+      "type": "TEXT",
+      "attachment": null,
+      "createdAt": "2026-02-25T08:06:20.357Z",
+      "sender": {
+        "id": "cmm1lm87q000165icwxcv2m4w",
+        "username": "dr_navin",
+        "avatar": "/uploads/avatars/1771998631907-avatar-cmm1lm87q000165icwxcv2m4w.png"
       }
     }
   ],

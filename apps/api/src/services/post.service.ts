@@ -209,7 +209,14 @@ export const postService = {
     };
 
     // Privacy filtering
-    const isDoctor = requestingUserRole === 'DOCTOR';
+    const isDoctor = requestingUserRole === 'DOCTOR' || requestingUserRole === 'VERIFIED_DOCTOR';
+    
+    console.log('[PostService] Privacy filtering:', {
+      requestingUserId,
+      requestingUserRole,
+      isDoctor,
+      privacyMode
+    });
     
     if (privacyMode === 'PUBLIC') {
       where.isPrivate = false;
@@ -231,6 +238,9 @@ export const postService = {
           { isPrivate: false },
           { AND: [{ isPrivate: true }, { authorId: requestingUserId || 'none' }] }
         ];
+        console.log('[PostService] Applied patient privacy filter:', where.OR);
+      } else {
+        console.log('[PostService] Doctor - no privacy filter applied');
       }
       // Doctors see all posts (no filter needed)
     }

@@ -70,7 +70,8 @@ export default function ChatWindow({
   // Fetch messages
   const fetchMessages = useCallback(async (cursor?: string) => {
     try {
-      const url = new URL(`${API_URL}/api/v2/chat/conversations/${conversationId}/messages`);
+      // Use v1 API to match ChatInbox
+      const url = new URL(`${API_URL}/api/chat/conversations/${conversationId}/messages`);
       if (cursor) {
         url.searchParams.append('cursor', cursor);
       }
@@ -91,14 +92,24 @@ export default function ChatWindow({
 
       const data = await response.json();
       
+      // Handle both v1 and v2 response formats
+      let messagesData = data.data || data.messages || data;
+      const paginationData = data.pagination || {};
+      
+      // Ensure messagesData is an array and filter out invalid messages
+      if (!Array.isArray(messagesData)) {
+        messagesData = [];
+      }
+      messagesData = messagesData.filter(msg => msg && msg.id && msg.senderId);
+      
       if (cursor) {
-        setMessages(prev => [...data.data, ...prev]);
+        setMessages(prev => [...messagesData, ...prev]);
       } else {
-        setMessages(data.data);
+        setMessages(messagesData);
       }
       
-      setHasMore(data.pagination.hasMore);
-      setNextCursor(data.pagination.nextCursor);
+      setHasMore(paginationData.hasMore || false);
+      setNextCursor(paginationData.nextCursor || null);
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
@@ -249,7 +260,7 @@ export default function ChatWindow({
   // Mark messages as read
   const markAsRead = useCallback(async () => {
     try {
-      await fetch(`${API_URL}/api/v2/chat/conversations/${conversationId}/read`, {
+      await fetch(`${API_URL}/api/chat/conversations/${conversationId}/read`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -325,7 +336,7 @@ export default function ChatWindow({
     setIsSending(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/v2/chat/messages`, {
+      const response = await fetch(`${API_URL}/api/chat/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -349,9 +360,12 @@ export default function ChatWindow({
       const data = await response.json();
       
       // Replace optimistic message with real one
-      setMessages(prev =>
-        prev.map(m => (m.id === tempId ? data.data : m))
-      );
+      const realMessage = data.data || data;
+      if (realMessage && realMessage.id) {
+        setMessages(prev =>
+          prev.map(m => (m.id === tempId ? realMessage : m))
+        );
+      }
       
       // Scroll again after replacement
       setTimeout(() => {
@@ -370,7 +384,7 @@ export default function ChatWindow({
     if (!editContent.trim()) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/v2/chat/messages/${messageId}`, {
+      const response = await fetch(`${API_URL}/api/chat/messages/${messageId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -397,7 +411,7 @@ export default function ChatWindow({
     if (!confirm('Delete this message?')) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/v2/chat/messages/${messageId}`, {
+      const response = await fetch(`${API_URL}/api/chat/messages/${messageId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -434,7 +448,7 @@ export default function ChatWindow({
         const base64 = reader.result as string;
         const base64Data = base64.split(',')[1];
 
-        const response = await fetch(`${API_URL}/api/v2/chat/upload`, {
+        const response = await fetch(`${API_URL}/api/chat/upload`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -626,7 +640,7 @@ export default function ChatWindow({
           </div>
         )}
         
-        {messages.map(renderMessage)}
+        {messages.filter(msg => msg && msg.id).map(renderMessage)}
         
         {otherUserTyping && (
           <div className="text-sm text-gray-500 italic">

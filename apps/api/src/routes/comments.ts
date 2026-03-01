@@ -7,8 +7,8 @@ import { prisma } from '@medthread/database';
 
 const router = Router();
 
-// Create comment - requires verified doctor
-router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Create comment - requires authentication (all authenticated users can comment)
+router.post('/', auth, async (req, res, next) => {
   try {
     const { content, postId, parentId } = req.body;
 
@@ -29,14 +29,29 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
     // Check privacy access for private posts
     if (post.isPrivate) {
       const userId = req.userId!;
-      const userRole = (req as any).userRole || 'PATIENT'; // Get from auth middleware
       
-      const user = { id: userId, role: userRole };
+      // Fetch full user data for privacy check
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { 
+          id: true, 
+          role: true, 
+          doctorVerificationStatus: true 
+        }
+      });
+      
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' });
+      }
+      
       const accessResult = checkPrivatePostAccess(user, post);
       
       if (!accessResult.hasAccess) {
+        console.log('[Comments] Access denied:', accessResult.reason);
         return res.status(404).json({ error: 'Post not found' });
       }
+      
+      console.log('[Comments] Access granted:', accessResult.reason);
     }
 
     const comment = await commentService.createComment({
@@ -63,18 +78,60 @@ router.get('/', async (req, res, next) => {
 
     // Extract userId from token if provided (optional auth)
     let userId: string | undefined;
+    let user: any = null;
     const token = req.headers.authorization?.split(' ')[1];
     if (token) {
       try {
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
         userId = decoded.userId;
+        
+        // Fetch full user data for privacy check
+        user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { 
+            id: true, 
+            role: true, 
+            doctorVerificationStatus: true 
+          }
+        });
       } catch (error) {
         // Invalid token, continue without userId
       }
     }
 
-    const comments = await commentService.getCommentsByPost(postId as string, userId);
+    // Get post to check privacy
+    const post = await prisma.post.findUnique({
+      where: { id: postId as string },
+      select: { id: true, isPrivate: true, authorId: true }
+    });
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Check privacy access
+    let filterForPrivacy = undefined;
+    if (post.isPrivate && user) {
+      const accessResult = checkPrivatePostAccess(user, post);
+      
+      if (!accessResult.hasAccess) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+      
+      // Pass privacy filtering info to service
+      filterForPrivacy = {
+        isPostPrivate: post.isPrivate,
+        isAuthor: accessResult.isAuthor,
+        shouldFilterReplies: accessResult.shouldFilterReplies
+      };
+    }
+
+    const comments = await commentService.getCommentsByPost(
+      postId as string, 
+      userId,
+      filterForPrivacy
+    );
 
     res.json(comments);
   } catch (error) {
@@ -82,8 +139,8 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// Update comment - requires verified doctor
-router.put('/:id', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Update comment - requires authentication (users can only update their own comments)
+router.put('/:id', auth, async (req, res, next) => {
   try {
     const { content } = req.body;
 
@@ -98,8 +155,8 @@ router.put('/:id', auth, requireVerifiedDoctor, async (req, res, next) => {
   }
 });
 
-// Delete comment - requires verified doctor
-router.delete('/:id', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Delete comment - requires authentication (users can only delete their own comments)
+router.delete('/:id', auth, async (req, res, next) => {
   try {
     await commentService.deleteComment(req.params.id, req.userId!);
     res.json({ success: true, message: 'Comment deleted' });
@@ -108,8 +165,8 @@ router.delete('/:id', auth, requireVerifiedDoctor, async (req, res, next) => {
   }
 });
 
-// Vote on comment - requires verified doctor
-router.post('/:id/vote', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Vote on comment - requires authentication (all authenticated users can vote)
+router.post('/:id/vote', auth, async (req, res, next) => {
   try {
     const { value } = req.body;
 

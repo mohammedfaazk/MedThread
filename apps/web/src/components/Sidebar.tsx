@@ -33,10 +33,14 @@ export function Sidebar() {
   const [loadingCommunities, setLoadingCommunities] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
-  const { role, loading, isDoctorVerified, isDoctorPending } = useJWTAuth()
+  const { role, loading, isDoctorVerified, isDoctorPending, user } = useJWTAuth()
 
   // Check if user is a doctor (verified or unverified)
   const isDoctor = role === 'DOCTOR' || role === 'VERIFIED_DOCTOR' || isDoctorVerified || isDoctorPending
+  
+  // Check if user can interact (not guest and not unverified doctor)
+  const canInteract = user && (role !== 'DOCTOR' || isDoctorVerified)
+  const isReadOnly = !canInteract
 
   // Fetch communities on mount
   useEffect(() => {
@@ -130,16 +134,35 @@ export function Sidebar() {
                   key={item.name}
                   href={item.href}
                   onClick={(e) => {
-                    if (item.name === 'Create Post' || item.name === 'Discussion Threads') {
+                    if (item.name === 'Discussion Threads') {
                       e.preventDefault();
-                      setIsCreateModalOpen(true);
+                      
+                      // Check if user can create posts
+                      if (isReadOnly) {
+                        if (!user) {
+                          alert('Please sign up or log in to create posts');
+                        } else if (isDoctorPending) {
+                          alert('Your doctor account is pending verification. You can create posts once verified by an admin.');
+                        }
+                        return;
+                      }
+                      
+                      if (isDoctor) {
+                        setIsCreateModalOpen(true);
+                      } else {
+                        router.push('/create');
+                      }
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${isActive ? 'bg-blue-500/10 text-blue-600 font-semibold backdrop-blur-xl' : 'text-gray-600'
-                    }`}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${
+                    isActive ? 'bg-blue-500/10 text-blue-600 font-semibold backdrop-blur-xl' : 'text-gray-600'
+                  } ${item.name === 'Discussion Threads' && isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <item.icon className="w-5 h-5" />
                   <span>{item.name}</span>
+                  {item.name === 'Discussion Threads' && isReadOnly && (
+                    <span className="ml-auto text-xs text-gray-400">🔒</span>
+                  )}
                 </Link>
               )
             })}
@@ -244,10 +267,13 @@ export function Sidebar() {
         </div>
       </aside>
 
-      <CreatePostModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+      {/* Only render modal for doctors */}
+      {isDoctor && (
+        <CreatePostModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+        />
+      )}
     </>
   )
 }

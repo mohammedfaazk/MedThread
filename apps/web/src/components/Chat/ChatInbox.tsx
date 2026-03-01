@@ -52,34 +52,26 @@ export default function ChatInbox({
   const fetchConversations = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_URL}/api/chat/conversations/preview`, {
+      // Use the standard conversations endpoint
+      const response = await axios.get(`${API_URL}/api/chat/conversations`, {
         params: { userId: currentUserId },
         headers: { Authorization: `Bearer ${token}` }
       })
 
-      setConversations(response.data)
+      // Transform to preview format if needed
+      const conversations = response.data
+      const previews = Array.isArray(conversations) ? conversations.map((conv: any) => ({
+        id: conv.id,
+        participants: conv.participants || [],
+        lastMessage: conv.messages?.[0] || conv.lastMessage || null,
+        unreadCount: conv.unreadCount || 0,
+        lastMessageAt: conv.lastMessageAt || conv.messages?.[0]?.createdAt
+      })) : []
+
+      setConversations(previews)
     } catch (error) {
       console.error('Error fetching conversations:', error)
-      // Fallback to existing endpoint if preview endpoint doesn't exist
-      try {
-        const response = await axios.get(`${API_URL}/api/chat/conversations`, {
-          params: { userId: currentUserId },
-          headers: { Authorization: `Bearer ${token}` }
-        })
-
-        // Transform to preview format
-        const previews = response.data.map((conv: any) => ({
-          id: conv.id,
-          participants: conv.participants || [],
-          lastMessage: conv.messages?.[0] || null,
-          unreadCount: conv.unreadCount || 0,
-          lastMessageAt: conv.lastMessageAt || conv.messages?.[0]?.createdAt
-        }))
-
-        setConversations(previews)
-      } catch (fallbackError) {
-        console.error('Fallback fetch failed:', fallbackError)
-      }
+      setConversations([])
     } finally {
       setLoading(false)
     }

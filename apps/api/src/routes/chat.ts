@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { PrismaClient } from '@medthread/database';
+import { authenticate, AuthRequest } from '../middleware/auth.refactored';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -7,9 +8,9 @@ const prisma = new PrismaClient();
 import { conversationsStore, messagesStore, appointmentsStore, createMockConversation, saveStore } from '../lib/mockStore';
 
 // Get all conversations for a user
-router.get('/conversations', async (req, res) => {
+router.get('/conversations', authenticate, async (req: AuthRequest, res) => {
     try {
-        const { userId } = req.query;
+        const userId = req.userId || req.query.userId as string;
         console.log('[API] Fetching conversations for userId:', userId);
 
         // Proactive Sync: Ensure any approved appointments for this user have mock conversations
@@ -110,7 +111,7 @@ router.get('/conversations', async (req, res) => {
 });
 
 // Get messages for a conversation
-router.get('/conversations/:id/messages', async (req, res) => {
+router.get('/conversations/:id/messages', authenticate, async (req: AuthRequest, res) => {
     try {
         const { id } = req.params;
         const { limit = 50, before } = req.query;
@@ -156,9 +157,16 @@ router.get('/conversations/:id/messages', async (req, res) => {
 });
 
 // Send a message (also handled via Socket.io)
-router.post('/messages', async (req, res) => {
+router.post('/messages', authenticate, async (req: AuthRequest, res) => {
     try {
-        const { conversationId, senderId, content, type = 'TEXT', attachment } = req.body;
+        const { conversationId, content, type = 'TEXT', attachment } = req.body;
+        
+        // Get senderId from authenticated user (JWT token)
+        const senderId = req.userId;
+        
+        if (!senderId) {
+            return res.status(401).json({ error: 'Authentication required' });
+        }
 
         // Get conversation to find receiver
         let receiverId = senderId; // Default fallback
@@ -268,7 +276,7 @@ router.post('/messages', async (req, res) => {
 });
 
 // Upload attachment (Now uses Cloudinary)
-router.post('/upload', async (req, res) => {
+router.post('/upload', authenticate, async (req: AuthRequest, res) => {
     try {
         const { base64Data, filename, mimeType } = req.body;
 

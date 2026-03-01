@@ -1,14 +1,14 @@
 import { Router } from 'express';
-import { authenticate as auth } from '../middleware/auth';
+import { authenticate as auth, optionalAuth } from '../middleware/auth.refactored';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { postService } from '../services/post.service';
 
 const router = Router();
 
-// Create post - requires verified doctor
-router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Create post - requires authentication (both doctors and patients can create posts)
+router.post('/', auth, async (req, res, next) => {
   try {
-    const { title, content, type, url, mediaUrls, communityId, flairId, isNSFW, isSpoiler, isDraft } = req.body;
+    const { title, content, type, url, mediaUrls, communityId, flairId, isNSFW, isSpoiler, isDraft, isPrivate } = req.body;
 
     if (!title || !communityId) {
       return res.status(400).json({ error: 'Title and community are required' });
@@ -26,6 +26,7 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
       isNSFW,
       isSpoiler,
       isDraft,
+      isPrivate, // Include privacy flag
     });
 
     res.status(201).json(post);
@@ -35,7 +36,7 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
 });
 
 // Get posts (with filters)
-router.get('/', async (req, res, next) => {
+router.get('/', optionalAuth, async (req: any, res, next) => {
   try {
     const { 
       community, 
@@ -61,6 +62,8 @@ router.get('/', async (req, res, next) => {
       dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
       dateTo: dateTo ? new Date(dateTo as string) : undefined,
       postType: postType as 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'POLL',
+      requestingUserId: req.userId, // Pass authenticated user ID
+      requestingUserRole: req.userRole, // Pass authenticated user role
     });
 
     res.json(posts);
@@ -95,8 +98,8 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// Update post - requires verified doctor
-router.put('/:id', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Update post - requires authentication (users can only update their own posts)
+router.put('/:id', auth, async (req, res, next) => {
   try {
     const { title, content, isNSFW, isSpoiler } = req.body;
 
@@ -113,8 +116,8 @@ router.put('/:id', auth, requireVerifiedDoctor, async (req, res, next) => {
   }
 });
 
-// Delete post - requires verified doctor
-router.delete('/:id', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Delete post - requires authentication (users can only delete their own posts)
+router.delete('/:id', auth, async (req, res, next) => {
   try {
     await postService.deletePost(req.params.id, req.userId!);
     res.json({ success: true, message: 'Post deleted' });
@@ -123,8 +126,8 @@ router.delete('/:id', auth, requireVerifiedDoctor, async (req, res, next) => {
   }
 });
 
-// Vote on post - requires verified doctor
-router.post('/:id/vote', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Vote on post - requires authentication (all authenticated users can vote)
+router.post('/:id/vote', auth, async (req, res, next) => {
   try {
     const { value } = req.body;
 
@@ -139,8 +142,8 @@ router.post('/:id/vote', auth, requireVerifiedDoctor, async (req, res, next) => 
   }
 });
 
-// Save/unsave post - requires verified doctor
-router.post('/:id/save', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Save/unsave post - requires authentication (all authenticated users can save)
+router.post('/:id/save', auth, async (req, res, next) => {
   try {
     const result = await postService.savePost(req.params.id, req.userId!);
     res.json(result);
@@ -149,8 +152,8 @@ router.post('/:id/save', auth, requireVerifiedDoctor, async (req, res, next) => 
   }
 });
 
-// Hide/unhide post - requires verified doctor
-router.post('/:id/hide', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Hide/unhide post - requires authentication (all authenticated users can hide)
+router.post('/:id/hide', auth, async (req, res, next) => {
   try {
     const result = await postService.hidePost(req.params.id, req.userId!);
     res.json(result);
@@ -172,8 +175,8 @@ router.get('/drafts', auth, async (req, res, next) => {
   }
 });
 
-// Publish a draft - requires verified doctor
-router.post('/:id/publish', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Publish a draft - requires authentication (users can only publish their own drafts)
+router.post('/:id/publish', auth, async (req, res, next) => {
   try {
     const post = await postService.publishDraft(req.params.id, req.userId!);
     res.json(post);

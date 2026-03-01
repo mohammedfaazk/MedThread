@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CreatePostModal } from './CreatePostModal'
-import { useUser } from '@/context/UserContext'
+import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { UserRound, Star, TrendingUp, Info } from 'lucide-react'
 
@@ -10,8 +10,15 @@ export function RightSidebar() {
   const [topDoctors, setTopDoctors] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const { role } = useUser()
+  const { role, user, isDoctorVerified, isDoctorPending } = useJWTAuth()
   const router = useRouter()
+
+  // Check if user is a doctor (verified or unverified)
+  const isDoctor = role === 'DOCTOR' || role === 'VERIFIED_DOCTOR'
+  
+  // Check if user can interact (not guest and not unverified doctor)
+  const canInteract = user && (role !== 'DOCTOR' || isDoctorVerified)
+  const isReadOnly = !canInteract
 
   useEffect(() => {
     fetchTopDoctors()
@@ -92,21 +99,46 @@ export function RightSidebar() {
             </p>
             <button
               onClick={() => {
-                if (role === 'PATIENT') {
-                  router.push('/create')
-                } else {
+                // Check if user can create posts
+                if (isReadOnly) {
+                  if (!user) {
+                    alert('Please sign up or log in to create posts');
+                  } else if (isDoctorPending) {
+                    alert('Your doctor account is pending verification. You can create posts once verified by an admin.');
+                  }
+                  return;
+                }
+                
+                if (isDoctor) {
                   setIsCreateModalOpen(true)
+                } else {
+                  router.push('/create')
                 }
               }}
-              className="block w-full py-2 bg-[#00BCD4] text-white rounded-full text-sm font-semibold hover:bg-[#00ACC1] text-center transition-all shadow-lg hover:shadow-xl"
+              disabled={isReadOnly}
+              className={`block w-full py-2 bg-[#00BCD4] text-white rounded-full text-sm font-semibold hover:bg-[#00ACC1] text-center transition-all shadow-lg hover:shadow-xl ${
+                isReadOnly ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Create Post
+              Create Post {isReadOnly && '🔒'}
             </button>
             <Link
               href="/communities/create"
-              className="block w-full mt-2 py-2 border-2 border-[#00BCD4] text-[#00BCD4] rounded-full text-sm font-semibold hover:bg-[#00BCD4]/10 backdrop-blur-sm text-center transition-all"
+              onClick={(e) => {
+                if (isReadOnly) {
+                  e.preventDefault();
+                  if (!user) {
+                    alert('Please sign up or log in to create communities');
+                  } else if (isDoctorPending) {
+                    alert('Your doctor account is pending verification. You can create communities once verified by an admin.');
+                  }
+                }
+              }}
+              className={`block w-full mt-2 py-2 border-2 border-[#00BCD4] text-[#00BCD4] rounded-full text-sm font-semibold hover:bg-[#00BCD4]/10 backdrop-blur-sm text-center transition-all ${
+                isReadOnly ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              Create Community
+              Create Community {isReadOnly && '🔒'}
             </Link>
           </div>
         </div>
@@ -222,10 +254,13 @@ export function RightSidebar() {
         </div>
       </div>
 
-      <CreatePostModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+      {/* Only render modal for doctors */}
+      {isDoctor && (
+        <CreatePostModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+        />
+      )}
     </aside>
   )
 }

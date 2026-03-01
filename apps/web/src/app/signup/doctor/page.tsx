@@ -164,9 +164,16 @@ export default function DoctorSignupPage() {
       }
       
       // Step 1: Register user account
+      // Generate username: remove special chars, convert to lowercase, replace spaces with underscores
+      const cleanUsername = formData.full_name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+        .replace(/\s+/g, '_') // Replace spaces with underscores
+        .substring(0, 20); // Limit to 20 characters
+      
       const registerResponse = await axios.post(`${API_URL}/api/auth/register`, {
         email: formData.email,
-        username: formData.full_name.toLowerCase().replace(/\s+/g, '_'),
+        username: cleanUsername,
         password: formData.password,
         role: 'DOCTOR'
       })

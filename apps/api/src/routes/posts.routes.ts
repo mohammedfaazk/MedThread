@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '@medthread/database';
 import { getPaginationParams, createPaginatedResponse, getSkipTake } from '../utils/pagination';
-import { authenticate } from '../middleware/auth.refactored';
+import { authenticate, optionalAuth } from '../middleware/auth.refactored';
 import { createContentLimiter } from '../middleware/rateLimiter';
 import { requirePrivatePostAccess } from '../middleware/privacyAccess';
 import { checkPrivatePostAccess } from '../utils/privacyCheck';
@@ -13,7 +13,7 @@ export const postsRouter = Router();
  * Get paginated list of posts
  * Query params: page, limit, sortBy, sortOrder, communityId, userId, privacyMode
  */
-postsRouter.get('/', async (req, res) => {
+postsRouter.get('/', optionalAuth, async (req, res) => {
   try {
     const { page, limit, sortBy, sortOrder } = getPaginationParams(req.query);
     const { skip, take } = getSkipTake(page, limit);

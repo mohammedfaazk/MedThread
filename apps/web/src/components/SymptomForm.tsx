@@ -1,7 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import axios from 'axios'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 interface SymptomFormProps {
   onDataChange: (data: any) => void
@@ -10,6 +14,10 @@ interface SymptomFormProps {
 
 export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormProps) {
   const [step, setStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [communities, setCommunities] = useState<any[]>([])
+  const [loadingCommunities, setLoadingCommunities] = useState(true)
+  const router = useRouter()
   const [formData, setFormData] = useState({
     age: '',
     gender: '',
@@ -19,8 +27,31 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
     primarySymptoms: [] as string[],
     duration: '',
     description: '',
-    isPrivate: false // Privacy mode
+    isPrivate: false,
+    communityId: '' // Add community selection
   })
+
+  // Fetch communities on mount
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/v1/communities`)
+        const communitiesData = response.data.communities || response.data
+        setCommunities(Array.isArray(communitiesData) ? communitiesData : [])
+        // Set default community
+        if (communitiesData.length > 0) {
+          setFormData(prev => ({ ...prev, communityId: communitiesData[0].id }))
+        }
+      } catch (error) {
+        console.error('Failed to fetch communities:', error)
+        setCommunities([])
+      } finally {
+        setLoadingCommunities(false)
+      }
+    }
+
+    fetchCommunities()
+  }, [])
 
   const commonSymptoms = [
     'Headache', 'Fever', 'Cough', 'Fatigue', 'Nausea',
@@ -34,6 +65,100 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
         ? prev.primarySymptoms.filter(s => s !== symptom)
         : [...prev.primarySymptoms, symptom]
     }))
+  }
+
+  const handleSubmit = async () => {
+    // Validation
+    if (!formData.description.trim()) {
+      alert('Please provide a description of your symptoms')
+      return
+    }
+
+    if (formData.primarySymptoms.length === 0) {
+      alert('Please select at least one symptom')
+      return
+    }
+
+    if (!formData.communityId) {
+      alert('Please select a community')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please log in to create a post')
+        router.push('/login')
+        return
+      }
+
+      // Create title from symptoms
+      const title = formData.primarySymptoms.length > 0
+        ? `${formData.primarySymptoms.slice(0, 3).join(', ')}${formData.primarySymptoms.length > 3 ? ' and more' : ''}`
+        : 'Medical Consultation Request'
+
+      // Format duration nicely
+      const durationMap: Record<string, string> = {
+        'less_than_day': 'Less than a day',
+        '1-3_days': '1-3 days',
+        '4-7_days': '4-7 days',
+        '1-2_weeks': '1-2 weeks',
+        'more_than_2_weeks': 'More than 2 weeks'
+      }
+      const durationText = durationMap[formData.duration] || 'Not specified'
+
+      // Build readable content
+      const content = `${formData.description}
+
+---
+
+📋 **Patient Details**
+${formData.age ? `Age: ${formData.age} years` : ''}${formData.gender ? ` • Gender: ${formData.gender.charAt(0).toUpperCase() + formData.gender.slice(1)}` : ''}${formData.weight ? ` • Weight: ${formData.weight} kg` : ''}
+
+🩺 **Symptoms Experienced**
+${formData.primarySymptoms.map(s => `• ${s}`).join('\n')}
+
+⏱️ **Duration**: ${durationText}
+${formData.isPrivate ? '\n🔒 **Private Consultation** - Only visible to verified doctors' : ''}`
+
+      // Create the post
+      const postData = {
+        title,
+        content,
+        communityId: formData.communityId,
+        type: 'TEXT',
+        isNSFW: false,
+        isSpoiler: false,
+        isPrivate: formData.isPrivate, // Add privacy flag
+        flair: { text: formData.isPrivate ? '🔒 Private' : '💬 Consultation' }
+      }
+
+      const response = await axios.post(
+        `${API_URL}/api/v1/posts`,
+        postData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+
+      const newPost = response.data
+
+      // Success!
+      alert('Post created successfully!')
+      
+      // Navigate to homepage to see the post
+      router.push('/')
+    } catch (error: any) {
+      console.error('Failed to create post:', error)
+      alert(error.response?.data?.message || 'Failed to create post. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -172,6 +297,32 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
         >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Additional Details</h2>
 
+          {/* Community Selector */}
+          <div>
+            <label className="block text-sm font-medium mb-2 text-charcoal">Choose a community</label>
+            {loadingCommunities ? (
+              <div className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-white/50 backdrop-blur-sm text-gray-500">
+                Loading communities...
+              </div>
+            ) : communities.length === 0 ? (
+              <div className="w-full px-3 py-2 border border-gray-200 rounded-xl bg-white/50 backdrop-blur-sm text-gray-500">
+                No communities available
+              </div>
+            ) : (
+              <select
+                value={formData.communityId}
+                onChange={(e) => setFormData({ ...formData, communityId: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-200 focus:border-transparent bg-white/50 backdrop-blur-sm transition"
+              >
+                {communities.map((community) => (
+                  <option key={community.id} value={community.id}>
+                    m/{community.name} - {community.displayName}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
           {/* Privacy Mode Selector */}
           <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-gray-200">
             <label className="block text-sm font-medium mb-3 text-charcoal">Post Privacy</label>
@@ -250,10 +401,11 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
               Back
             </button>
             <button
-              onClick={() => alert('Post created!')}
-              className="flex-1 py-3 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-all font-semibold shadow-soft hover:shadow-elevated"
+              onClick={handleSubmit}
+              disabled={isSubmitting || !formData.description.trim() || formData.primarySymptoms.length === 0}
+              className="flex-1 py-3 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-all font-semibold shadow-soft hover:shadow-elevated disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Publish Post
+              {isSubmitting ? 'Publishing...' : 'Publish Post'}
             </button>
           </div>
         </motion.div>

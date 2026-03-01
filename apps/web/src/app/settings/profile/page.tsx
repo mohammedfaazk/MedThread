@@ -206,8 +206,8 @@ export default function ProfileSettingsPage() {
         return
       }
 
-      // Upload images first
-      await Promise.all([
+      // Upload images first and get the URLs
+      const [avatarUrl, bannerUrl] = await Promise.all([
         uploadAvatar(),
         uploadBanner()
       ])
@@ -238,8 +238,20 @@ export default function ProfileSettingsPage() {
       )
 
       if (response.data.success) {
+        // Update localStorage with new user data including avatar/banner
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+        const updatedUser = {
+          ...currentUser,
+          ...response.data.data,
+          avatar: avatarUrl || currentUser.avatar,
+          banner: bannerUrl || currentUser.banner,
+        }
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        
         alert('Profile updated successfully!')
-        fetchProfile()
+        
+        // Reload the page to refresh all components with new data
+        window.location.reload()
       }
     } catch (error: any) {
       console.error('Failed to update profile:', error)

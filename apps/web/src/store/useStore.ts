@@ -125,7 +125,14 @@ export const useStore = create<AppState>()(
           params.append('sort', sort)
           params.append('limit', limit.toString())
           
-          const response = await axios.get(`${API_URL}/api/v1/posts?${params}`)
+          // Get auth token from localStorage
+          const token = localStorage.getItem('auth_token')
+          const headers: any = {}
+          if (token) {
+            headers.Authorization = `Bearer ${token}`
+          }
+          
+          const response = await axios.get(`${API_URL}/api/v1/posts?${params}`, { headers })
           const apiPosts = response.data
           
           // Transform API posts to match our Post interface
