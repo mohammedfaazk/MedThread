@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useJWTAuth } from '@/context/JWTAuthContext'
-import { Search, Bell, Leaf, ChevronDown, CheckCircle2, Clock, X, TrendingUp, Hash, User as UserIcon } from 'lucide-react'
+import { Search, Leaf, ChevronDown, CheckCircle2, Clock, X, TrendingUp, Hash, User as UserIcon } from 'lucide-react'
 import { useSearchHistory } from '@/hooks/useSearchHistory'
 import { getImageUrl } from '@/lib/imageUrl'
+import { NotificationBell } from './NotificationBell'
 import axios from 'axios'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -25,14 +26,13 @@ interface Suggestion {
 export function NavbarEnhanced() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const { user, role, loading, logout, isDoctorVerified, isDoctorPending } = useJWTAuth()
-  const { history, addToHistory, removeFromHistory, clearHistory, getRecentSearches } = useSearchHistory()
+  const { addToHistory, removeFromHistory, clearHistory, getRecentSearches } = useSearchHistory()
 
   // Check if user is a doctor (verified or unverified)
   const isDoctor = role === 'DOCTOR' || role === 'VERIFIED_DOCTOR' || isDoctorVerified || isDoctorPending
@@ -123,10 +123,10 @@ export function NavbarEnhanced() {
   const showAutocompleteSuggestions = showSuggestions && searchQuery.length >= 2 && suggestions.length > 0
 
   return (
-    <nav className="bg-white/70 backdrop-blur-xl border-b border-white/20 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-[1400px] mx-auto px-6 h-[65px] flex items-center gap-4">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 mr-6 hover:opacity-80 transition group">
+    <nav className="sticky top-0 z-50 py-3">
+      <div className="max-w-[1400px] mx-auto px-6 flex items-center gap-4">
+        {/* Logo - Curved Container */}
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition group bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl px-4 py-2 shadow-lg hover:shadow-xl">
           <div className="w-10 h-10 bg-gradient-to-br from-[#5CB8B2] to-[#4DA9A3] rounded-xl flex items-center justify-center shadow-lg shadow-[#9DD4D3] group-hover:scale-105 transition-transform">
             <Leaf className="text-white w-6 h-6" />
           </div>
@@ -136,10 +136,10 @@ export function NavbarEnhanced() {
           </div>
         </Link>
 
-        {/* Search with Suggestions */}
+        {/* Search Bar - Curved Container */}
         <div ref={searchRef} className="flex-1 max-w-[500px] relative">
           <form onSubmit={handleSearch}>
-            <div className="relative group">
+            <div className="relative group bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl shadow-lg hover:shadow-xl transition-all">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors z-10" />
               <input
                 type="text"
@@ -147,7 +147,7 @@ export function NavbarEnhanced() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
-                className="w-full pl-11 pr-4 py-2 bg-neutral-300/20 hover:bg-neutral-300/30 backdrop-blur-[1px] border border-neutral-400/20 rounded-2xl text-sm focus:outline-none focus:border-blue-400/40 focus:bg-white/50 focus:ring-4 focus:ring-blue-100/50 transition-all"
+                className="w-full pl-11 pr-4 py-2.5 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 rounded-2xl transition-all"
               />
             </div>
           </form>
@@ -269,40 +269,18 @@ export function NavbarEnhanced() {
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2">
+        {/* Actions - Curved Containers */}
+        <div className="flex items-center gap-3">
           {user ? (
             <>
-              {/* Notifications */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 hover:bg-neutral-300/20 backdrop-blur-[1px] border border-neutral-400/20 rounded-xl relative transition-all"
-                >
-                  <Bell className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-[#FF4500] rounded-full"></span>
-                </button>
+              {/* Notifications - Real-time with NotificationBell Component */}
+              <NotificationBell />
 
-                {showNotifications && (
-                  <div className="absolute right-0 top-12 w-80 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
-                    <div className="p-4 border-b border-neutral-400/20 bg-neutral-300/10">
-                      <h3 className="font-semibold text-sm">Notifications</h3>
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      <div className="p-4 hover:bg-neutral-300/20 cursor-pointer border-b border-neutral-400/10 transition-all">
-                        <p className="text-sm"><span className="font-semibold">Dr_Sarah_Johnson</span> replied to your post</p>
-                        <p className="text-xs text-gray-500 mt-1">2 hours ago</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* User Menu */}
+              {/* User Menu - Curved Container */}
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-3 px-2 py-1.5 hover:bg-neutral-300/20 backdrop-blur-[1px] border border-neutral-400/20 rounded-2xl transition-all group"
+                  className="flex items-center gap-3 px-3 py-2 bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl transition-all group shadow-lg hover:shadow-xl hover:scale-105"
                 >
                   {user.avatar ? (
                     <img
@@ -326,11 +304,12 @@ export function NavbarEnhanced() {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 top-12 w-56 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
-                    <Link href={`/u/${user.username || user.id}`} className="block px-4 py-3 hover:bg-neutral-300/20 border-b border-neutral-400/20 transition-all">
+                  <div className="absolute right-0 top-14 w-56 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
+                    <Link href="/profile" className="block px-4 py-3 hover:bg-neutral-300/20 border-b border-neutral-400/20 transition-all">
                       <p className="font-semibold text-sm">My Profile</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
                     </Link>
+                    <Link href={`/u/${user.username || user.id}`} className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Public Profile</Link>
                     {isDoctor ? (
                       <Link href="/dashboard/doctor" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Doctor Dashboard</Link>
                     ) : (
@@ -353,7 +332,7 @@ export function NavbarEnhanced() {
           ) : !loading && (
             <Link
               href="/login"
-              className="px-6 py-1.5 bg-[#FF4500] text-white rounded-full text-sm font-semibold hover:bg-[#ff5722] transition shadow-sm"
+              className="px-6 py-2.5 bg-gradient-to-r from-[#FF4500] to-[#ff5722] text-white rounded-2xl text-sm font-semibold hover:shadow-xl transition-all shadow-lg hover:scale-105"
             >
               Log In
             </Link>

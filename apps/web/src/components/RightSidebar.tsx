@@ -5,6 +5,7 @@ import { CreatePostModal } from './CreatePostModal'
 import { useUser } from '@/context/UserContext'
 import { useRouter } from 'next/navigation'
 import { UserRound, Star, TrendingUp, Info } from 'lucide-react'
+import CountUp from './enhancements/CountUp'
 
 export function RightSidebar() {
   const [topDoctors, setTopDoctors] = useState<any[]>([])
@@ -113,8 +114,8 @@ export function RightSidebar() {
 
         {/* Top Doctors */}
         <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg">
-          <div className="px-4 py-3 border-b border-neutral-400/20">
-            <h3 className="font-bold text-sm">Top Doctors This Week</h3>
+          <div className="px-4 py-3 border-b border-cyan-200/30">
+            <h3 className="font-bold text-sm text-gray-800">Top Doctors This Week</h3>
           </div>
           <div className="p-3">
             {loading ? (
@@ -143,7 +144,7 @@ export function RightSidebar() {
                     </div>
                     <span className="text-xs text-[#FF4500] font-semibold flex items-center gap-1">
                       <Star className="w-3 h-3 fill-[#FF4500]" />
-                      {reputation}
+                      <CountUp from={0} to={reputation} duration={1.5} className="inline" />
                     </span>
                   </Link>
                 )
@@ -152,7 +153,7 @@ export function RightSidebar() {
           </div>
           <Link
             href="/doctors"
-            className="block px-4 py-2 text-sm text-center text-blue-600 hover:bg-neutral-300/20 border-t border-neutral-400/20 font-semibold transition-all"
+            className="block px-4 py-2 text-sm text-center text-blue-600 hover:bg-cyan-50/50 border-t border-cyan-200/30 font-semibold transition-all"
           >
             View All Doctors
           </Link>
@@ -160,8 +161,8 @@ export function RightSidebar() {
 
         {/* Trending Topics */}
         <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg">
-          <div className="px-4 py-3 border-b border-neutral-400/20">
-            <h3 className="font-bold text-sm">Trending Topics</h3>
+          <div className="px-4 py-3 border-b border-cyan-200/30">
+            <h3 className="font-bold text-sm text-gray-800">Trending Topics</h3>
           </div>
           <div className="p-3">
             {trendingTopics.map((item, idx) => (
@@ -175,7 +176,9 @@ export function RightSidebar() {
                     <TrendingUp className="w-3 h-3" />
                     #{idx + 1} Trending
                   </span>
-                  <span className="text-xs text-gray-500">{item.posts} posts</span>
+                  <span className="text-xs text-gray-500">
+                    <CountUp from={0} to={item.posts} duration={1.5} className="inline" /> posts
+                  </span>
                 </div>
                 <p className="text-sm font-semibold mt-1">{item.topic}</p>
               </Link>
@@ -183,7 +186,7 @@ export function RightSidebar() {
           </div>
           <Link
             href="/trending"
-            className="block px-4 py-2 text-sm text-center text-blue-600 hover:bg-gray-50 border-t border-neutral-400/20 font-semibold transition-all"
+            className="block px-4 py-2 text-sm text-center text-blue-600 hover:bg-cyan-50/50 border-t border-cyan-200/30 font-semibold transition-all"
           >
             View All Trending
           </Link>
@@ -203,7 +206,7 @@ export function RightSidebar() {
         </div>
 
         {/* Footer Links */}
-        <div className="text-xs text-gray-500 px-4">
+        <div className="text-xs text-gray-900 px-4">
           <div className="flex flex-wrap gap-2 mb-2">
             <Link href="/about" className="hover:underline">About</Link>
             <span>•</span>
@@ -218,7 +221,7 @@ export function RightSidebar() {
             <span>•</span>
             <Link href="/mod-policy" className="hover:underline">Mod Policy</Link>
           </div>
-          <p>© 2024 MedThread, Inc.</p>
+          <p>© 2026 MedThread, Inc.</p>
         </div>
       </div>
 

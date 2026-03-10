@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { getImageUrl } from '@/lib/imageUrl'
 import axios from 'axios'
 import { motion } from 'framer-motion'
+import IridescenceLayout from '@/components/IridescenceLayout'
 import {
     Calendar,
     Clock,
@@ -164,7 +165,7 @@ export default function AppointmentsPage() {
     }
 
     return (
-        <div className="min-h-screen">
+        <IridescenceLayout>
             <NavbarEnhanced />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
@@ -406,6 +407,6 @@ export default function AppointmentsPage() {
                     </div>
                 </main>
             </div>
-        </div>
+        </IridescenceLayout>
     )
 }

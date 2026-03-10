@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import ChatInbox from '@/components/Chat/ChatInbox';
 import ChatWindow from '@/components/Chat/ChatWindow';
+import IridescenceLayout from '@/components/IridescenceLayout';
 import { 
   ArrowLeft, 
   AlertCircle, 
@@ -233,7 +234,7 @@ export default function ChatPage() {
   // Mobile view
   if (isMobile) {
     return (
-      <div className="h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #f6e3af 0%, #7dc2f1 100%)' }}>
+      <IridescenceLayout className="h-screen flex flex-col">
         <div className="px-4 py-3 flex items-center gap-3" style={{
           background: 'rgba(255, 255, 255, 0.25)',
           backdropFilter: 'blur(20px)',
@@ -281,7 +282,7 @@ export default function ChatPage() {
             />
           )}
         </div>
-      </div>
+      </IridescenceLayout>
     );
   }
 
@@ -289,7 +290,7 @@ export default function ChatPage() {
   const dashboardPath = userRole === 'DOCTOR' ? '/dashboard/doctor' : '/dashboard/patient';
   
   return (
-    <div className="chat-layout">
+    <IridescenceLayout className="chat-layout">
       {/* Sidebar */}
       <div className="chat-sidebar">
         <div className="chat-sidebar-header">
@@ -412,6 +413,6 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
-    </div>
+    </IridescenceLayout>
   );
 }

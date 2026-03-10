@@ -6,6 +6,9 @@ import { UserProvider } from '@/context/UserContext'
 import { DEFAULT_SEO } from '@/lib/seo'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import { MobileNavigation } from '@/components/MobileNavigation'
+import GlobalClickSpark from '@/components/GlobalClickSpark'
 
 export const metadata: Metadata = {
   title: {
@@ -99,15 +102,26 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <GoogleAnalytics />
-        <JWTAuthProvider>
-          <UserProvider>
-            <SocketProvider>
-              <AnalyticsProvider>
-                {children}
-              </AnalyticsProvider>
-            </SocketProvider>
-          </UserProvider>
-        </JWTAuthProvider>
+        <GlobalClickSpark 
+          sparkColor="#00E5FF"
+          sparkCount={8}
+          sparkRadius={15}
+          sparkSize={13}
+          duration={400}
+          easing="ease-out"
+        />
+        <ErrorBoundary>
+          <JWTAuthProvider>
+            <UserProvider>
+              <SocketProvider>
+                <AnalyticsProvider>
+                  {children}
+                  <MobileNavigation />
+                </AnalyticsProvider>
+              </SocketProvider>
+            </UserProvider>
+          </JWTAuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )

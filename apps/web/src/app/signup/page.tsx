@@ -75,6 +75,8 @@ export default function SignupPage() {
   const [yearsOfExperience, setYearsOfExperience] = useState('')
   const [hospitalAffiliation, setHospitalAffiliation] = useState('')
   const [clinicAddress, setClinicAddress] = useState('')
+  const [medicalUniversity, setMedicalUniversity] = useState('')
+  const [graduationYear, setGraduationYear] = useState('')
 
   // Document uploads (base64)
   const [idProof, setIdProof] = useState('')
@@ -228,13 +230,21 @@ export default function SignupPage() {
     }
 
     // Doctor-specific validation
-    if (!medicalLicenseNumber || !licenseIssuingAuthority || !specialty || !licenseExpiryDate) {
+    if (!medicalLicenseNumber || !licenseIssuingAuthority || !specialty || !licenseExpiryDate || !medicalUniversity || !graduationYear) {
       setError('Please fill all required doctor fields')
       return
     }
 
     if (!yearsOfExperience || parseInt(yearsOfExperience) < 0) {
       setError('Please enter valid years of experience')
+      return
+    }
+
+    // Validate graduation year
+    const currentYear = new Date().getFullYear()
+    const gradYear = parseInt(graduationYear)
+    if (!gradYear || gradYear < 1950 || gradYear > currentYear) {
+      setError('Please enter a valid graduation year')
       return
     }
 
@@ -289,6 +299,8 @@ export default function SignupPage() {
               yearsOfExperience: parseInt(yearsOfExperience),
               hospitalAffiliation: hospitalAffiliation || undefined,
               clinicAddress: clinicAddress || undefined,
+              medicalUniversity,
+              graduationYear: parseInt(graduationYear),
               documents: {
                 idProof,
                 medicalDegree,
@@ -548,6 +560,45 @@ export default function SignupPage() {
                     min="0"
                     max="70"
                   />
+                </div>
+              </div>
+
+              {/* Education Details - Prominent for Admin Verification */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
+                  <span>🎓</span>
+                  Education Details
+                </h4>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Medical College/University <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={medicalUniversity}
+                      onChange={(e) => setMedicalUniversity(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                      placeholder="e.g., AIIMS Delhi, Harvard Medical School"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Graduation Year <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={graduationYear}
+                      onChange={(e) => setGraduationYear(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                      placeholder="YYYY"
+                      required
+                      min="1950"
+                      max={new Date().getFullYear()}
+                    />
+                  </div>
                 </div>
               </div>
 

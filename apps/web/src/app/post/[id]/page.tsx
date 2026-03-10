@@ -4,18 +4,21 @@ import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { PostDetail } from '@/components/PostDetail'
 import { CommentSection } from '@/components/CommentSection'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 export default function PostPage({ params }: { params: { id: string } }) {
   return (
-    <div className="min-h-screen">
-      <NavbarEnhanced />
-      <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
-        <Sidebar />
-        <main className="flex-1 max-w-[640px]">
-          <PostDetail postId={params.id} />
-          <CommentSection postId={params.id} />
-        </main>
+    <IridescenceLayout>
+      <div className="min-h-screen">
+        <NavbarEnhanced />
+        <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
+          <Sidebar />
+          <main className="flex-1 max-w-[640px]">
+            <PostDetail postId={params.id} />
+            <CommentSection postId={params.id} />
+          </main>
+        </div>
       </div>
-    </div>
+    </IridescenceLayout>
   )
 }

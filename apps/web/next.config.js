@@ -5,6 +5,27 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@medthread/ui']
   },
+  // Webpack optimizations to prevent chunk loading errors
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      // Improve chunk loading reliability in development
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks?.cacheGroups,
+            default: {
+              minChunks: 2,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      };
+    }
+    return config;
+  },
   // PWA Configuration
   headers: async () => [
     {

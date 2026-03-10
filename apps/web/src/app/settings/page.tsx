@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { AlertTriangle, Trash2, UserX, Info, Shield } from 'lucide-react'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -120,7 +121,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <IridescenceLayout>
       <NavbarEnhanced />
       <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
         <Sidebar />
@@ -415,6 +416,6 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
-    </div>
+    </IridescenceLayout>
   )
 }

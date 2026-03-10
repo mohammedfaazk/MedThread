@@ -2,6 +2,12 @@
 
 import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
+import { AnimatedCard } from '@/components/AnimatedCard'
+import { AnimatedBackground } from '@/components/AnimatedBackground'
+import { WelcomeHeroBanner } from '@/components/WelcomeHeroBanner'
+import Iridescence from '@/components/ui/Iridescence'
+import { GlassIcon } from '@/components/enhancements/GlassIcon'
+import { CountUpNumber } from '@/components/enhancements/CountUpNumber'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -218,7 +224,16 @@ export default function DoctorDashboard() {
     const pendingAppointments = appointments.filter(apt => apt.status === 'PENDING')
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen relative">
+            {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
+            <div className="fixed inset-0 -z-10">
+                <Iridescence 
+                    color={[0.4, 0.7, 0.9]} 
+                    mouseReact 
+                    amplitude={0.1} 
+                    speed={0.8} 
+                />
+            </div>
             <NavbarEnhanced />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
@@ -284,38 +299,10 @@ export default function DoctorDashboard() {
                         </div>
                     )}
 
-                    {/* Header Section */}
-                    <div className="mb-8">
-                        <div className="flex items-start justify-between mb-6">
-                            <div>
-                                <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                                    Welcome back, <span className="text-blue-600">{user?.username || user?.email?.split('@')[0]}</span>
-                                </h1>
-                                <div className="flex items-center gap-2">
-                                    <Shield className="w-4 h-4 text-blue-600" />
-                                    <span className="text-sm text-gray-600 font-medium">
-                                        VERIFIED {(user as any)?.specialty?.toUpperCase() || 'DOCTOR'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Stats Badges in Header */}
-                            <div className="flex items-center gap-3">
-                                <div className="bg-blue-50 rounded-xl px-4 py-3 border border-blue-200 text-center w-[110px]">
-                                    <div className="text-2xl font-bold text-blue-600 mb-0.5">{totalAppointments}</div>
-                                    <div className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">Appointments</div>
-                                </div>
-                                <div className="bg-orange-50 rounded-xl px-4 py-3 border border-orange-200 text-center w-[110px]">
-                                    <div className="text-2xl font-bold text-orange-600 mb-0.5">{pendingCount}</div>
-                                    <div className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">Pending</div>
-                                </div>
-                                <div className="bg-green-50 rounded-xl px-4 py-3 border border-green-200 text-center w-[110px]">
-                                    <div className="text-2xl font-bold text-green-600 mb-0.5">{messagesCount}</div>
-                                    <div className="text-[10px] text-gray-500 uppercase tracking-wide font-semibold">Messages</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Premium Welcome Hero Banner */}
+                    {!isDoctorPending && (
+                        <WelcomeHeroBanner userName={user?.username || user?.email?.split('@')[0] || 'Doctor'} />
+                    )}
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -326,7 +313,7 @@ export default function DoctorDashboard() {
                                     <div className="flex items-center justify-between">
                                         <h2 className="text-xl font-bold text-gray-900">Pending Appointments</h2>
                                         <span className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 font-bold text-sm">
-                                            {pendingCount}
+                                            <CountUpNumber value={pendingCount} duration={1000} />
                                         </span>
                                     </div>
                                 </div>
@@ -405,9 +392,7 @@ export default function DoctorDashboard() {
                                 <div className="p-6 border-b border-neutral-400/20">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                                <Calendar className="w-5 h-5 text-blue-600" />
-                                            </div>
+                                            <GlassIcon icon={Calendar} color="blue" label="Schedule" size={24} />
                                             <div>
                                                 <h2 className="text-lg font-bold text-gray-900">Schedule Availability</h2>
                                                 <p className="text-xs text-gray-500">Set your weekly consultation hours</p>

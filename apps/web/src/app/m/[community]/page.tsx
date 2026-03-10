@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { Users, Calendar, Shield } from 'lucide-react'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -99,29 +100,34 @@ export default function CommunityPage({ params }: { params: { community: string 
 
   if (loading) {
     return (
-      <div className="min-h-screen">
-        <NavbarEnhanced />
-        <div className="max-w-[1400px] mx-auto px-6 py-12 text-center">
-          <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading community...</p>
+      <IridescenceLayout>
+        <div className="min-h-screen">
+          <NavbarEnhanced />
+          <div className="max-w-[1400px] mx-auto px-6 py-12 text-center">
+            <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading community...</p>
+          </div>
         </div>
-      </div>
+      </IridescenceLayout>
     )
   }
 
   if (!community) {
     return (
-      <div className="min-h-screen">
-        <NavbarEnhanced />
-        <div className="max-w-[1400px] mx-auto px-6 py-12 text-center">
-          <p className="text-gray-600">Community not found</p>
+      <IridescenceLayout>
+        <div className="min-h-screen">
+          <NavbarEnhanced />
+          <div className="max-w-[1400px] mx-auto px-6 py-12 text-center">
+            <p className="text-gray-600">Community not found</p>
+          </div>
         </div>
-      </div>
+      </IridescenceLayout>
     )
   }
 
   return (
-    <div className="min-h-screen">
+    <IridescenceLayout>
+      <div className="min-h-screen">
       <NavbarEnhanced />
       
       {/* Community Header */}
@@ -255,6 +261,6 @@ export default function CommunityPage({ params }: { params: { community: string 
           </div>
         </aside>
       </div>
-    </div>
+    </IridescenceLayout>
   )
 }

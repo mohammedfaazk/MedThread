@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../lib/api.refactored';
+import { useStore } from './useStore.refactored';
 
 interface User {
   id: string;
@@ -64,6 +65,11 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+          
+          // Initialize socket connection for real-time updates
+          if (result.user && result.token) {
+            useStore.getState().initializeSocket(result.user.id, result.token);
+          }
         } catch (error: any) {
           set({
             error: error.message || 'Login failed',
@@ -83,6 +89,11 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+          
+          // Initialize socket connection for real-time updates
+          if (result.user && result.token) {
+            useStore.getState().initializeSocket(result.user.id, result.token);
+          }
         } catch (error: any) {
           set({
             error: error.message || 'Registration failed',
@@ -99,6 +110,9 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Logout error:', error);
         } finally {
+          // Disconnect socket before clearing auth state
+          useStore.getState().disconnectSocket();
+          
           set({
             user: null,
             token: null,
@@ -116,6 +130,11 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await api.getCurrentUser();
           set({ user, isLoading: false, error: null });
+          
+          // Initialize socket connection if user is authenticated
+          if (user && token) {
+            useStore.getState().initializeSocket(user.id, token);
+          }
         } catch (error: any) {
           set({
             error: error.message || 'Failed to fetch user',

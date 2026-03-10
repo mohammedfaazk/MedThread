@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import axios from 'axios'
 import { Coins, ShoppingCart, Award, Sparkles, Check } from 'lucide-react'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -110,7 +111,8 @@ export default function ShopPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <IridescenceLayout>
+      <div className="min-h-screen">
       <NavbarEnhanced />
       <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
         <Sidebar />
@@ -245,6 +247,7 @@ export default function ShopPage() {
           </div>
         </main>
       </div>
-    </div>
+      </div>
+    </IridescenceLayout>
   )
 }

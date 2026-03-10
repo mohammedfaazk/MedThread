@@ -63,11 +63,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     setLoading(true);
     try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications?limit=10`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -88,11 +91,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     if (!user) return;
 
     try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/unread-count`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/unread-count`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -100,21 +106,29 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.data.count || 0);
+      } else if (response.status === 500) {
+        // Server error - silently fail and set count to 0
+        console.warn('[NotificationContext] Notifications service unavailable');
+        setUnreadCount(0);
       }
     } catch (error) {
       console.error('[NotificationContext] Error fetching unread count:', error);
+      setUnreadCount(0);
     }
   }, [user]);
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
       await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/${notificationId}/read`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -137,12 +151,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Mark all as read
   const markAllAsRead = useCallback(async () => {
     try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
       await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/mark-all-read`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -163,12 +180,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Delete notification
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
       await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/${notificationId}`,
         {
           method: 'DELETE',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -197,7 +217,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Initialize socket connection
   useEffect(() => {
     if (user) {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('auth_token');
       if (token) {
         notificationSocket.connect(user.id, token);
         setConnected(true);

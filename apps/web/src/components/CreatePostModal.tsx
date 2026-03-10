@@ -7,7 +7,7 @@ import { useJWTAuth } from '@/context/JWTAuthContext'
 import { FileText, Image, Video, Link2, BarChart3, Bold, Italic, List } from 'lucide-react'
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'
 
 interface CreatePostModalProps {
   isOpen: boolean
@@ -29,6 +29,7 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
   const [flair, setFlair] = useState('')
   const [isNSFW, setIsNSFW] = useState(false)
   const [isSpoiler, setIsSpoiler] = useState(false)
+  const [isPrivate, setIsPrivate] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoadingCommunities, setIsLoadingCommunities] = useState(true)
   const [verificationError, setVerificationError] = useState<string | null>(null)
@@ -213,6 +214,7 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
         type: postType.toUpperCase(),
         isNSFW,
         isSpoiler,
+        isPrivate,
         flair: flair ? { text: flair } : undefined
       }
 
@@ -245,7 +247,8 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
         }
       )
 
-      const newPost = response.data
+      // Handle both response formats
+      const newPost = response.data.data || response.data
 
       // Reset form
       setTitle('')
@@ -257,13 +260,11 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
       setFlair('')
       setIsNSFW(false)
       setIsSpoiler(false)
+      setIsPrivate(false)
       
       onClose()
 
-      // Refresh posts to show the new one
-      await fetchPosts({ sort: 'new' })
-      
-      // Navigate to the new post
+      // Navigate to the new post (real-time updates will handle showing it in the feed)
       router.push(`/post/${newPost.id}`)
     } catch (error: any) {
       console.error('Failed to create post:', error)
@@ -624,7 +625,33 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
             </select>
           </div>
 
-          {/* Options */}
+          {/* Privacy Toggle - Prominent */}
+          <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isPrivate}
+                onChange={(e) => setIsPrivate(e.target.checked)}
+                className="w-5 h-5 rounded mt-0.5 accent-blue-600"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-semibold text-blue-900">Private Post</span>
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                    {isPrivate ? 'PRIVATE' : 'PUBLIC'}
+                  </span>
+                </div>
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  {isPrivate 
+                    ? "✓ Only you and verified doctors can see this post. Doctor replies are private to each doctor."
+                    : "Everyone can see this post and all replies from doctors."
+                  }
+                </p>
+              </div>
+            </label>
+          </div>
+
+          {/* Other Options */}
           <div className="mb-4 space-y-2">
             <label className="flex items-center gap-2 cursor-pointer">
               <input

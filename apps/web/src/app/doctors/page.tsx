@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 import { Stethoscope } from 'lucide-react'
 
@@ -74,11 +75,12 @@ export default function DoctorsPage() {
   if (loading) return <div className="p-8 text-center">Loading doctors...</div>
 
   return (
-    <div className="min-h-screen">
-      <NavbarEnhanced />
-      <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
-        <Sidebar />
-        <main className="flex-1 max-w-[900px]">
+    <IridescenceLayout>
+      <div className="min-h-screen">
+        <NavbarEnhanced />
+        <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
+          <Sidebar />
+          <main className="flex-1 max-w-[900px]">
           <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-6 mb-4 shadow-lg">
             <h1 className="text-3xl font-bold mb-2">Verified Doctors</h1>
             <p className="text-gray-600">Connect with verified healthcare professionals</p>
@@ -149,5 +151,6 @@ export default function DoctorsPage() {
         </main>
       </div>
     </div>
+    </IridescenceLayout>
   )
 }

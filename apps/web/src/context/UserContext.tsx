@@ -65,19 +65,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             // 1. Check if user is a doctor in Supabase
-            const { data: doctorData, error: dError } = await supabase
-                .from('doctors')
-                .select('id, user_id')
-                .or(`id.eq.${userId},user_id.eq.${userId}`)
-                .maybeSingle();
+            try {
+                const { data: doctorData, error: dError } = await supabase
+                    .from('doctors')
+                    .select('id, user_id')
+                    .or(`id.eq.${userId},user_id.eq.${userId}`)
+                    .maybeSingle();
 
-            if (dError) console.warn('Supabase doctor check error:', dError.message);
+                if (dError) console.warn('Supabase doctor check error:', dError.message);
 
-            if (doctorData) {
-                console.log('User identified as VERIFIED_DOCTOR from Supabase, profileId:', doctorData.id);
-                setRole('VERIFIED_DOCTOR');
-                setProfileId(doctorData.id);
-                return;
+                if (doctorData) {
+                    console.log('User identified as VERIFIED_DOCTOR from Supabase, profileId:', doctorData.id);
+                    setRole('VERIFIED_DOCTOR');
+                    setProfileId(doctorData.id);
+                    return;
+                }
+            } catch (supabaseError) {
+                console.warn('⚠️ Supabase doctor check failed:', supabaseError);
             }
 
             // 2. Fallback: Check doctor_data.json for doctor identification
@@ -101,31 +105,35 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
 
             // 3. Check if user is a patient - try plural name as suggested by user
-            const { data: patientData, error: pError } = await supabase
-                .from('patient_health_records')
-                .select('id')
-                .or(`id.eq.${userId},user_id.eq.${userId}`)
-                .maybeSingle();
-
-            if (pError) {
-                console.warn('Supabase patient check error (plural):', pError.message, 'Trying singular...');
-                const { data: singData } = await supabase
-                    .from('patient_health_record')
+            try {
+                const { data: patientData, error: pError } = await supabase
+                    .from('patient_health_records')
                     .select('id')
                     .or(`id.eq.${userId},user_id.eq.${userId}`)
                     .maybeSingle();
 
-                if (singData) {
+                if (pError) {
+                    console.warn('Supabase patient check error (plural):', pError.message, 'Trying singular...');
+                    const { data: singData } = await supabase
+                        .from('patient_health_record')
+                        .select('id')
+                        .or(`id.eq.${userId},user_id.eq.${userId}`)
+                        .maybeSingle();
+
+                    if (singData) {
+                        setRole('PATIENT');
+                        setProfileId(singData.id);
+                        return;
+                    }
+                }
+
+                if (patientData) {
                     setRole('PATIENT');
-                    setProfileId(singData.id);
+                    setProfileId(patientData.id);
                     return;
                 }
-            }
-
-            if (patientData) {
-                setRole('PATIENT');
-                setProfileId(patientData.id);
-                return;
+            } catch (supabaseError) {
+                console.warn('⚠️ Supabase patient check failed:', supabaseError);
             }
 
             // 4. Fallback to API
@@ -186,13 +194,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         const loadSupabaseAuth = async () => {
-            console.log('ℹ️ No JWT, checking Supabase...');
-            const { data: { session } } = await supabase.auth.getSession();
+            // Skip Supabase if we have JWT auth
+            if (localStorage.getItem('auth_token')) {
+                console.log('⏭️ Skipping Supabase (JWT available)');
+                if (mounted) {
+                    setLoading(false);
+                }
+                return;
+            }
 
-            if (session?.user && mounted) {
-                console.log('✅ Supabase user found');
-                setUser(session.user);
-                await fetchRole(session.user.id);
+            console.log('ℹ️ No JWT, checking Supabase...');
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (session?.user && mounted) {
+                    console.log('✅ Supabase user found');
+                    setUser(session.user);
+                    await fetchRole(session.user.id);
+                }
+            } catch (error) {
+                console.warn('⚠️ Supabase connection failed:', error);
+                // Continue without Supabase
             }
 
             if (mounted) {
@@ -220,26 +242,36 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.addEventListener('storage', handleStorageChange);
 
         // Supabase auth listener - ONLY if not using JWT
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
-            // CRITICAL: Ignore ALL Supabase events if we have JWT
-            if (useJWT || localStorage.getItem('auth_token')) {
-                console.log('⏭️ Ignoring Supabase event (using JWT)');
-                return;
-            }
+        let subscription: any = { unsubscribe: () => {} };
+        
+        // Only set up Supabase listener if no JWT
+        if (!localStorage.getItem('auth_token')) {
+            try {
+                const { data } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
+                    // CRITICAL: Ignore ALL Supabase events if we have JWT
+                    if (useJWT || localStorage.getItem('auth_token')) {
+                        console.log('⏭️ Ignoring Supabase event (using JWT)');
+                        return;
+                    }
 
-            console.log('🔄 Supabase auth changed:', event);
-            if (session?.user && mounted) {
-                setUser(session.user);
-                await fetchRole(session.user.id);
-            } else if (mounted) {
-                setUser(null);
-                setRole(null);
-                setProfileId(null);
+                    console.log('🔄 Supabase auth changed:', event);
+                    if (session?.user && mounted) {
+                        setUser(session.user);
+                        await fetchRole(session.user.id);
+                    } else if (mounted) {
+                        setUser(null);
+                        setRole(null);
+                        setProfileId(null);
+                    }
+                    if (mounted) {
+                        setLoading(false);
+                    }
+                });
+                subscription = data.subscription;
+            } catch (error) {
+                console.warn('⚠️ Failed to set up Supabase auth listener:', error);
             }
-            if (mounted) {
-                setLoading(false);
-            }
-        });
+        }
 
         return () => {
             mounted = false;
@@ -257,8 +289,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.removeItem('user');
 
             // Also sign out from Supabase if using it
-            const { error } = await supabase.auth.signOut();
-            if (error) console.warn('Supabase signout error:', error);
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) console.warn('Supabase signout error:', error);
+            } catch (supabaseError) {
+                console.warn('⚠️ Supabase signout failed:', supabaseError);
+            }
 
             setUser(null);
             setRole(null);

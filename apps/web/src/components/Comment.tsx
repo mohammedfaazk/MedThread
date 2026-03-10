@@ -320,12 +320,15 @@ export function Comment({
               >
                 Share
               </button>
-              <ReportButton 
-                type="comment" 
-                targetId={id} 
-                targetTitle={content.substring(0, 50) + '...'}
-                className="hover:bg-neutral-300/20 px-2 py-1 rounded-full transition-all"
-              />
+              {/* Only show report button if not the author */}
+              {!isAuthor && (
+                <ReportButton 
+                  type="comment" 
+                  targetId={id} 
+                  targetTitle={content.substring(0, 50) + '...'}
+                  className="hover:bg-neutral-300/20 px-2 py-1 rounded-full transition-all"
+                />
+              )}
               <button
                 onClick={handleSave}
                 className={`hover:bg-neutral-300/20 px-2 py-1 rounded-full transition-all ${saved ? 'text-yellow-200 font-semibold' : ''}`}

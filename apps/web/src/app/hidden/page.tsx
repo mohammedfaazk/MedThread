@@ -8,6 +8,7 @@ import { useStore } from '@/store/useStore'
 import { EyeOff, Eye } from 'lucide-react'
 import Link from 'next/link'
 import axios from 'axios'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -84,24 +85,27 @@ export default function HiddenPostsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-cream-50 via-white to-blue-50">
-        <NavbarEnhanced />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 ml-64 p-8">
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center shadow-lg">
-                <p className="text-gray-600">Please log in to view hidden posts</p>
+      <IridescenceLayout>
+        <div className="min-h-screen bg-gradient-to-br from-cream-50 via-white to-blue-50">
+          <NavbarEnhanced />
+          <div className="flex">
+            <Sidebar />
+            <main className="flex-1 ml-64 p-8">
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center shadow-lg">
+                  <p className="text-gray-600">Please log in to view hidden posts</p>
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
-      </div>
+      </IridescenceLayout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream-50 via-white to-blue-50">
+    <IridescenceLayout>
+      <div className="min-h-screen bg-gradient-to-br from-cream-50 via-white to-blue-50">
       <NavbarEnhanced />
       <div className="flex">
         <Sidebar />
@@ -199,6 +203,6 @@ export default function HiddenPostsPage() {
           </div>
         </main>
       </div>
-    </div>
+    </IridescenceLayout>
   )
 }

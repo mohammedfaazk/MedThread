@@ -7,6 +7,7 @@ import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import StructuredData, { structuredDataSchemas } from '@/components/StructuredData'
+import Iridescence from '@/components/ui/Iridescence'
 
 export default function Home() {
   const { user, role, loading } = useJWTAuth()
@@ -19,7 +20,17 @@ export default function Home() {
       <StructuredData data={structuredDataSchemas.website()} />
       <StructuredData data={structuredDataSchemas.medicalOrganization()} />
       
-      <div className="min-h-screen">
+      <div className="min-h-screen relative">
+        {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
+        <div className="fixed inset-0 -z-10">
+          <Iridescence 
+            color={[0.4, 0.7, 0.9]} 
+            mouseReact 
+            amplitude={0.1} 
+            speed={0.8} 
+          />
+        </div>
+
         <Navbar />
         <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
           <Sidebar />

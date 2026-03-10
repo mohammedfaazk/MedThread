@@ -21,7 +21,9 @@ export default function ProfileSettingsPage() {
     bio: '',
     specialty: '',
     website: '',
-    location: ''
+    location: '',
+    address: '',
+    pincode: ''
   })
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
@@ -55,7 +57,9 @@ export default function ProfileSettingsPage() {
           bio: profileData.bio || '',
           specialty: profileData.specialty || '',
           website: '',
-          location: ''
+          location: '',
+          address: profileData.address || '',
+          pincode: profileData.pincode || ''
         })
         setAvatarPreview(getImageUrl(profileData.avatar))
         setBannerPreview(getImageUrl(profileData.banner))
@@ -206,15 +210,17 @@ export default function ProfileSettingsPage() {
         return
       }
 
-      // Upload images first
-      await Promise.all([
+      // Upload images first and get the new URLs
+      const [newAvatarUrl, newBannerUrl] = await Promise.all([
         uploadAvatar(),
         uploadBanner()
       ])
 
       // Update profile
       const profileUpdateData: any = {
-        bio: formData.bio
+        bio: formData.bio,
+        address: formData.address,
+        pincode: formData.pincode
       }
       
       // Only include username if it changed and is available
@@ -238,8 +244,21 @@ export default function ProfileSettingsPage() {
       )
 
       if (response.data.success) {
+        // Update the user object in localStorage and auth context
+        const updatedUser = {
+          ...user,
+          bio: formData.bio,
+          username: formData.username || user.username,
+          specialty: isDoctor ? formData.specialty : user.specialty,
+          avatar: newAvatarUrl || user.avatar,
+          banner: newBannerUrl || user.banner
+        }
+        
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        
+        // Force a page reload to update all components with new user data
         alert('Profile updated successfully!')
-        fetchProfile()
+        window.location.reload()
       }
     } catch (error: any) {
       console.error('Failed to update profile:', error)
@@ -438,6 +457,40 @@ export default function ProfileSettingsPage() {
                   />
                 </div>
               )}
+
+              {/* Address */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Address
+                </label>
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none"
+                  placeholder="Enter your full address"
+                />
+              </div>
+
+              {/* Pincode */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                  Pincode
+                </label>
+                <input
+                  type="text"
+                  name="pincode"
+                  value={formData.pincode}
+                  onChange={handleInputChange}
+                  maxLength={10}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  placeholder="Enter your pincode"
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  Used for area-wise doctor recommendations
+                </p>
+              </div>
 
               {/* Submit Button */}
               <div className="flex gap-3 pt-4">

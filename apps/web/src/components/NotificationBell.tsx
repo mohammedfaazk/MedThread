@@ -72,11 +72,14 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
     if (!user) return;
 
     try {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/unread-count`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/unread-count`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -84,9 +87,14 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
       if (response.ok) {
         const data = await response.json();
         setUnreadCount(data.data.count || 0);
+      } else if (response.status === 500) {
+        // Server error - silently fail and set count to 0
+        console.warn('Notifications service unavailable');
+        setUnreadCount(0);
       }
     } catch (error) {
       console.error('Error fetching unread count:', error);
+      setUnreadCount(0);
     }
   };
 
@@ -273,19 +281,17 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 hover:bg-neutral-300/20 backdrop-blur-[1px] border border-neutral-400/20 rounded-xl relative transition-all"
+        className="p-2.5 bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl relative transition-all shadow-lg hover:shadow-xl hover:scale-105"
         aria-label="Notifications"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-5 h-5 text-slate-700" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-[#FF4500] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF4500] rounded-full"></span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-12 w-96 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden z-50">
+        <div className="absolute right-0 top-14 w-96 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden z-50">
           {/* Header */}
           <div className="p-4 border-b border-neutral-400/20 bg-neutral-300/10 flex items-center justify-between">
             <h3 className="font-semibold text-sm">Notifications</h3>

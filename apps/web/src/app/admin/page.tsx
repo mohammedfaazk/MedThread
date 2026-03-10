@@ -18,6 +18,8 @@ interface PendingDoctor {
   yearsOfExperience: number
   hospitalAffiliation?: string
   clinicAddress?: string
+  medicalUniversity?: string
+  graduationYear?: number
   kycDocuments: {
     idProof: string
     medicalDegree: string
@@ -255,8 +257,23 @@ export default function AdminDashboard() {
                             <p className="text-sm font-semibold text-gray-900">{doctor.yearsOfExperience} years</p>
                           </div>
                           <div>
+                            <p className="text-xs text-gray-500">Medical College</p>
+                            <p className="text-sm font-semibold text-gray-900">{doctor.medicalUniversity || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">Graduation Year</p>
+                            <p className="text-sm font-semibold text-gray-900">{doctor.graduationYear || 'N/A'}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                          <div>
                             <p className="text-xs text-gray-500">License Number</p>
                             <p className="text-sm font-semibold text-gray-900">{doctor.medicalLicenseNumber}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500">License Authority</p>
+                            <p className="text-sm font-semibold text-gray-900 truncate">{doctor.licenseIssuingAuthority}</p>
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Submitted</p>
@@ -309,6 +326,25 @@ export default function AdminDashboard() {
               {/* Doctor Info */}
               <div className="bg-gray-50 rounded-lg p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Doctor Information</h3>
+                
+                {/* Education Details - Highlighted */}
+                <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-4">
+                  <h4 className="text-sm font-bold text-green-900 mb-3 flex items-center gap-2">
+                    <span>🎓</span>
+                    Education Details
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Medical College/University</p>
+                      <p className="font-bold text-gray-900 text-lg">{selectedDoctor.medicalUniversity || 'Not Provided'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Graduation Year</p>
+                      <p className="font-bold text-gray-900 text-lg">{selectedDoctor.graduationYear || 'Not Provided'}</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-500">Username</p>

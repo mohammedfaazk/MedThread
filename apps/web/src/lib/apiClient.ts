@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { cache, cacheKeys } from './cache';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004/api';
 
 interface ApiClientOptions extends AxiosRequestConfig {
   cache?: boolean;

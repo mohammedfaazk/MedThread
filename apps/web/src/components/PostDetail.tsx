@@ -230,11 +230,11 @@ export function PostDetail({ postId }: PostDetailProps) {
     <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 mb-4 shadow-lg hover:shadow-xl transition-all">
       <div className="flex">
         {/* Vote Section */}
-        <div className="w-10 bg-neutral-300/10 backdrop-blur-sm flex flex-col items-center py-4 rounded-l-2xl border-r border-neutral-400/20">
+        <div className="w-10 bg-cyan-500/5 backdrop-blur-sm flex flex-col items-center py-4 rounded-l-2xl border-r border-cyan-200/30">
           <button
             onClick={() => handleVote(1)}
-            className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${
-              post.userVote === 1 ? 'text-[#FF4500]' : 'text-gray-400'
+            className={`p-1 hover:bg-cyan-100/30 rounded-lg transition-all ${
+              post.userVote === 1 ? 'text-[#FF4500]' : 'text-gray-600'
             }`}
           >
             <svg className="w-6 h-6" fill={post.userVote === 1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -242,14 +242,14 @@ export function PostDetail({ postId }: PostDetailProps) {
             </svg>
           </button>
           <span className={`text-sm font-bold my-2 ${
-            post.userVote === 1 ? 'text-[#FF4500]' : post.userVote === -1 ? 'text-[#7193ff]' : ''
+            post.userVote === 1 ? 'text-[#FF4500]' : post.userVote === -1 ? 'text-[#7193ff]' : 'text-gray-700'
           }`}>
             {post.score}
           </span>
           <button
             onClick={() => handleVote(-1)}
-            className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${
-              post.userVote === -1 ? 'text-[#7193ff]' : 'text-gray-400'
+            className={`p-1 hover:bg-cyan-100/30 rounded-lg transition-all ${
+              post.userVote === -1 ? 'text-[#7193ff]' : 'text-gray-600'
             }`}
           >
             <svg className="w-6 h-6" fill={post.userVote === -1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -262,7 +262,7 @@ export function PostDetail({ postId }: PostDetailProps) {
         <div className="flex-1 p-4">
           {/* Header */}
           <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-gray-700">
               <span className="font-semibold hover:underline cursor-pointer flex items-center gap-1">
                 {post.authorType === 'doctor' ? <Stethoscope className="w-4 h-4" /> : <User className="w-4 h-4" />}
                 {post.author}

@@ -2,11 +2,19 @@
 
 import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
+import { AnimatedCard } from '@/components/AnimatedCard'
+import { AnimatedBackground } from '@/components/AnimatedBackground'
+import { WelcomeHeroBanner } from '@/components/WelcomeHeroBanner'
+import Iridescence from '@/components/ui/Iridescence'
+import { GlassIcon } from '@/components/enhancements/GlassIcon'
+import { CountUpNumber } from '@/components/enhancements/CountUpNumber'
+import SpotlightCard from '@/components/enhancements/SpotlightCard'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { getImageUrl } from '@/lib/imageUrl'
+import { motion } from 'framer-motion'
 import {
     Plus,
     Calendar,
@@ -16,7 +24,8 @@ import {
     Clock,
     Star,
     CheckCircle2,
-    UserRound
+    UserRound,
+    Pill
 } from 'lucide-react'
 
 interface Appointment {
@@ -28,12 +37,31 @@ interface Appointment {
     reason?: string;
 }
 
+interface Medication {
+    id: string;
+    name: string;
+    dosage: string;
+    frequency: 'once' | 'twice' | 'thrice' | 'four_times';
+    times: string[];
+    instructions: string;
+    ongoing: boolean;
+    startDate: string;
+    endDate?: string;
+}
+
+interface TodayDose {
+    medication: Medication;
+    time: string;
+    taken: boolean;
+}
+
 export default function PatientDashboard() {
     const { user, role, loading } = useJWTAuth()
     const router = useRouter()
     const [appointments, setAppointments] = useState<Appointment[]>([])
     const [doctors, setDoctors] = useState<any[]>([])
     const [fetching, setFetching] = useState(false)
+    const [todayMedications, setTodayMedications] = useState<TodayDose[]>([])
 
     const effectiveUserId = user?.id;
 
@@ -47,6 +75,7 @@ export default function PatientDashboard() {
         if (effectiveUserId && role === 'PATIENT') {
             loadAppointments()
             loadDoctors()
+            loadTodayMedications()
         }
     }, [effectiveUserId, role])
 
@@ -104,6 +133,56 @@ export default function PatientDashboard() {
         }
     }
 
+    const loadTodayMedications = () => {
+        if (!effectiveUserId) return;
+
+        try {
+            const stored = localStorage.getItem(`medications_${effectiveUserId}`);
+            if (!stored) {
+                setTodayMedications([]);
+                return;
+            }
+
+            const medications: Medication[] = JSON.parse(stored);
+            const today = new Date().toISOString().split('T')[0];
+            const todayDoses: TodayDose[] = [];
+
+            medications.forEach(med => {
+                // Check if medication is active today
+                const startDate = new Date(med.startDate);
+                const endDate = med.endDate ? new Date(med.endDate) : null;
+                const todayDate = new Date(today);
+
+                if (todayDate >= startDate && (!endDate || todayDate <= endDate)) {
+                    // Get next 3 upcoming doses
+                    const now = new Date();
+                    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+                    med.times.forEach(time => {
+                        const takenKey = `taken_${effectiveUserId}_${med.id}_${today}_${time}`;
+                        const taken = !!localStorage.getItem(takenKey);
+
+                        // Only add if not taken or if it's upcoming
+                        if (!taken || time >= currentTime) {
+                            todayDoses.push({
+                                medication: med,
+                                time,
+                                taken,
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Sort by time and take first 3
+            todayDoses.sort((a, b) => a.time.localeCompare(b.time));
+            setTodayMedications(todayDoses.slice(0, 3));
+        } catch (error) {
+            console.error('Error loading medications:', error);
+            setTodayMedications([]);
+        }
+    }
+
     if (loading || !user) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -116,20 +195,24 @@ export default function PatientDashboard() {
     }
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen relative">
+            {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
+            <div className="fixed inset-0 -z-10">
+                <Iridescence 
+                    color={[0.4, 0.7, 0.9]} 
+                    mouseReact 
+                    amplitude={0.1} 
+                    speed={0.8} 
+                />
+            </div>
             <NavbarEnhanced />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
                 <Sidebar />
 
                 <main className="flex-1 p-6 overflow-y-auto">
-                    {/* Welcome Section */}
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                            Welcome back, <span className="text-blue-600">{user.email?.split('@')[0]}</span>
-                        </h1>
-                        <p className="text-sm text-gray-600 font-medium">Your health dashboard</p>
-                    </div>
+                    {/* Premium Welcome Hero Banner */}
+                    <WelcomeHeroBanner userName={user.username || user.email?.split('@')[0] || 'User'} />
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -139,19 +222,20 @@ export default function PatientDashboard() {
                             {/* Top Tools Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Diet Planner Card */}
-                                <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
+                                <AnimatedCard delay={0.1}>
+                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
                                 >
                                     <div className="flex items-start justify-between mb-4">
-                                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                            <Utensils className="w-5 h-5 text-green-600" />
-                                        </div>
+                                        <GlassIcon icon={Utensils} color="green" label="Diet" size={24} />
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">Diet Planner</h3>
                                     <div className="flex items-center gap-3 mb-4">
                                         <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                                             <div className="h-full bg-green-500 w-[65%]" />
                                         </div>
-                                        <span className="text-xs font-semibold text-gray-500">1,450 / 2,200</span>
+                                        <span className="text-xs font-semibold text-gray-500">
+                                            <CountUpNumber value={1450} duration={1500} /> / 2,200
+                                        </span>
                                     </div>
                                     <div className="grid grid-cols-3 gap-2 mb-4">
                                         <NutrientInfo label="Protein" value="45g" color="blue" />
@@ -164,15 +248,15 @@ export default function PatientDashboard() {
                                     >
                                         Track Diet
                                     </button>
-                                </div>
+                                </SpotlightCard>
+                                </AnimatedCard>
 
                                 {/* Symptom Checker Card */}
-                                <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col"
+                                <AnimatedCard delay={0.2}>
+                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col"
                                 >
                                     <div className="flex items-start justify-between mb-4">
-                                        <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                                            <Activity className="w-5 h-5 text-orange-600" />
-                                        </div>
+                                        <GlassIcon icon={Activity} color="orange" label="Symptoms" size={24} />
                                         <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-[10px] font-semibold uppercase">
                                             AI
                                         </span>
@@ -194,11 +278,13 @@ export default function PatientDashboard() {
                                     >
                                         Analyze Symptoms
                                     </button>
-                                </div>
+                                </SpotlightCard>
+                                </AnimatedCard>
                             </div>
 
                             {/* Upcoming Appointments - Full Width */}
-                            <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col overflow-hidden"
+                            <AnimatedCard delay={0.3}>
+                            <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col overflow-hidden"
                             >
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
@@ -278,54 +364,81 @@ export default function PatientDashboard() {
                                         ))}
                                     </div>
                                 )}
-                            </div>
+                            </SpotlightCard>
+                            </AnimatedCard>
                         </div>
 
                         {/* Right Column: Medications & Secondary Tools */}
                         <div className="lg:col-span-1 space-y-6">
 
                             {/* Medication Reminder Card */}
-                            <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
+                            <AnimatedCard delay={0.4}>
+                            <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
                             >
                                 <div className="flex items-center justify-between mb-6">
-                                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                        <Clock className="w-5 h-5 text-blue-600" />
-                                    </div>
+                                    <GlassIcon icon={Clock} color="blue" label="Meds" size={24} />
                                 </div>
 
                                 <h3 className="text-lg font-bold text-gray-900 mb-1">Medications</h3>
                                 <p className="text-gray-500 text-xs mb-6">Daily health routine</p>
 
-                                <div className="space-y-3">
-                                    <MedicationItem
-                                        name="Atorvastatin"
-                                        dosage="10mg • 1 tab"
-                                        time="08:00 AM"
-                                        completed={true}
-                                    />
-                                    <MedicationItem
-                                        name="Vitamin D3"
-                                        dosage="2000 IU • 1 cap"
-                                        time="10:00 AM"
-                                        active={true}
-                                    />
-                                    <MedicationItem
-                                        name="Metformin"
-                                        dosage="500mg • 2 tabs"
-                                        time="08:00 PM"
-                                    />
-                                </div>
+                                {todayMedications.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <Pill className="w-8 h-8 text-blue-600" />
+                                        </div>
+                                        <p className="text-gray-600 text-sm mb-2">No medications tracked yet</p>
+                                        <p className="text-gray-500 text-xs">Start tracking your daily medications</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {todayMedications.map((dose, idx) => (
+                                            <div 
+                                                key={`${dose.medication.id}-${dose.time}-${idx}`}
+                                                className="bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-white/30 hover:shadow-md transition"
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className="font-semibold text-gray-900 text-sm mb-1 truncate">
+                                                            {dose.medication.name}
+                                                        </h4>
+                                                        <p className="text-xs text-gray-600 mb-2">
+                                                            {dose.medication.dosage}
+                                                        </p>
+                                                        <div className="flex items-center gap-2">
+                                                            <Clock className="w-3 h-3 text-gray-500" />
+                                                            <span className="text-xs text-gray-600">{dose.time}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                                                        dose.taken 
+                                                            ? 'bg-green-100' 
+                                                            : 'bg-orange-100'
+                                                    }`}>
+                                                        {dose.taken ? (
+                                                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                                        ) : (
+                                                            <Clock className="w-4 h-4 text-orange-600" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
 
                                 <button
                                     onClick={() => router.push('/medications')}
                                     className="w-full mt-6 py-3 bg-[#00BCD4] text-white rounded-xl font-semibold hover:bg-[#00ACC1] transition shadow-lg"
                                 >
-                                    Track Medications
+                                    {todayMedications.length === 0 ? 'Track Medications' : 'Manage Medications'}
                                 </button>
-                            </div>
+                            </SpotlightCard>
+                            </AnimatedCard>
 
                             {/* Top Doctors section */}
-                            <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all">
+                            <AnimatedCard delay={0.5}>
+                            <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all">
                                 <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-bold text-gray-900">Top Doctors This Week</h3>
                                     <button onClick={() => router.push('/doctors')} className="text-blue-600 text-xs font-semibold hover:underline">
@@ -364,7 +477,8 @@ export default function PatientDashboard() {
                                         })
                                     )}
                                 </div>
-                            </div>
+                            </SpotlightCard>
+                            </AnimatedCard>
 
                         </div>
 
@@ -396,27 +510,17 @@ function NutrientInfo({ label, value, color }: { label: string, value: string, c
         orange: 'text-orange-600 bg-orange-50',
         purple: 'text-purple-600 bg-purple-50',
     }
+    
+    // Extract number from value (e.g., "45g" -> 45)
+    const numericValue = parseInt(value.match(/\d+/)?.[0] || '0')
+    const unit = value.replace(/\d+/g, '')
+    
     return (
         <div className={`p-3 rounded-xl flex flex-col items-center text-center ${colors[color]}`}>
             <span className="text-[10px] font-semibold uppercase mb-1">{label}</span>
-            <span className="text-xs font-bold">{value}</span>
-        </div>
-    )
-}
-
-function MedicationItem({ name, dosage, time, completed = false, active = false }: any) {
-    return (
-        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${completed ? 'bg-green-100 text-green-600' : active ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'
-                }`}>
-                {completed ? <CheckCircle2 className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-            </div>
-            <div className="flex-1 min-w-0">
-                <h4 className={`text-sm font-bold text-gray-900 ${completed ? 'line-through opacity-50' : ''}`}>{name}</h4>
-                <p className="text-[10px] text-gray-500">{dosage}</p>
-            </div>
-            <span className="text-[10px] font-semibold text-gray-600 uppercase">
-                {time}
+            <span className="text-xs font-bold">
+                <CountUpNumber value={numericValue} duration={1200} />
+                {unit}
             </span>
         </div>
     )

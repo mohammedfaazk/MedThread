@@ -35,6 +35,8 @@ export default function DoctorSignupPage() {
     license_expiry: '',
     specialization: '',
     sub_specialization: '',
+    medical_university: '',
+    graduation_year: '',
     hospital_name: '',
     hospital_address: '',
     years_experience: 0,
@@ -83,6 +85,16 @@ export default function DoctorSignupPage() {
     if (!formData.license_authority) newErrors.license_authority = 'License authority required'
     if (!formData.license_expiry) newErrors.license_expiry = 'License expiry date required'
     if (!formData.specialization) newErrors.specialization = 'Specialization required'
+    if (!formData.medical_university) newErrors.medical_university = 'Medical university required'
+    if (!formData.graduation_year) {
+      newErrors.graduation_year = 'Graduation year required'
+    } else {
+      const year = parseInt(formData.graduation_year)
+      const currentYear = new Date().getFullYear()
+      if (year < 1950 || year > currentYear) {
+        newErrors.graduation_year = `Year must be between 1950 and ${currentYear}`
+      }
+    }
     if (!formData.hospital_name) newErrors.hospital_name = 'Hospital name required'
     if (!formData.hospital_address) newErrors.hospital_address = 'Hospital address required'
     if (formData.years_experience < 0) newErrors.years_experience = 'Invalid experience'
@@ -446,6 +458,40 @@ export default function DoctorSignupPage() {
                   />
                 </div>
                 {errors.license_expiry && <p className="text-red-500 text-xs mt-1">{errors.license_expiry}</p>}
+              </div>
+
+              {/* Education Details - Highlighted */}
+              <div className="bg-green-50 border-2 border-green-300 rounded-xl p-4">
+                <h4 className="text-sm font-bold text-green-900 mb-3 flex items-center gap-2">
+                  <span>🎓</span>
+                  Education Details
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Medical College/University *</label>
+                    <input
+                      value={formData.medical_university}
+                      onChange={(e) => handleInputChange('medical_university', e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                      placeholder="e.g., AIIMS Delhi, Harvard Medical School"
+                    />
+                    {errors.medical_university && <p className="text-red-500 text-xs mt-1">{errors.medical_university}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Graduation Year *</label>
+                    <input
+                      type="number"
+                      value={formData.graduation_year}
+                      onChange={(e) => handleInputChange('graduation_year', e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                      placeholder="YYYY"
+                      min="1950"
+                      max={new Date().getFullYear()}
+                    />
+                    {errors.graduation_year && <p className="text-red-500 text-xs mt-1">{errors.graduation_year}</p>}
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

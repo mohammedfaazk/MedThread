@@ -10,7 +10,7 @@ interface PostFeedProps {
 }
 
 export function PostFeed({ community }: PostFeedProps = {}) {
-  const { posts, fetchPosts, sortBy, setSortBy, loading } = useStore()
+  const { posts, fetchPosts, sortBy, setSortBy, loading, isSocketConnected } = useStore()
 
   useEffect(() => {
     // Fetch posts from API
@@ -60,6 +60,14 @@ export function PostFeed({ community }: PostFeedProps = {}) {
           <TrendingUp className="w-4 h-4" />
           Rising
         </button>
+        
+        {/* Real-time connection indicator */}
+        <div className="ml-auto flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+          <span className="text-xs text-gray-500">
+            {isSocketConnected ? 'Live' : 'Offline'}
+          </span>
+        </div>
       </div>
 
       {/* Loading State */}

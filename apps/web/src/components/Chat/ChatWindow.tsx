@@ -50,6 +50,8 @@ export default function ChatWindow({
   const [editContent, setEditContent] = useState('');
   const [attachment, setAttachment] = useState<string | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null); // For full-screen image view
+  const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null); // Object URL for preview
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -279,12 +281,175 @@ export default function ChatWindow({
     }, 2000);
   }, [socket, isConnected, conversationId, isTyping]);
 
+  // Helper function to convert base64 to object URL for safe display
+  const getImageObjectUrl = (base64Data: string | undefined): string => {
+    if (!base64Data) {
+      console.warn('getImageObjectUrl: No data provided');
+      return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    }
+
+    try {
+      // If it's already an object URL or regular URL, return as-is
+      if (base64Data.startsWith('blob:') || base64Data.startsWith('http')) {
+        return base64Data;
+      }
+
+      // If it's a plain base64 string without data URL prefix, assume it's an image
+      if (!base64Data.startsWith('data:')) {
+        console.log('Adding data URL prefix to plain base64 string');
+        base64Data = `data:image/jpeg;base64,${base64Data}`;
+      }
+
+      // Check if it's a valid base64 data URL
+      const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches) {
+        console.error('Invalid base64 data URL format:', base64Data.substring(0, 50));
+        return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      }
+
+      const mimeType = matches[1];
+      const base64Content = matches[2];
+
+      // Only process image types
+      if (!mimeType.startsWith('image/')) {
+        console.warn('getImageObjectUrl called with non-image type:', mimeType);
+        return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      }
+
+      // Validate base64 content
+      if (!base64Content || base64Content.length < 10) {
+        console.error('Base64 content too short or empty');
+        return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+      }
+
+      // Decode base64
+      const binaryString = atob(base64Content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Create blob and object URL
+      const blob = new Blob([bytes], { type: mimeType });
+      const objectUrl = URL.createObjectURL(blob);
+      
+      return objectUrl;
+    } catch (error) {
+      console.error('Failed to create object URL:', error, 'Data preview:', base64Data?.substring(0, 100));
+      // Return a 1x1 transparent pixel as fallback
+      return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    }
+  };
+
+  // Helper function to download file from base64
+  const downloadFile = (base64Data: string, filename: string) => {
+    try {
+      console.log('📥 Attempting to download:', filename, 'Data length:', base64Data?.length);
+      
+      if (!base64Data) {
+        console.error('No data provided for download');
+        alert('No file data available. Please try again.');
+        return;
+      }
+
+      // If it's a plain base64 string without data URL prefix, we need to determine the type
+      if (!base64Data.startsWith('data:')) {
+        console.error('Missing data URL prefix. Cannot determine file type.');
+        alert('Invalid file format. Please try uploading the file again.');
+        return;
+      }
+
+      // Extract the base64 content and mime type
+      const matches = base64Data.match(/^data:([^;]+);base64,(.+)$/);
+      if (!matches) {
+        console.error('Invalid base64 data format. Expected: data:mime/type;base64,content');
+        alert('Invalid file format. Please try uploading the file again.');
+        return;
+      }
+
+      const mimeType = matches[1];
+      const base64Content = matches[2];
+
+      console.log('📄 File details:', { mimeType, contentLength: base64Content.length });
+
+      // Validate base64 content
+      if (!base64Content || base64Content.length === 0) {
+        console.error('Empty base64 content');
+        alert('File is empty. Please try again.');
+        return;
+      }
+
+      // Convert base64 to binary
+      const binaryString = atob(base64Content);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // Create blob from binary data
+      const blob = new Blob([bytes], { type: mimeType });
+
+      // Verify blob was created successfully
+      if (blob.size === 0) {
+        console.error('Created blob is empty');
+        alert('Failed to process file. Please try again.');
+        return;
+      }
+
+      console.log('✅ Blob created:', { size: blob.size, type: blob.type });
+
+      // Create object URL (trusted by browser)
+      const url = URL.createObjectURL(blob);
+
+      // Create temporary link and trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+
+      // Cleanup after a short delay to ensure download started
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+
+      console.log('✅ File downloaded successfully:', filename, `(${blob.size} bytes)`);
+    } catch (error) {
+      console.error('❌ Download failed:', error);
+      if (error instanceof DOMException) {
+        alert('Download blocked by browser. Please check your browser settings.');
+      } else if (error instanceof Error && error.message.includes('atob')) {
+        alert('Invalid file data. The file may be corrupted.');
+      } else {
+        alert('Failed to download file. Please try again.');
+      }
+    }
+  };
+
   // Send message with optimistic UI
   const sendMessage = useCallback(async () => {
     if (!newMessage.trim() && !attachment) return;
     if (isSending) return;
+    
+    // Validate required data
+    if (!conversationId) {
+      console.error('❌ No conversationId provided');
+      alert('Error: No conversation selected');
+      return;
+    }
 
     const messageContent = newMessage.trim();
+    
+    // Either content or attachment must be provided
+    if (!messageContent && !attachment) {
+      console.error('❌ No message content or attachment');
+      return;
+    }
+
     const messageAttachment = attachment;
     const tempId = `temp-${Date.now()}-${Math.random()}`;
 
@@ -306,7 +471,7 @@ export default function ChatWindow({
       createdAt: new Date().toISOString(),
       isEdited: false,
       isDeleted: false,
-      type: messageAttachment ? 'IMAGE' : 'TEXT',
+      type: messageAttachment ? (messageAttachment.startsWith('data:image') ? 'IMAGE' : 'FILE') : 'TEXT',
       attachment: messageAttachment || undefined,
       sender: {
         id: currentUserId,
@@ -325,6 +490,13 @@ export default function ChatWindow({
     setIsSending(true);
 
     try {
+      console.log('🔍 Sending message with:', {
+        conversationId,
+        content: messageContent,
+        type: messageAttachment ? 'IMAGE' : 'TEXT',
+        attachment: messageAttachment
+      });
+
       const response = await fetch(`${API_URL}/api/v2/chat/messages`, {
         method: 'POST',
         headers: {
@@ -333,8 +505,8 @@ export default function ChatWindow({
         },
         body: JSON.stringify({
           conversationId,
-          content: messageContent,
-          type: messageAttachment ? 'IMAGE' : 'TEXT',
+          content: messageContent || '', // Allow empty content for attachment-only messages
+          type: messageAttachment ? (messageAttachment.startsWith('data:image') ? 'IMAGE' : 'FILE') : 'TEXT',
           attachment: messageAttachment
         })
       });
@@ -533,12 +705,83 @@ export default function ChatWindow({
               </p>
             ) : (
               <>
-                {message.attachment && message.type === 'IMAGE' && (
-                  <img
-                    src={message.attachment}
-                    alt="Attachment"
-                    className="max-w-full rounded mb-2"
-                  />
+                {message.attachment && (
+                  <>
+                    {/* Determine if it's an image based on type field OR mime type in data URL */}
+                    {(message.type === 'IMAGE' || (message.attachment.startsWith('data:image') && message.type !== 'FILE')) && (
+                      <div 
+                        className="mb-2 cursor-pointer group relative max-w-sm"
+                        onClick={() => {
+                          setImagePreview(message.attachment!);
+                          const objUrl = getImageObjectUrl(message.attachment!);
+                          setImageObjectUrl(objUrl);
+                        }}
+                      >
+                        <img
+                          src={getImageObjectUrl(message.attachment)}
+                          alt="Attachment"
+                          className="max-w-full rounded-lg hover:opacity-90 transition-opacity"
+                          onError={(e) => {
+                            console.warn('Failed to load image attachment');
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg flex items-center justify-center">
+                          <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                    {/* Show as file if type is FILE OR if it's not an image mime type */}
+                    {(message.type === 'FILE' || (!message.attachment.startsWith('data:image') && message.type !== 'IMAGE')) && (
+                      <div className="mb-2 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0">
+                            {message.attachment.startsWith('data:application/pdf') ? (
+                              <svg className="w-10 h-10 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                              </svg>
+                            ) : message.attachment.startsWith('data:application/vnd') || message.attachment.startsWith('data:application/msword') ? (
+                              <svg className="w-10 h-10 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                              </svg>
+                            ) : (
+                              <svg className="w-10 h-10 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                              {message.attachment.startsWith('data:application/pdf') ? 'Document.pdf' : 
+                               message.attachment.startsWith('data:application/vnd') ? 'Document.docx' : 
+                               message.attachment.startsWith('data:application/msword') ? 'Document.doc' : 
+                               'Document'}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {Math.round((message.attachment.length * 0.75) / 1024)} KB
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              const extension = message.attachment!.startsWith('data:application/pdf') ? 'pdf' : 
+                                              message.attachment!.startsWith('data:application/vnd') ? 'docx' : 
+                                              message.attachment!.startsWith('data:application/msword') ? 'doc' : 'file';
+                              downloadFile(message.attachment!, `document-${Date.now()}.${extension}`);
+                            }}
+                            className="flex-shrink-0 p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-full transition-colors"
+                            title="Download"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
                 <p className="whitespace-pre-wrap break-words">
                   {message.content}
@@ -640,14 +883,40 @@ export default function ChatWindow({
       {/* Input */}
       <div className="border-t p-4">
         {attachment && (
-          <div className="mb-2 p-2 bg-gray-100 rounded flex items-center justify-between">
-            <span className="text-sm">Attachment ready</span>
-            <button
-              onClick={() => setAttachment(null)}
-              className="text-red-500"
-            >
-              Remove
-            </button>
+          <div className="mb-2 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg border border-blue-200 dark:border-blue-700">
+            <div className="flex items-center gap-3">
+              {attachment.startsWith('data:image') ? (
+                <img 
+                  src={getImageObjectUrl(attachment)} 
+                  alt="Preview" 
+                  className="w-16 h-16 object-cover rounded"
+                />
+              ) : (
+                <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                  <svg className="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              )}
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {attachment.startsWith('data:image') ? 'Image' : 
+                   attachment.startsWith('data:application/pdf') ? 'PDF Document' : 
+                   'Document'} ready to send
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {Math.round((attachment.length * 0.75) / 1024)} KB
+                </p>
+              </div>
+              <button
+                onClick={() => setAttachment(null)}
+                className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
         
@@ -703,6 +972,58 @@ export default function ChatWindow({
           </button>
         </div>
       </div>
+
+      {/* Full-screen Image Preview Modal */}
+      {imagePreview && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-4"
+          onClick={() => {
+            setImagePreview(null);
+            if (imageObjectUrl) {
+              URL.revokeObjectURL(imageObjectUrl);
+              setImageObjectUrl(null);
+            }
+          }}
+        >
+          <button
+            onClick={() => {
+              setImagePreview(null);
+              if (imageObjectUrl) {
+                URL.revokeObjectURL(imageObjectUrl);
+                setImageObjectUrl(null);
+              }
+            }}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 p-2 rounded-full bg-black bg-opacity-50"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const extension = imagePreview.startsWith('data:image/png') ? 'png' :
+                              imagePreview.startsWith('data:image/gif') ? 'gif' :
+                              imagePreview.startsWith('data:image/webp') ? 'webp' : 'jpg';
+              downloadFile(imagePreview, `image-${Date.now()}.${extension}`);
+            }}
+            className="absolute top-4 left-4 text-white hover:text-gray-300 p-2 rounded-full bg-black bg-opacity-50 flex items-center gap-2"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className="text-sm">Download</span>
+          </button>
+
+          <img
+            src={imageObjectUrl || imagePreview}
+            alt="Full size preview"
+            className="max-w-full max-h-full object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }

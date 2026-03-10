@@ -8,6 +8,8 @@ import { getImageUrl } from '@/lib/imageUrl'
 import Link from 'next/link'
 import axios from 'axios'
 import { Trophy, TrendingUp, Stethoscope, Users, Loader2, Crown, Medal, Award } from 'lucide-react'
+import IridescenceLayout from '@/components/IridescenceLayout'
+import { CountUpNumber } from '@/components/enhancements/CountUpNumber'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -86,10 +88,11 @@ export default function LeaderboardPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <NavbarEnhanced />
-      <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
-        <Sidebar />
+    <IridescenceLayout>
+      <div className="min-h-screen">
+        <NavbarEnhanced />
+        <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
+          <Sidebar />
         
         <main className="flex-1 max-w-[900px]">
           {/* Header */}
@@ -109,15 +112,21 @@ export default function LeaderboardPage() {
               <div className="grid grid-cols-3 gap-4 mt-6">
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <p className="text-white/80 text-sm mb-1">Total Karma</p>
-                  <p className="text-2xl font-bold">{stats.totalKarma.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">
+                    <CountUpNumber value={stats.totalKarma} />
+                  </p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <p className="text-white/80 text-sm mb-1">Average Karma</p>
-                  <p className="text-2xl font-bold">{stats.averageKarma.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">
+                    <CountUpNumber value={stats.averageKarma} />
+                  </p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
                   <p className="text-white/80 text-sm mb-1">Votes (24h)</p>
-                  <p className="text-2xl font-bold">{stats.recentVotes24h.toLocaleString()}</p>
+                  <p className="text-2xl font-bold">
+                    <CountUpNumber value={stats.recentVotes24h} />
+                  </p>
                 </div>
               </div>
             )}
@@ -206,10 +215,16 @@ export default function LeaderboardPage() {
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <span className="flex items-center gap-1">
                           <TrendingUp className="w-4 h-4 text-[#FF4500]" />
-                          <span className="font-semibold text-[#FF4500]">{user.totalKarma.toLocaleString()}</span>
+                          <span className="font-semibold text-[#FF4500]">
+                            <CountUpNumber value={user.totalKarma} />
+                          </span>
                         </span>
-                        <span>{user._count.posts} posts</span>
-                        <span>{user._count.comments} comments</span>
+                        <span>
+                          <CountUpNumber value={user._count.posts} /> posts
+                        </span>
+                        <span>
+                          <CountUpNumber value={user._count.comments} /> comments
+                        </span>
                       </div>
                     </div>
 
@@ -217,11 +232,15 @@ export default function LeaderboardPage() {
                     <div className="hidden lg:flex gap-3">
                       <div className="text-center">
                         <p className="text-xs text-gray-500 mb-1">Post</p>
-                        <p className="text-lg font-bold text-blue-600">{user.postKarma}</p>
+                        <p className="text-lg font-bold text-blue-600">
+                          <CountUpNumber value={user.postKarma} />
+                        </p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-gray-500 mb-1">Comment</p>
-                        <p className="text-lg font-bold text-green-600">{user.commentKarma}</p>
+                        <p className="text-lg font-bold text-green-600">
+                          <CountUpNumber value={user.commentKarma} />
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -240,6 +259,7 @@ export default function LeaderboardPage() {
           )}
         </main>
       </div>
-    </div>
+      </div>
+    </IridescenceLayout>
   )
 }

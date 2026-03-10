@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../lib/api.refactored';
+import { postSocket } from '../lib/postSocket';
 
 interface Post {
   id: string;
@@ -52,6 +53,9 @@ interface AppState {
   // UI State
   sortBy: 'hot' | 'new' | 'top' | 'rising';
   
+  // Real-time
+  isSocketConnected: boolean;
+  
   // Post Actions
   fetchPosts: (filters?: any) => Promise<void>;
   fetchPost: (postId: string) => Promise<void>;
@@ -64,6 +68,11 @@ interface AppState {
   createComment: (postId: string, content: string, parentId?: string) => Promise<void>;
   voteComment: (commentId: string, value: 1 | -1) => Promise<void>;
   collapseComment: (commentId: string) => void;
+  
+  // Real-time Actions
+  initializeSocket: (userId: string, token: string) => void;
+  disconnectSocket: () => void;
+  addNewPost: (post: Post) => void;
   
   // UI Actions
   setSortBy: (sort: 'hot' | 'new' | 'top' | 'rising') => void;
@@ -82,6 +91,7 @@ export const useStore = create<AppState>((set, get) => ({
   commentsError: null,
   
   sortBy: 'hot',
+  isSocketConnected: false,
   
   // Post Actions
   fetchPosts: async (filters = {}) => {
@@ -292,5 +302,75 @@ export const useStore = create<AppState>((set, get) => ({
   
   clearError: () => {
     set({ postsError: null, commentsError: null });
+  },
+
+  // Real-time Actions
+  initializeSocket: (userId: string, token: string) => {
+    try {
+      postSocket.connect(userId, token);
+      
+      // Listen for new posts
+      postSocket.onPostCreated((event) => {
+        console.log('[Store] Received new post:', event.post.title);
+        
+        // Add new post to the beginning of the list if it's not already there
+        set((state) => {
+          const existingPost = state.posts.find(p => p.id === event.post.id);
+          if (existingPost) {
+            return state; // Post already exists
+          }
+          
+          // Convert the post format to match our interface
+          const newPost: Post = {
+            id: event.post.id,
+            type: event.post.type,
+            title: event.post.title,
+            content: event.post.content,
+            author: event.post.author,
+            community: event.post.community,
+            score: 0,
+            upvotes: 0,
+            downvotes: 0,
+            commentCount: event.post._count.comments,
+            userVote: null,
+            isSaved: false,
+            isHidden: false,
+            createdAt: event.post.createdAt,
+            tags: [],
+            isNSFW: event.post.isNSFW,
+            isLocked: false,
+          };
+          
+          return {
+            posts: [newPost, ...state.posts],
+          };
+        });
+      });
+      
+      set({ isSocketConnected: true });
+      console.log('[Store] Socket initialized for real-time posts');
+    } catch (error) {
+      console.error('[Store] Failed to initialize socket:', error);
+      set({ isSocketConnected: false });
+    }
+  },
+  
+  disconnectSocket: () => {
+    postSocket.disconnect();
+    set({ isSocketConnected: false });
+    console.log('[Store] Socket disconnected');
+  },
+  
+  addNewPost: (post: Post) => {
+    set((state) => {
+      const existingPost = state.posts.find(p => p.id === post.id);
+      if (existingPost) {
+        return state; // Post already exists
+      }
+      
+      return {
+        posts: [post, ...state.posts],
+      };
+    });
   },
 }));

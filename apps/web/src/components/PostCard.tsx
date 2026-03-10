@@ -10,6 +10,8 @@ import ReportButton from './ReportButton'
 import { analytics } from '@/lib/analytics'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useClickSpark } from '@/hooks/useClickSpark'
+import SpotlightCard from './enhancements/SpotlightCard'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -73,6 +75,7 @@ export function PostCard({
   const [isDeleting, setIsDeleting] = useState(false)
 
   const isAuthor = user?.username === author
+  const { triggerSpark, ClickSparkComponent } = useClickSpark()
 
   useEffect(() => {
     fetchPostAwards()
@@ -111,6 +114,7 @@ export function PostCard({
   const handleVote = (e: React.MouseEvent, value: 1 | -1) => {
     e.preventDefault()
     e.stopPropagation()
+    triggerSpark(e)
     const token = localStorage.getItem('auth_token')
     votePost(id, value, token || undefined)
     analytics.trackEvent('post_vote', 'engagement', { postId: id, vote: value })
@@ -221,29 +225,31 @@ export function PostCard({
   }
 
   return (
-    <div 
-      onClick={handleCardClick}
-      className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-lg hover:shadow-xl"
-    >
+    <SpotlightCard>
+      <div 
+        onClick={handleCardClick}
+        className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-lg hover:shadow-xl"
+      >
+        {ClickSparkComponent}
         <div className="flex">
           {/* Vote Section */}
-          <div className="w-10 bg-neutral-300/10 backdrop-blur-sm flex flex-col items-center py-2 rounded-l-2xl border-r border-neutral-400/20">
+          <div className="w-10 bg-cyan-500/5 backdrop-blur-sm flex flex-col items-center py-2 rounded-l-2xl border-r border-cyan-200/30">
             <button
               onClick={(e) => handleVote(e, 1)}
-              className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${userVote === 1 ? 'text-[#FF4500]' : 'text-gray-400'
+              className={`p-1 hover:bg-cyan-100/30 rounded-lg transition-all ${userVote === 1 ? 'text-[#FF4500]' : 'text-gray-600'
                 }`}
             >
               <svg className="w-5 h-5" fill={userVote === 1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
               </svg>
             </button>
-            <span className={`text-xs font-bold my-1 ${userVote === 1 ? 'text-[#FF4500]' : userVote === -1 ? 'text-[#7193ff]' : ''
+            <span className={`text-xs font-bold my-1 ${userVote === 1 ? 'text-[#FF4500]' : userVote === -1 ? 'text-[#7193ff]' : 'text-gray-700'
               }`}>
               {score}
             </span>
             <button
               onClick={(e) => handleVote(e, -1)}
-              className={`p-1 hover:bg-neutral-300/30 rounded-lg transition-all ${userVote === -1 ? 'text-[#7193ff]' : 'text-gray-400'
+              className={`p-1 hover:bg-cyan-100/30 rounded-lg transition-all ${userVote === -1 ? 'text-[#7193ff]' : 'text-gray-600'
                 }`}
             >
               <svg className="w-5 h-5" fill={userVote === -1 ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
@@ -546,15 +552,19 @@ export function PostCard({
                 </svg>
                 <span>Hide</span>
               </button>
-              <ReportButton 
-                type="post" 
-                targetId={id} 
-                targetTitle={title}
-                className="hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
-              />
+              {/* Only show report button if not the author */}
+              {!isAuthor && (
+                <ReportButton 
+                  type="post" 
+                  targetId={id} 
+                  targetTitle={title}
+                  className="hover:bg-neutral-300/20 px-2 py-1 rounded-lg transition-all"
+                />
+              )}
             </div>
           </div>
         </div>
       </div>
+    </SpotlightCard>
   )
 }

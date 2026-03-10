@@ -6,6 +6,7 @@ import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import { Shield, FileText, Calendar, Building2, MapPin, Phone, Stethoscope } from 'lucide-react'
+import { ReflectiveCard } from '@/components/enhancements/ReflectiveCard'
 
 export default function DoctorVerificationPage() {
     const { user } = useJWTAuth()
@@ -89,7 +90,8 @@ export default function DoctorVerificationPage() {
         <div className="min-h-screen">
             <NavbarEnhanced />
             <div className="max-w-4xl mx-auto px-6 py-8">
-                <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 hover:shadow-xl transition-all">
+                <ReflectiveCard>
+                    <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8 hover:shadow-xl transition-all">
                     <div className="flex items-center gap-3 mb-6">
                         <Shield className="w-8 h-8 text-blue-600" />
                         <h1 className="text-3xl font-bold text-gray-900">Doctor Verification</h1>
@@ -260,6 +262,7 @@ export default function DoctorVerificationPage() {
                         </p>
                     </form>
                 </div>
+            </ReflectiveCard>
             </div>
         </div>
     )

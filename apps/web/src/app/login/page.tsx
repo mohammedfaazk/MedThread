@@ -1,10 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import axios from 'axios'
 import { useJWTAuth } from '@/context/JWTAuthContext'
+import { BlurText } from '@/components/enhancements/BlurText'
+import { TypeText } from '@/components/enhancements/TypeText'
+import Iridescence from '@/components/ui/Iridescence'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +17,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  // Memoize the color array to prevent Iridescence re-renders
+  const iridescenceColor = useMemo<[number, number, number]>(() => [0.4, 0.7, 0.9], [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,15 +88,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 w-full max-w-md border border-white/20">
+    <div className="min-h-screen relative flex items-center justify-center p-4">
+      {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
+      <div className="fixed inset-0 -z-10">
+        <Iridescence 
+          color={iridescenceColor} 
+          mouseReact 
+          amplitude={0.1} 
+          speed={0.8} 
+        />
+      </div>
+
+      <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-xl transition-all p-8 w-full max-w-md border border-white/20">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Login to your MedThread account</p>
+          <BlurText text="Welcome Back" className="text-3xl font-bold text-gray-900 mb-2" />
+          <TypeText text="Login to your MedThread account" className="text-gray-600" speed={50} />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
+          <div className="bg-red-50/80 backdrop-blur-sm border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
             {error}
           </div>
         )}
@@ -104,7 +120,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white/70"
               placeholder="your@email.com"
               required
             />
@@ -119,14 +135,14 @@ export default function LoginPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white/70"
                 placeholder="••••••••"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
               >
                 {showPassword ? '👁️' : '👁️‍🗨️'}
               </button>
@@ -136,7 +152,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
@@ -145,14 +161,14 @@ export default function LoginPage() {
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Don't have an account?{' '}
-            <Link href="/signup" className="text-blue-600 hover:underline font-semibold">
+            <Link href="/signup" className="text-blue-600 hover:text-blue-700 hover:underline font-semibold transition-colors">
               Sign up
             </Link>
           </p>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-sm text-gray-500 text-center">
+        <div className="mt-8 pt-6 border-t border-white/30">
+          <p className="text-sm text-gray-600 text-center bg-white/30 backdrop-blur-sm rounded-lg p-3">
             <strong>Test Accounts:</strong><br />
             Admin: admin@medthread.com / Admin@123456
           </p>

@@ -10,6 +10,7 @@ import { FileText, Users, Hash, User, CheckCircle2, Loader2 } from 'lucide-react
 import Link from 'next/link'
 import { useSearchHistory } from '@/hooks/useSearchHistory'
 import { highlightText, highlightAndTruncate } from '@/utils/highlightText'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -295,19 +296,21 @@ function SearchResults() {
 
 export default function SearchPage() {
   return (
-    <div className="min-h-screen">
-      <NavbarEnhanced />
-      <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
-        <Sidebar />
-        <Suspense fallback={
-          <div className="flex-1 max-w-[640px] p-4 text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-gray-500">Loading search results...</p>
-          </div>
-        }>
-          <SearchResults />
-        </Suspense>
+    <IridescenceLayout>
+      <div className="min-h-screen">
+        <NavbarEnhanced />
+        <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
+          <Sidebar />
+          <Suspense fallback={
+            <div className="flex-1 max-w-[640px] p-4 text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+              <p className="text-gray-500">Loading search results...</p>
+            </div>
+          }>
+            <SearchResults />
+          </Suspense>
+        </div>
       </div>
-    </div>
+    </IridescenceLayout>
   )
 }

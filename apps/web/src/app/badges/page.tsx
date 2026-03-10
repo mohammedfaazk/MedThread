@@ -7,6 +7,7 @@ import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { Trophy, Lock, Star, Zap, Award, TrendingUp, Loader2, Filter } from 'lucide-react'
 import axios from 'axios'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -141,7 +142,8 @@ export default function BadgesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <IridescenceLayout>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <NavbarEnhanced />
       <div className="flex max-w-[1400px] mx-auto">
         <Sidebar />
@@ -338,6 +340,6 @@ export default function BadgesPage() {
           )}
         </div>
       </div>
-    </div>
+    </IridescenceLayout>
   )
 }

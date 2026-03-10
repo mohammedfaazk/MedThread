@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useJWTAuth } from '@/context/JWTAuthContext';
 import { getImageUrl } from '@/lib/imageUrl';
 import { Filter, Check, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import IridescenceLayout from '@/components/IridescenceLayout';
 
 interface Notification {
   id: string;
@@ -234,13 +235,18 @@ export default function NotificationsPage() {
   }, [user, loading, router]);
 
   if (!user) {
-    return null;
+    return (
+      <IridescenceLayout>
+        <div className="p-8">Loading...</div>
+      </IridescenceLayout>
+    );
   }
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <IridescenceLayout>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
@@ -427,6 +433,6 @@ export default function NotificationsPage() {
           </div>
         )}
       </div>
-    </div>
+    </IridescenceLayout>
   );
 }

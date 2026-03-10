@@ -3,6 +3,7 @@
 import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import Link from 'next/link'
+import IridescenceLayout from '@/components/IridescenceLayout'
 
 export default function TrendingPage() {
   const trending = [
@@ -17,7 +18,8 @@ export default function TrendingPage() {
   ]
 
   return (
-    <div className="min-h-screen">
+    <IridescenceLayout>
+      <div className="min-h-screen">
       <NavbarEnhanced />
       <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
         <Sidebar />
@@ -51,6 +53,6 @@ export default function TrendingPage() {
           </div>
         </main>
       </div>
-    </div>
+    </IridescenceLayout>
   )
 }

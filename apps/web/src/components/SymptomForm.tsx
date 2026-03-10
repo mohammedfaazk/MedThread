@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 
 interface SymptomFormProps {
   onDataChange: (data: any) => void
@@ -18,7 +17,8 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
     medications: [] as string[],
     primarySymptoms: [] as string[],
     duration: '',
-    description: ''
+    description: '',
+    isPrivate: false
   })
 
   const commonSymptoms = [
@@ -51,10 +51,7 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
       </div>
 
       {step === 1 && (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
+        <div className="space-y-6">
         >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Basic Information</h2>
 
@@ -101,14 +98,11 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
           >
             Continue
           </button>
-        </motion.div>
+        </div>
       )}
 
       {step === 2 && (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
+        <div className="space-y-6">
         >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Symptoms</h2>
 
@@ -160,14 +154,11 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
               Continue
             </button>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {step === 3 && (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
+        <div className="space-y-6">
         >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Additional Details</h2>
 
@@ -184,6 +175,32 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
             />
           </div>
 
+          {/* Privacy Toggle */}
+          <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.isPrivate}
+                onChange={(e) => setFormData({ ...formData, isPrivate: e.target.checked })}
+                className="w-5 h-5 rounded mt-0.5 accent-blue-600"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-semibold text-blue-900">Private Post</span>
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                    {formData.isPrivate ? 'PRIVATE' : 'PUBLIC'}
+                  </span>
+                </div>
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  {formData.isPrivate 
+                    ? "✓ Only you and verified doctors can see this post. Doctor replies are private to each doctor."
+                    : "Everyone can see this post and all replies from doctors."
+                  }
+                </p>
+              </div>
+            </label>
+          </div>
+
           <div className="flex gap-3">
             <button
               onClick={() => setStep(2)}
@@ -192,13 +209,17 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
               Back
             </button>
             <button
-              onClick={() => alert('Post created!')}
+              onClick={() => {
+                console.log('Creating post with data:', formData);
+                // TODO: Implement actual post creation with privacy setting
+                alert(`Post will be created as ${formData.isPrivate ? 'PRIVATE' : 'PUBLIC'}!`);
+              }}
               className="flex-1 py-3 bg-cyan-500 text-white rounded-full hover:bg-cyan-600 transition-all font-semibold shadow-soft hover:shadow-elevated"
             >
               Publish Post
             </button>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   )

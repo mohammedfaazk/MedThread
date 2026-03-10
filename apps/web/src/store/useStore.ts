@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'
 
 interface User {
   id: string
@@ -126,10 +126,11 @@ export const useStore = create<AppState>()(
           params.append('limit', limit.toString())
           
           const response = await axios.get(`${API_URL}/api/v1/posts?${params}`)
-          const apiPosts = response.data
+          // Handle both response formats: {success: true, data: posts} or posts array
+          const apiPosts = response.data.data || response.data
           
           // Transform API posts to match our Post interface
-          const transformedPosts: Post[] = apiPosts.map((post: any) => ({
+          const transformedPosts: Post[] = (Array.isArray(apiPosts) ? apiPosts : []).map((post: any) => ({
             id: post.id,
             type: post.type?.toLowerCase() || 'text',
             title: post.title,
@@ -163,7 +164,8 @@ export const useStore = create<AppState>()(
           set({ posts: transformedPosts, loading: false })
         } catch (error: any) {
           console.error('Failed to fetch posts:', error)
-          set({ error: error.message, loading: false })
+          console.error('Error details:', error.response?.data)
+          set({ error: error.message, loading: false, posts: [] })
         }
       },
       
