@@ -1,0 +1,2567 @@
+
+> @medthread/api@0.1.0 build
+> tsc
+
+[1G[0K[96msrc/config/razorpay.ts[0m:[93m1[0m:[93m22[0m - [91merror[0m[90m TS2307: [0mCannot find module 'razorpay' or its corresponding type declarations.
+
+[7m1[0m import Razorpay from 'razorpay';
+[7m [0m [91m                     ~~~~~~~~~~[0m
+
+[96msrc/config/stripe.ts[0m:[93m8[0m:[93m3[0m - [91merror[0m[90m TS2322: [0mType '"2024-12-18.acacia"' is not assignable to type '"2026-01-28.clover"'.
+
+[7m8[0m   apiVersion: '2024-12-18.acacia',
+[7m [0m [91m  ~~~~~~~~~~[0m
+
+[96msrc/controllers/admin.controller.ts[0m:[93m239[0m:[93m7[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'targetType' does not exist in type '{ status?: string | undefined; page?: number | undefined; limit?: number | undefined; }'.
+
+[7m239[0m       targetType: targetType as any,
+[7m   [0m [91m      ~~~~~~~~~~[0m
+
+[96msrc/controllers/admin.controller.ts[0m:[93m331[0m:[93m11[0m - [91merror[0m[90m TS2339: [0mProperty 'user' does not exist on type 'AuthRequest'.
+
+[7m331[0m       req.user!.id,
+[7m   [0m [91m          ~~~~[0m
+
+[96msrc/controllers/notification.controller.ts[0m:[93m227[0m:[93m7[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ email?: Partial<Record<"REPLY" | "MENTION" | "AWARD" | "FOLLOWER" | "APPOINTMENT_REQUEST" | "APPOINTMENT_UPDATE" | "VERIFICATION_STATUS" | "COMMUNITY_INVITE" | "DIRECT_MESSAGE" | "SYSTEM_ANNOUNCEMENT" | "UPVOTE_MILESTONE", "off" | ... 1 more ... | "digest">> | undefined; ... 5 more ...; upvoteThreshold?: number | ...' is not assignable to parameter of type 'Partial<NotificationPreferencesData>'.
+  Types of property 'inApp' are incompatible.
+    Type 'Partial<Record<"REPLY" | "MENTION" | "AWARD" | "FOLLOWER" | "APPOINTMENT_REQUEST" | "APPOINTMENT_UPDATE" | "VERIFICATION_STATUS" | "COMMUNITY_INVITE" | "DIRECT_MESSAGE" | "SYSTEM_ANNOUNCEMENT" | "UPVOTE_MILESTONE", boolean>> | undefined' is not assignable to type 'Record<NotificationType, boolean> | undefined'.
+      Type 'Partial<Record<"REPLY" | "MENTION" | "AWARD" | "FOLLOWER" | "APPOINTMENT_REQUEST" | "APPOINTMENT_UPDATE" | "VERIFICATION_STATUS" | "COMMUNITY_INVITE" | "DIRECT_MESSAGE" | "SYSTEM_ANNOUNCEMENT" | "UPVOTE_MILESTONE", boolean>>' is not assignable to type 'Record<NotificationType, boolean>'.
+        Types of property 'REPLY' are incompatible.
+          Type 'boolean | undefined' is not assignable to type 'boolean'.
+            Type 'undefined' is not assignable to type 'boolean'.
+
+[7m227[0m       validatedData
+[7m   [0m [91m      ~~~~~~~~~~~~~[0m
+
+[96msrc/controllers/notification.controller.ts[0m:[93m241[0m:[93m37[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m241[0m   unsubscribe = asyncHandler(async (req, res: Response) => {
+[7m   [0m [91m                                    ~~~[0m
+
+[96msrc/handlers/notification.handler.ts[0m:[93m115[0m:[93m44[0m - [91merror[0m[90m TS2345: [0mArgument of type 'string[]' is not assignable to parameter of type 'string'.
+
+[7m115[0m       await notificationService.markAsRead([notificationId], userId);
+[7m   [0m [91m                                           ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/index.ts[0m:[93m5[0m:[93m26[0m - [91merror[0m[90m TS7016: [0mCould not find a declaration file for module 'cookie-parser'. '/Users/mohammedfaazk/Desktop/MedThread/node_modules/cookie-parser/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/cookie-parser` if it exists or add a new declaration (.d.ts) file containing `declare module 'cookie-parser';`
+
+[7m5[0m import cookieParser from 'cookie-parser';
+[7m [0m [91m                         ~~~~~~~~~~~~~~~[0m
+
+[96msrc/middleware/chatPermission.ts[0m:[93m78[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'isActive' does not exist on type '{ appointment: ({ patient: { id: string; username: string; }; doctor: { id: string; username: string; doctorVerificationStatus: DoctorVerificationStatus | null; }; } & { ...; }) | null; participants: { ...; }[]; } & { ...; }'.
+
+[7m78[0m       isActive: conversation?.isActive
+[7m  [0m [91m                              ~~~~~~~~[0m
+
+[96msrc/middleware/requireVerifiedDoctor.ts[0m:[93m16[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m16[0m     const userId = req.userId;
+[7m  [0m [91m                       ~~~~~~[0m
+
+[96msrc/middleware/requireVerifiedDoctor.ts[0m:[93m43[0m:[93m52[0m - [91merror[0m[90m TS2367: [0mThis comparison appears to be unintentional because the types '"PATIENT" | "NURSE" | "MEDICAL_STUDENT" | "PHARMACIST" | "COMMUNITY_CONTRIBUTOR" | "MODERATOR" | "ADMIN"' and '"VERIFIED_DOCTOR"' have no overlap.
+
+[7m43[0m     const isDoctorRole = user.role === 'DOCTOR' || user.role === 'VERIFIED_DOCTOR';
+[7m  [0m [91m                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/routes/account.ts[0m:[93m12[0m:[93m67[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m12[0m router.get('/deletion-preview', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                  ~~~[0m
+
+[96msrc/routes/account.ts[0m:[93m12[0m:[93m72[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m12[0m router.get('/deletion-preview', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                       ~~~[0m
+
+[96msrc/routes/account.ts[0m:[93m25[0m:[93m62[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m25[0m router.post('/deactivate', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                             ~~~[0m
+
+[96msrc/routes/account.ts[0m:[93m25[0m:[93m67[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m25[0m router.post('/deactivate', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                  ~~~[0m
+
+[96msrc/routes/account.ts[0m:[93m42[0m:[93m62[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m42[0m router.post('/reactivate', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                             ~~~[0m
+
+[96msrc/routes/account.ts[0m:[93m42[0m:[93m67[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m42[0m router.post('/reactivate', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                  ~~~[0m
+
+[96msrc/routes/account.ts[0m:[93m58[0m:[93m72[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m58[0m router.delete('/delete-permanently', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                       ~~~[0m
+
+[96msrc/routes/account.ts[0m:[93m58[0m:[93m77[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m58[0m router.delete('/delete-permanently', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                            ~~~[0m
+
+[96msrc/routes/analytics.routes.ts[0m:[93m13[0m:[93m61[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m13[0m router.post('/event', asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                                            ~~~[0m
+
+[96msrc/routes/analytics.routes.ts[0m:[93m48[0m:[93m64[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m48[0m router.post('/pageview', asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                                               ~~~[0m
+
+[96msrc/routes/analytics.routes.ts[0m:[93m80[0m:[93m66[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m80[0m router.post('/conversion', asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                                                 ~~~[0m
+
+[96msrc/routes/analytics.routes.ts[0m:[93m105[0m:[93m73[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m105[0m router.post('/post-view/:postId', asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                                                        ~~~[0m
+
+[96msrc/routes/analytics.routes.ts[0m:[93m117[0m:[93m81[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m117[0m router.get('/user/:userId', authenticate, asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                                                                ~~~[0m
+
+[96msrc/routes/analytics.routes.ts[0m:[93m140[0m:[93m67[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m140[0m router.get('/post/:postId', asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                                                  ~~~[0m
+
+[96msrc/routes/analytics.routes.ts[0m:[93m155[0m:[93m78[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m155[0m router.get('/dashboard', authenticate, asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                                                             ~~~[0m
+
+[96msrc/routes/appointments.ts[0m:[93m316[0m:[93m22[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m316[0m         await prisma.notification.create({
+[7m   [0m [91m                     ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/routes/appointments.ts[0m:[93m388[0m:[93m22[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m388[0m         await prisma.notification.create({
+[7m   [0m [91m                     ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/routes/appointments.ts[0m:[93m476[0m:[93m33[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'patientId' does not exist in type 'Without<ConversationCreateInput, ConversationUncheckedCreateInput> & ConversationUncheckedCreateInput'.
+
+[7m476[0m                                 patientId: appointment.patientId,
+[7m   [0m [91m                                ~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m26566[0m:[93m5[0m
+    [7m26566[0m     data: XOR<ConversationCreateInput, ConversationUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: ConversationSelect<DefaultArgs> | null | undefined; include?: ConversationInclude<DefaultArgs> | null | undefined; data: (Without<...> & ConversationUncheckedCreateInput) | (Without<...> & ConversationCreateInput); }'
+
+[96msrc/routes/awards.ts[0m:[93m13[0m:[93m37[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m13[0m router.get('/', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                    ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m13[0m:[93m42[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m13[0m router.get('/', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                         ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m26[0m:[93m40[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m26[0m router.get('/:id', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                       ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m26[0m:[93m45[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m26[0m router.get('/:id', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                            ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m39[0m:[93m52[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m39[0m router.post('/', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                   ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m39[0m:[93m57[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m39[0m router.post('/', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                        ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m69[0m:[93m79[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m69[0m router.post('/give', authenticate, requireVerifiedDoctor, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                              ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m69[0m:[93m84[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m69[0m router.post('/give', authenticate, requireVerifiedDoctor, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                                   ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m90[0m:[93m49[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m90[0m router.get('/post/:postId', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m90[0m:[93m54[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m90[0m router.get('/post/:postId', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                     ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m103[0m:[93m55[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m103[0m router.get('/comment/:commentId', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                      ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m103[0m:[93m60[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m103[0m router.get('/comment/:commentId', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                           ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m116[0m:[93m55[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m116[0m router.get('/user/:userId/given', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                      ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m116[0m:[93m60[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m116[0m router.get('/user/:userId/given', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                           ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m132[0m:[93m58[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m132[0m router.get('/user/:userId/received', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                         ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m132[0m:[93m63[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m132[0m router.get('/user/:userId/received', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                              ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m145[0m:[93m59[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m145[0m router.get('/coins/me', authenticate, asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                          ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m145[0m:[93m64[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m145[0m router.get('/coins/me', authenticate, asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                               ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m158[0m:[93m61[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m158[0m router.post('/coins/add', authenticate, asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                            ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m158[0m:[93m66[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m158[0m router.post('/coins/add', authenticate, asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                                 ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m183[0m:[93m51[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m183[0m router.get('/stats/platform', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                  ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m183[0m:[93m56[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m183[0m router.get('/stats/platform', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                       ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m196[0m:[93m62[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m196[0m router.post('/initialize', authenticate, asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                             ~~~[0m
+
+[96msrc/routes/awards.ts[0m:[93m196[0m:[93m67[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m196[0m router.post('/initialize', authenticate, asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                                  ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m14[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m14[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m14[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m14[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m30[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m30[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m30[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m30[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m49[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m49[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m67[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m67[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m67[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m67[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m86[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m86[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/badge.routes.ts[0m:[93m105[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m105[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/block.routes.ts[0m:[93m15[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m15[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/block.routes.ts[0m:[93m43[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m43[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/block.routes.ts[0m:[93m70[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m70[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/block.routes.ts[0m:[93m94[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m94[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m17[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m17[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m37[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m37[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m65[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m65[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m93[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m93[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m158[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m158[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m208[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m208[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m240[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m240[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m261[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m261[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m281[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m281[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m300[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m300[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/chat.v2.ts[0m:[93m365[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m365[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/cme-credits.routes.ts[0m:[93m15[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m15[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/cme-credits.routes.ts[0m:[93m28[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m28[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/cme-credits.routes.ts[0m:[93m28[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m28[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/cme-credits.routes.ts[0m:[93m45[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m45[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/cme-credits.routes.ts[0m:[93m59[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m59[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/cme-credits.routes.ts[0m:[93m73[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m73[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/cme-credits.routes.ts[0m:[93m73[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m73[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/cme-credits.routes.ts[0m:[93m87[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m87[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/comments.ts[0m:[93m19[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m19[0m       authorId: req.userId!,
+[7m  [0m [91m                    ~~~~~~[0m
+
+[96msrc/routes/comments.ts[0m:[93m69[0m:[93m75[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m69[0m     const comment = await commentService.updateComment(req.params.id, req.userId!, content);
+[7m  [0m [91m                                                                          ~~~~~~[0m
+
+[96msrc/routes/comments.ts[0m:[93m79[0m:[93m59[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m79[0m     await commentService.deleteComment(req.params.id, req.userId!);
+[7m  [0m [91m                                                          ~~~~~~[0m
+
+[96msrc/routes/comments.ts[0m:[93m95[0m:[93m72[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m95[0m     const result = await commentService.voteComment(req.params.id, req.userId!, value);
+[7m  [0m [91m                                                                       ~~~~~~[0m
+
+[96msrc/routes/communities.ts[0m:[93m36[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m36[0m       creatorId: req.userId!,
+[7m  [0m [91m                     ~~~~~~[0m
+
+[96msrc/routes/communities.ts[0m:[93m75[0m:[93m11[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m75[0m       req.userId!,
+[7m  [0m [91m          ~~~~~~[0m
+
+[96msrc/routes/communities.ts[0m:[93m88[0m:[93m76[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m88[0m     const result = await communityService.joinCommunity(req.params.id, req.userId!);
+[7m  [0m [91m                                                                           ~~~~~~[0m
+
+[96msrc/routes/communities.ts[0m:[93m98[0m:[93m77[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m98[0m     const result = await communityService.leaveCommunity(req.params.id, req.userId!);
+[7m  [0m [91m                                                                            ~~~~~~[0m
+
+[96msrc/routes/consultation-funnel.routes.ts[0m:[93m15[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m15[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/consultation-funnel.routes.ts[0m:[93m34[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m34[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/consultation-funnel.routes.ts[0m:[93m51[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m51[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/consultation-funnel.routes.ts[0m:[93m72[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m72[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/consultation-funnel.routes.ts[0m:[93m89[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m89[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/consultation-funnel.routes.ts[0m:[93m108[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m108[0m   asyncHandler(async (req: any, res) => {
+[7m   [0m [91m                                ~~~[0m
+
+[96msrc/routes/doctor-profile-enhanced.routes.ts[0m:[93m14[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m14[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/doctor-profile-enhanced.routes.ts[0m:[93m14[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m14[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/doctor-profile-enhanced.routes.ts[0m:[93m28[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m28[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/doctor-profile-enhanced.routes.ts[0m:[93m51[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m51[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/doctor-profile-enhanced.routes.ts[0m:[93m65[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m65[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/doctor-profile-enhanced.routes.ts[0m:[93m79[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m79[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/file-upload.routes.ts[0m:[93m15[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m15[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/file-upload.routes.ts[0m:[93m40[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m40[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/file-upload.routes.ts[0m:[93m73[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m73[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/file-upload.routes.ts[0m:[93m93[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m93[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/file-upload.routes.ts[0m:[93m113[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m113[0m   asyncHandler(async (req: any, res) => {
+[7m   [0m [91m                                ~~~[0m
+
+[96msrc/routes/file-upload.routes.ts[0m:[93m132[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m132[0m   asyncHandler(async (req, res) => {
+[7m   [0m [91m                      ~~~[0m
+
+[96msrc/routes/file-upload.routes.ts[0m:[93m132[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m132[0m   asyncHandler(async (req, res) => {
+[7m   [0m [91m                           ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m15[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m15[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m43[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m43[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m70[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m70[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m89[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m89[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m  [0m [91m                                        ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m113[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m113[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m137[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m137[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m156[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m156[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m181[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m181[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/follow.ts[0m:[93m207[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m207[0m   asyncHandler(async (req: AuthRequest, res) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m15[0m:[93m33[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m15[0m   asyncHandler(async (req: any, res) => {
+[7m  [0m [91m                                ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m34[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m34[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m34[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m34[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m48[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m48[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m48[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m48[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m61[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m61[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m61[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m61[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m74[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m74[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/health-insights.routes.ts[0m:[93m74[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m74[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m12[0m:[93m53[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m12[0m router.get('/me', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                    ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m12[0m:[93m58[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m12[0m router.get('/me', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                         ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m25[0m:[93m49[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m25[0m router.get('/user/:userId', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m25[0m:[93m54[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m25[0m router.get('/user/:userId', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                     ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m38[0m:[93m66[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m38[0m router.post('/update/:userId', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                 ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m38[0m:[93m71[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m38[0m router.post('/update/:userId', authenticate, asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                      ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m62[0m:[93m48[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m62[0m router.get('/leaderboard', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                               ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m62[0m:[93m53[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m62[0m router.get('/leaderboard', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                    ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m78[0m:[93m56[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m78[0m router.get('/leaderboard/doctors', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                       ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m78[0m:[93m61[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m78[0m router.get('/leaderboard/doctors', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                            ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m94[0m:[93m69[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m94[0m router.get('/leaderboard/specialty/:specialty', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                    ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m94[0m:[93m74[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m94[0m router.get('/leaderboard/specialty/:specialty', asyncHandler(async (req, res) => {
+[7m  [0m [91m                                                                         ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m111[0m:[93m58[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m111[0m router.get('/rank/me', authenticate, asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                         ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m111[0m:[93m63[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m111[0m router.get('/rank/me', authenticate, asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                              ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m124[0m:[93m49[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m124[0m router.get('/rank/:userId', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m124[0m:[93m54[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m124[0m router.get('/rank/:userId', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                     ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m137[0m:[93m47[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m137[0m router.get('/milestones', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                              ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m137[0m:[93m52[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m137[0m router.get('/milestones', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                                   ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m150[0m:[93m42[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m150[0m router.get('/stats', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                         ~~~[0m
+
+[96msrc/routes/karma.ts[0m:[93m150[0m:[93m47[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m150[0m router.get('/stats', asyncHandler(async (req, res) => {
+[7m   [0m [91m                                              ~~~[0m
+
+[96msrc/routes/posts.routes.ts[0m:[93m20[0m:[93m31[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<{}, any, any, ParsedQs, Record<string, any>>'.
+
+[7m20[0m     const currentUserId = req.userId; // From auth middleware (optional)
+[7m  [0m [91m                              ~~~~~~[0m
+
+[96msrc/routes/posts.routes.ts[0m:[93m39[0m:[93m32[0m - [91merror[0m[90m TS2367: [0mThis comparison appears to be unintentional because the types 'UserRole | undefined' and '"VERIFIED_DOCTOR"' have no overlap.
+
+[7m39[0m       const isVerifiedDoctor = user?.role === 'VERIFIED_DOCTOR' ||
+[7m  [0m [91m                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/routes/posts.routes.ts[0m:[93m230[0m:[93m14[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m230[0m     if (!req.userId) {
+[7m   [0m [91m             ~~~~~~[0m
+
+[96msrc/routes/posts.routes.ts[0m:[93m245[0m:[93m23[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m245[0m         authorId: req.userId,
+[7m   [0m [91m                      ~~~~~~[0m
+
+[96msrc/routes/posts.routes.ts[0m:[93m248[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'tags' does not exist in type '(Without<PostCreateInput, PostUncheckedCreateInput> & PostUncheckedCreateInput) | (Without<...> & PostCreateInput)'.
+
+[7m248[0m         tags: tags || [],
+[7m   [0m [91m        ~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m9688[0m:[93m5[0m
+    [7m9688[0m     data: XOR<PostCreateInput, PostUncheckedCreateInput>
+    [7m    [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: PostSelect<DefaultArgs> | null | undefined; include?: PostInclude<DefaultArgs> | null | undefined; data: (Without<PostCreateInput, PostUncheckedCreateInput> & PostUncheckedCreateInput) | (Without<...> & PostCreateInput); }'
+
+[96msrc/routes/posts.ts[0m:[93m23[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m23[0m       authorId: req.userId!,
+[7m  [0m [91m                    ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m103[0m:[93m66[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m103[0m     const post = await postService.updatePost(req.params.id, req.userId!, {
+[7m   [0m [91m                                                                 ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m119[0m:[93m53[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m119[0m     await postService.deletePost(req.params.id, req.userId!);
+[7m   [0m [91m                                                    ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m135[0m:[93m66[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m135[0m     const result = await postService.votePost(req.params.id, req.userId!, value);
+[7m   [0m [91m                                                                 ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m145[0m:[93m66[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m145[0m     const result = await postService.savePost(req.params.id, req.userId!);
+[7m   [0m [91m                                                                 ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m155[0m:[93m66[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m155[0m     const result = await postService.hidePost(req.params.id, req.userId!);
+[7m   [0m [91m                                                                 ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m168[0m:[93m52[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m168[0m     const drafts = await postService.getDrafts(req.userId!);
+[7m   [0m [91m                                                   ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m178[0m:[93m68[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m178[0m     const post = await postService.publishDraft(req.params.id, req.userId!);
+[7m   [0m [91m                                                                   ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m190[0m:[93m11[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m190[0m       req.userId!,
+[7m   [0m [91m          ~~~~~~[0m
+
+[96msrc/routes/posts.ts[0m:[93m205[0m:[93m11[0m - [91merror[0m[90m TS2339: [0mProperty 'userId' does not exist on type 'Request<ParamsDictionary, any, any, ParsedQs, Record<string, any>>'.
+
+[7m205[0m       req.userId!,
+[7m   [0m [91m          ~~~~~~[0m
+
+[96msrc/routes/replies.ts[0m:[93m58[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'description' does not exist in type 'Without<CaseTimelineEventCreateInput, CaseTimelineEventUncheckedCreateInput> & CaseTimelineEventUncheckedCreateInput'.
+
+[7m58[0m         description: `${isDoctorVerified ? 'Verified doctor' : 'User'} replied`,
+[7m  [0m [91m        ~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m29711[0m:[93m5[0m
+    [7m29711[0m     data: XOR<CaseTimelineEventCreateInput, CaseTimelineEventUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: CaseTimelineEventSelect<DefaultArgs> | null | undefined; include?: CaseTimelineEventInclude<DefaultArgs> | null | undefined; data: (Without<...> & CaseTimelineEventUncheckedCreateInput) | (Without<...> & CaseTimelineEventCreateInput); }'
+
+[96msrc/routes/replies.ts[0m:[93m220[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'description' does not exist in type 'Without<CaseTimelineEventCreateInput, CaseTimelineEventUncheckedCreateInput> & CaseTimelineEventUncheckedCreateInput'.
+
+[7m220[0m           description: 'Reply marked as helpful',
+[7m   [0m [91m          ~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m29711[0m:[93m5[0m
+    [7m29711[0m     data: XOR<CaseTimelineEventCreateInput, CaseTimelineEventUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: CaseTimelineEventSelect<DefaultArgs> | null | undefined; include?: CaseTimelineEventInclude<DefaultArgs> | null | undefined; data: (Without<...> & CaseTimelineEventUncheckedCreateInput) | (Without<...> & CaseTimelineEventCreateInput); }'
+
+[96msrc/routes/replies.ts[0m:[93m273[0m:[93m9[0m - [91merror[0m[90m TS2561: [0mObject literal may only specify known properties, but 'resolvedAt' does not exist in type '(Without<MedicalThreadUpdateInput, MedicalThreadUncheckedUpdateInput> & MedicalThreadUncheckedUpdateInput) | (Without<...> & MedicalThreadUpdateInput)'. Did you mean to write 'isResolved'?
+
+[7m273[0m         resolvedAt: new Date()
+[7m   [0m [91m        ~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m27664[0m:[93m5[0m
+    [7m27664[0m     data: XOR<MedicalThreadUpdateInput, MedicalThreadUncheckedUpdateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: MedicalThreadSelect<DefaultArgs> | null | undefined; include?: MedicalThreadInclude<DefaultArgs> | null | undefined; data: (Without<...> & MedicalThreadUncheckedUpdateInput) | (Without<...> & MedicalThreadUpdateInput); where: MedicalThreadWhereUniqueInput; }'
+
+[96msrc/routes/replies.ts[0m:[93m282[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'description' does not exist in type 'Without<CaseTimelineEventCreateInput, CaseTimelineEventUncheckedCreateInput> & CaseTimelineEventUncheckedCreateInput'.
+
+[7m282[0m         description: 'Best answer selected',
+[7m   [0m [91m        ~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m29711[0m:[93m5[0m
+    [7m29711[0m     data: XOR<CaseTimelineEventCreateInput, CaseTimelineEventUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: CaseTimelineEventSelect<DefaultArgs> | null | undefined; include?: CaseTimelineEventInclude<DefaultArgs> | null | undefined; data: (Without<...> & CaseTimelineEventUncheckedCreateInput) | (Without<...> & CaseTimelineEventCreateInput); }'
+
+[96msrc/routes/users.routes.ts[0m:[93m14[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m14[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/users.routes.ts[0m:[93m14[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m14[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/routes/users.routes.ts[0m:[93m61[0m:[93m23[0m - [91merror[0m[90m TS7006: [0mParameter 'req' implicitly has an 'any' type.
+
+[7m61[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                      ~~~[0m
+
+[96msrc/routes/users.routes.ts[0m:[93m61[0m:[93m28[0m - [91merror[0m[90m TS7006: [0mParameter 'res' implicitly has an 'any' type.
+
+[7m61[0m   asyncHandler(async (req, res) => {
+[7m  [0m [91m                           ~~~[0m
+
+[96msrc/scripts/delete-dr-navin.ts[0m:[93m80[0m:[93m38[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">'. Did you mean 'notifications'?
+
+[7m80[0m       const notifications = await tx.notification.deleteMany({ where: { userId: user.id } });
+[7m  [0m [91m                                     ~~~~~~~~~~~~[0m
+
+[96msrc/scripts/delete-user.ts[0m:[93m39[0m:[93m40[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m39[0m     const notifications = await prisma.notification.deleteMany({
+[7m  [0m [91m                                       ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/scripts/ensure-passwords.ts[0m:[93m13[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType 'null' is not assignable to type 'string | StringFilter<"User"> | undefined'.
+
+[7m13[0m         passwordHash: null
+[7m  [0m [91m        ~~~~~~~~~~~~[0m
+
+[96msrc/scripts/test-notification-triggers.ts[0m:[93m61[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'creatorId' does not exist in type '(Without<CommunityCreateInput, CommunityUncheckedCreateInput> & CommunityUncheckedCreateInput) | (Without<...> & CommunityCreateInput)'.
+
+[7m61[0m           creatorId: user1.id,
+[7m  [0m [91m          ~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m8319[0m:[93m5[0m
+    [7m8319[0m     data: XOR<CommunityCreateInput, CommunityUncheckedCreateInput>
+    [7m    [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: CommunitySelect<DefaultArgs> | null | undefined; include?: CommunityInclude<DefaultArgs> | null | undefined; data: (Without<...> & CommunityUncheckedCreateInput) | (Without<...> & CommunityCreateInput); }'
+
+[96msrc/scripts/test-notification-triggers.ts[0m:[93m93[0m:[93m40[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m93[0m     const mentionNotifs = await prisma.notification.findMany({
+[7m  [0m [91m                                       ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/scripts/test-notification-triggers.ts[0m:[93m125[0m:[93m38[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m125[0m     const replyNotifs = await prisma.notification.findMany({
+[7m   [0m [91m                                     ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/scripts/test-notification-triggers.ts[0m:[93m157[0m:[93m47[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m157[0m     const commentMentionNotifs = await prisma.notification.findMany({
+[7m   [0m [91m                                              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/chat.service.test.ts[0m:[93m1[0m:[93m65[0m - [91merror[0m[90m TS2307: [0mCannot find module 'vitest' or its corresponding type declarations.
+
+[7m1[0m import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+[7m [0m [91m                                                                ~~~~~~~~[0m
+
+[96msrc/services/__tests__/chat.service.test.ts[0m:[93m298[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'isDeleted' does not exist on type '{ id: string; createdAt: Date; subject: string | null; content: string; type: MessageType; isRead: boolean; conversationId: string | null; senderId: string; attachment: string | null; receiverId: string; }'.
+
+[7m298[0m       expect(result.isDeleted).toBe(true);
+[7m   [0m [91m                    ~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m1[0m:[93m54[0m - [91merror[0m[90m TS2307: [0mCannot find module 'vitest' or its corresponding type declarations.
+
+[7m1[0m import { describe, it, expect, beforeEach, vi } from 'vitest';
+[7m [0m [91m                                                     ~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m20[0m:[93m34[0m - [91merror[0m[90m TS2339: [0mProperty 'generateUnsubscribeToken' does not exist on type 'EmailService'.
+
+[7m20[0m       const token = emailService.generateUnsubscribeToken(userId, notificationType);
+[7m  [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m38[0m:[93m34[0m - [91merror[0m[90m TS2339: [0mProperty 'generateUnsubscribeToken' does not exist on type 'EmailService'.
+
+[7m38[0m       const token = emailService.generateUnsubscribeToken(userId, notificationType);
+[7m  [0m [91m                                 ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m39[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'handleUnsubscribe' does not exist on type 'EmailService'.
+
+[7m39[0m       const result = await emailService.handleUnsubscribe(token);
+[7m  [0m [91m                                        ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m47[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'handleUnsubscribe' does not exist on type 'EmailService'.
+
+[7m47[0m       const result = await emailService.handleUnsubscribe('invalid-token');
+[7m  [0m [91m                                        ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m60[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'handleUnsubscribe' does not exist on type 'EmailService'.
+
+[7m60[0m       const result = await emailService.handleUnsubscribe(expiredToken);
+[7m  [0m [91m                                        ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m91[0m:[93m69[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 2.
+
+[7m91[0m       const result = await emailService.sendNotificationEmail(user, notification);
+[7m  [0m [91m                                                                    ~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m118[0m:[93m69[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 2.
+
+[7m118[0m       const result = await emailService.sendNotificationEmail(user, notification);
+[7m   [0m [91m                                                                    ~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m146[0m:[93m69[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 2.
+
+[7m146[0m       const result = await emailService.sendNotificationEmail(user, notification);
+[7m   [0m [91m                                                                    ~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m190[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'sendDigestEmail' does not exist on type 'EmailService'.
+
+[7m190[0m       const result = await emailService.sendDigestEmail(user, notifications, 'daily');
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m214[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'sendDigestEmail' does not exist on type 'EmailService'.
+
+[7m214[0m       const result = await emailService.sendDigestEmail(user, notifications, 'weekly');
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m226[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'sendDigestEmail' does not exist on type 'EmailService'.
+
+[7m226[0m       const result = await emailService.sendDigestEmail(user, [], 'daily');
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m277[0m:[93m41[0m - [91merror[0m[90m TS2339: [0mProperty 'sendDigestEmail' does not exist on type 'EmailService'.
+
+[7m277[0m       const result = await emailService.sendDigestEmail(user, notifications, 'daily');
+[7m   [0m [91m                                        ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m304[0m:[93m69[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 2.
+
+[7m304[0m       const result = await emailService.sendNotificationEmail(user, notification);
+[7m   [0m [91m                                                                    ~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m328[0m:[93m69[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 2.
+
+[7m328[0m       const result = await emailService.sendNotificationEmail(user, notification);
+[7m   [0m [91m                                                                    ~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m355[0m:[93m69[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 2.
+
+[7m355[0m       const result = await emailService.sendNotificationEmail(user, notification);
+[7m   [0m [91m                                                                    ~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/email.service.test.ts[0m:[93m377[0m:[93m69[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 2.
+
+[7m377[0m       const result = await emailService.sendNotificationEmail(user, notification);
+[7m   [0m [91m                                                                    ~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m1[0m:[93m54[0m - [91merror[0m[90m TS2307: [0mCannot find module 'vitest' or its corresponding type declarations.
+
+[7m1[0m import { describe, it, expect, beforeEach, vi } from 'vitest';
+[7m [0m [91m                                                     ~~~~~~~~[0m
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m38[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m38[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+[7m  [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m43[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m43[0m       expect(prisma.notificationPreferences.findUnique).toHaveBeenCalledWith({
+[7m  [0m [91m                    ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m61[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m61[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(null);
+[7m  [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m62[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m62[0m       (prisma.notificationPreferences.create as any).mockResolvedValue(mockPreferences);
+[7m  [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m67[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m67[0m       expect(prisma.notificationPreferences.create).toHaveBeenCalled();
+[7m  [0m [91m                    ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m89[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m89[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(existingPreferences);
+[7m  [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m90[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m90[0m       (prisma.notificationPreferences.update as any).mockResolvedValue(updatedPreferences);
+[7m  [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m97[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m97[0m       expect(prisma.notificationPreferences.update).toHaveBeenCalled();
+[7m  [0m [91m                    ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m112[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m112[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(existingPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m133[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m133[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(existingPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m154[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m154[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(existingPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m180[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m180[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m212[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m212[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m244[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m244[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m273[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m273[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m300[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m300[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m329[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m329[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-preferences.service.test.ts[0m:[93m350[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m350[0m       (prisma.notificationPreferences.findUnique as any).mockResolvedValue(mockPreferences);
+[7m   [0m [91m              ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m1[0m:[93m59[0m - [91merror[0m[90m TS2307: [0mCannot find module '@jest/globals' or its corresponding type declarations.
+
+[7m1[0m import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+[7m [0m [91m                                                          ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m25[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '"USER"' is not assignable to type 'UserRole | undefined'.
+
+[7m25[0m         role: 'USER',
+[7m  [0m [91m        ~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m49808[0m:[93m5[0m
+    [7m49808[0m     role?: $Enums.UserRole
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'role' which is declared here on type '(Without<UserCreateInput, UserUncheckedCreateInput> & UserUncheckedCreateInput) | (Without<...> & UserCreateInput)'
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m34[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '"USER"' is not assignable to type 'UserRole | undefined'.
+
+[7m34[0m         role: 'USER',
+[7m  [0m [91m        ~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m49808[0m:[93m5[0m
+    [7m49808[0m     role?: $Enums.UserRole
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'role' which is declared here on type '(Without<UserCreateInput, UserUncheckedCreateInput> & UserUncheckedCreateInput) | (Without<...> & UserCreateInput)'
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m44[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'creatorId' does not exist in type '(Without<CommunityCreateInput, CommunityUncheckedCreateInput> & CommunityUncheckedCreateInput) | (Without<...> & CommunityCreateInput)'.
+
+[7m44[0m         creatorId: testUser1.id,
+[7m  [0m [91m        ~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m8319[0m:[93m5[0m
+    [7m8319[0m     data: XOR<CommunityCreateInput, CommunityUncheckedCreateInput>
+    [7m    [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: CommunitySelect<DefaultArgs> | null | undefined; include?: CommunityInclude<DefaultArgs> | null | undefined; data: (Without<...> & CommunityUncheckedCreateInput) | (Without<...> & CommunityCreateInput); }'
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m59[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m59[0m     await prisma.notification.deleteMany({
+[7m  [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m90[0m:[93m42[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m90[0m       const notifications = await prisma.notification.findMany({
+[7m  [0m [91m                                         ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m112[0m:[93m20[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m112[0m       await prisma.notification.deleteMany({
+[7m   [0m [91m                   ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m126[0m:[93m42[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m126[0m       const notifications = await prisma.notification.findMany({
+[7m   [0m [91m                                         ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m147[0m:[93m42[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m147[0m       const notifications = await prisma.notification.findMany({
+[7m   [0m [91m                                         ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m169[0m:[93m42[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m169[0m       const notifications = await prisma.notification.findMany({
+[7m   [0m [91m                                         ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m191[0m:[93m42[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m191[0m       const notifications = await prisma.notification.findMany({
+[7m   [0m [91m                                         ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m227[0m:[93m20[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m227[0m       await prisma.notification.deleteMany({
+[7m   [0m [91m                   ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification-triggers.test.ts[0m:[93m244[0m:[93m42[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m244[0m       const notifications = await prisma.notification.findMany({
+[7m   [0m [91m                                         ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m1[0m:[93m65[0m - [91merror[0m[90m TS2307: [0mCannot find module 'vitest' or its corresponding type declarations.
+
+[7m1[0m import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+[7m [0m [91m                                                                ~~~~~~~~[0m
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m141[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m141[0m       (prisma.notification.findMany as any).mockResolvedValue(mockNotifications);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m142[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m142[0m       (prisma.notification.count as any).mockResolvedValue(1);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m157[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m157[0m       (prisma.notification.findMany as any).mockResolvedValue([]);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m158[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m158[0m       (prisma.notification.count as any).mockResolvedValue(0);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m164[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m164[0m       expect(prisma.notification.findMany).toHaveBeenCalledWith(
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m174[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m174[0m       (prisma.notification.findMany as any).mockResolvedValue([]);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m175[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m175[0m       (prisma.notification.count as any).mockResolvedValue(0);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m181[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m181[0m       expect(prisma.notification.findMany).toHaveBeenCalledWith(
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m199[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m199[0m       (prisma.notification.findFirst as any).mockResolvedValue(mockNotification);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m200[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m200[0m       (prisma.notification.update as any).mockResolvedValue({
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m208[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m208[0m       expect(prisma.notification.update).toHaveBeenCalledWith({
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m218[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m218[0m       (prisma.notification.findFirst as any).mockResolvedValue(null);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m232[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m232[0m       (prisma.notification.findFirst as any).mockResolvedValue(mockNotification);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m236[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m236[0m       expect(prisma.notification.update).not.toHaveBeenCalled();
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m242[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m242[0m       (prisma.notification.updateMany as any).mockResolvedValue({ count: 5 });
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m247[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m247[0m       expect(prisma.notification.updateMany).toHaveBeenCalledWith({
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m269[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m269[0m       (prisma.notification.findFirst as any).mockResolvedValue(mockNotification);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m270[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m270[0m       (prisma.notification.update as any).mockResolvedValue({
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m278[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m278[0m       expect(prisma.notification.update).toHaveBeenCalledWith({
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m288[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m288[0m       (prisma.notification.findFirst as any).mockResolvedValue(null);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m298[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m298[0m       (prisma.notification.count as any).mockResolvedValue(3);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m303[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m303[0m       expect(prisma.notification.count).toHaveBeenCalledWith({
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m313[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m313[0m       (prisma.notification.count as any).mockResolvedValue(3);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m318[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m318[0m       expect(prisma.notification.count).toHaveBeenCalledTimes(1);
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m323[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m323[0m       expect(prisma.notification.count).toHaveBeenCalledTimes(1);
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m333[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m333[0m       (prisma.notification.count as any).mockResolvedValue(3);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m334[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m334[0m       (prisma.notification.findFirst as any).mockResolvedValue(mockNotification);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m335[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m335[0m       (prisma.notification.update as any).mockResolvedValue({
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m342[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m342[0m       expect(prisma.notification.count).toHaveBeenCalledTimes(1);
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m348[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m348[0m       (prisma.notification.count as any).mockResolvedValue(2);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m351[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m351[0m       expect(prisma.notification.count).toHaveBeenCalledTimes(2);
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m357[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m357[0m       (prisma.notification.count as any).mockResolvedValue(3);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m361[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m361[0m       expect(prisma.notification.count).toHaveBeenCalledTimes(1);
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m368[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m368[0m       expect(prisma.notification.count).toHaveBeenCalledTimes(2);
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m372[0m:[93m15[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m372[0m       (prisma.notification.count as any).mockResolvedValue(3);
+[7m   [0m [91m              ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m377[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m377[0m       expect(prisma.notification.count).toHaveBeenCalledTimes(2);
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m385[0m:[93m21[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m385[0m       expect(prisma.notification.count).toHaveBeenCalledTimes(4);
+[7m   [0m [91m                    ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m731[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'id' does not exist on type 'AggregatedNotification'.
+
+[7m731[0m       expect(result[0].id).toBe('notif-2'); // Most recent first
+[7m   [0m [91m                       ~~[0m
+
+[96msrc/services/__tests__/notification.service.test.ts[0m:[93m732[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'id' does not exist on type 'AggregatedNotification'.
+
+[7m732[0m       expect(result[1].id).toBe('notif-1');
+[7m   [0m [91m                       ~~[0m
+
+[96msrc/services/__tests__/socket-delivery.service.test.ts[0m:[93m1[0m:[93m65[0m - [91merror[0m[90m TS2307: [0mCannot find module 'vitest' or its corresponding type declarations.
+
+[7m1[0m import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+[7m [0m [91m                                                                ~~~~~~~~[0m
+
+[96msrc/services/account.service.ts[0m:[93m102[0m:[93m16[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">'. Did you mean 'notifications'?
+
+[7m102[0m       await tx.notification.deleteMany({ where: { userId } });
+[7m   [0m [91m               ~~~~~~~~~~~~[0m
+
+[96msrc/services/account.service.ts[0m:[93m233[0m:[93m14[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m233[0m       prisma.notification.count({ where: { userId } }),
+[7m   [0m [91m             ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m72[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m72[0m     if (primarySymptoms.some(s => s.includes('chest pain') || s.includes('chest pressure'))) {
+[7m  [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m77[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m77[0m     if (primarySymptoms.some(s =>
+[7m  [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m87[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m87[0m     if (primarySymptoms.some(s =>
+[7m  [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m101[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m101[0m     if (primarySymptoms.some(s => s.includes('severe abdominal pain')) &&
+[7m   [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m107[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m107[0m     if (primarySymptoms.some(s =>
+[7m   [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m245[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m245[0m     if (primarySymptoms.some(s =>
+[7m   [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m252[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m252[0m     if (primarySymptoms.some(s =>
+[7m   [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m259[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m259[0m     if (primarySymptoms.some(s =>
+[7m   [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m266[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m266[0m     if (primarySymptoms.some(s =>
+[7m   [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m273[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m273[0m     if (primarySymptoms.some(s =>
+[7m   [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m280[0m:[93m30[0m - [91merror[0m[90m TS7006: [0mParameter 's' implicitly has an 'any' type.
+
+[7m280[0m     if (primarySymptoms.some(s =>
+[7m   [0m [91m                             ~[0m
+
+[96msrc/services/ai-symptom-analysis.service.ts[0m:[93m346[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'aiAnalysis' does not exist in type '(Without<MedicalThreadUpdateInput, MedicalThreadUncheckedUpdateInput> & MedicalThreadUncheckedUpdateInput) | (Without<...> & MedicalThreadUpdateInput)'.
+
+[7m346[0m         aiAnalysis: analysis as any
+[7m   [0m [91m        ~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m27664[0m:[93m5[0m
+    [7m27664[0m     data: XOR<MedicalThreadUpdateInput, MedicalThreadUncheckedUpdateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: MedicalThreadSelect<DefaultArgs> | null | undefined; include?: MedicalThreadInclude<DefaultArgs> | null | undefined; data: (Without<...> & MedicalThreadUncheckedUpdateInput) | (Without<...> & MedicalThreadUpdateInput); where: MedicalThreadWhereUniqueInput; }'
+
+[96msrc/services/award.service.ts[0m:[93m540[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m540[0m     await prisma.notification.create({
+[7m   [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/badge.service.ts[0m:[93m283[0m:[93m42[0m - [91merror[0m[90m TS2339: [0mProperty 'userBadge' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+[7m283[0m       const existingBadge = await prisma.userBadge.findUnique({
+[7m   [0m [91m                                         ~~~~~~~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m298[0m:[93m38[0m - [91merror[0m[90m TS2339: [0mProperty 'userBadge' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+[7m298[0m       const userBadge = await prisma.userBadge.create({
+[7m   [0m [91m                                     ~~~~~~~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m312[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'badgePoints' does not exist in type '(Without<UserUpdateInput, UserUncheckedUpdateInput> & UserUncheckedUpdateInput) | (Without<...> & UserUpdateInput)'.
+
+[7m312[0m           badgePoints: {
+[7m   [0m [91m          ~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m6519[0m:[93m5[0m
+    [7m6519[0m     data: XOR<UserUpdateInput, UserUncheckedUpdateInput>
+    [7m    [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: UserSelect<DefaultArgs> | null | undefined; include?: UserInclude<DefaultArgs> | null | undefined; data: (Without<UserUpdateInput, UserUncheckedUpdateInput> & UserUncheckedUpdateInput) | (Without<...> & UserUpdateInput); where: UserWhereUniqueInput; }'
+
+[96msrc/services/badge.service.ts[0m:[93m335[0m:[93m11[0m - [91merror[0m[90m TS2322: [0mType '"BADGE_EARNED"' is not assignable to type 'NotificationType'.
+
+[7m335[0m           type: 'BADGE_EARNED',
+[7m   [0m [91m          ~~~~[0m
+
+  [96msrc/services/notification.service.ts[0m:[93m7[0m:[93m3[0m
+    [7m7[0m   type: NotificationType;
+    [7m [0m [96m  ~~~~[0m
+    The expected type comes from property 'type' which is declared here on type 'CreateNotificationParams'
+
+[96msrc/services/badge.service.ts[0m:[93m514[0m:[93m39[0m - [91merror[0m[90m TS2339: [0mProperty 'userBadge' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+[7m514[0m       const userBadges = await prisma.userBadge.findMany({
+[7m   [0m [91m                                      ~~~~~~~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m519[0m:[93m29[0m - [91merror[0m[90m TS7006: [0mParameter 'ub' implicitly has an 'any' type.
+
+[7m519[0m       return userBadges.map(ub => ({
+[7m   [0m [91m                            ~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m534[0m:[93m35[0m - [91merror[0m[90m TS2339: [0mProperty 'userBadge' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+
+[7m534[0m       const badges = await prisma.userBadge.findMany({
+[7m   [0m [91m                                  ~~~~~~~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m540[0m:[93m19[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'badgePoints' does not exist in type 'UserSelect<DefaultArgs>'.
+
+[7m540[0m         select: { badgePoints: true }
+[7m   [0m [91m                  ~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m6292[0m:[93m5[0m
+    [7m6292[0m     select?: UserSelect<ExtArgs> | null
+    [7m    [0m [96m    ~~~~~~[0m
+    The expected type comes from property 'select' which is declared here on type '{ select?: UserSelect<DefaultArgs> | null | undefined; include?: UserInclude<DefaultArgs> | null | undefined; where: UserWhereUniqueInput; }'
+
+[96msrc/services/badge.service.ts[0m:[93m543[0m:[93m41[0m - [91merror[0m[90m TS7006: [0mParameter 'acc' implicitly has an 'any' type.
+
+[7m543[0m       const byCategory = badges.reduce((acc, badge) => {
+[7m   [0m [91m                                        ~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m543[0m:[93m46[0m - [91merror[0m[90m TS7006: [0mParameter 'badge' implicitly has an 'any' type.
+
+[7m543[0m       const byCategory = badges.reduce((acc, badge) => {
+[7m   [0m [91m                                             ~~~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m549[0m:[93m39[0m - [91merror[0m[90m TS7006: [0mParameter 'acc' implicitly has an 'any' type.
+
+[7m549[0m       const byRarity = badges.reduce((acc, badge) => {
+[7m   [0m [91m                                      ~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m549[0m:[93m44[0m - [91merror[0m[90m TS7006: [0mParameter 'badge' implicitly has an 'any' type.
+
+[7m549[0m       const byRarity = badges.reduce((acc, badge) => {
+[7m   [0m [91m                                           ~~~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m557[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'badgePoints' does not exist on type '{ id: string; email: string; username: string; passwordHash: string; role: UserRole; verified: boolean; doctorVerificationStatus: DoctorVerificationStatus | null; ... 33 more ...; updatedAt: Date; }'.
+
+[7m557[0m         totalPoints: user?.badgePoints || 0,
+[7m   [0m [91m                           ~~~~~~~~~~~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m561[0m:[93m18[0m - [91merror[0m[90m TS7006: [0mParameter 'a' implicitly has an 'any' type.
+
+[7m561[0m           .sort((a, b) => b.earnedAt.getTime() - a.earnedAt.getTime())
+[7m   [0m [91m                 ~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m561[0m:[93m21[0m - [91merror[0m[90m TS7006: [0mParameter 'b' implicitly has an 'any' type.
+
+[7m561[0m           .sort((a, b) => b.earnedAt.getTime() - a.earnedAt.getTime())
+[7m   [0m [91m                    ~[0m
+
+[96msrc/services/badge.service.ts[0m:[93m563[0m:[93m16[0m - [91merror[0m[90m TS7006: [0mParameter 'b' implicitly has an 'any' type.
+
+[7m563[0m           .map(b => ({
+[7m   [0m [91m               ~[0m
+
+[96msrc/services/block.service.ts[0m:[93m194[0m:[93m15[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'patientId' does not exist in type 'ConversationWhereInput'.
+
+[7m194[0m             { patientId: userId1, doctorId: userId2 },
+[7m   [0m [91m              ~~~~~~~~~[0m
+
+[96msrc/services/block.service.ts[0m:[93m195[0m:[93m15[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'patientId' does not exist in type 'ConversationWhereInput'.
+
+[7m195[0m             { patientId: userId2, doctorId: userId1 },
+[7m   [0m [91m              ~~~~~~~~~[0m
+
+[96msrc/services/block.service.ts[0m:[93m199[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'isActive' does not exist in type '(Without<ConversationUpdateManyMutationInput, ConversationUncheckedUpdateManyInput> & ConversationUncheckedUpdateManyInput) | (Without<...> & ConversationUpdateManyMutationInput)'.
+
+[7m199[0m           isActive: false,
+[7m   [0m [91m          ~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m26628[0m:[93m5[0m
+    [7m26628[0m     data: XOR<ConversationUpdateManyMutationInput, ConversationUncheckedUpdateManyInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ data: (Without<ConversationUpdateManyMutationInput, ConversationUncheckedUpdateManyInput> & ConversationUncheckedUpdateManyInput) | (Without<...> & ConversationUpdateManyMutationInput); where?: ConversationWhereInput | undefined; }'
+
+[96msrc/services/block.service.ts[0m:[93m214[0m:[93m20[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m214[0m       await prisma.notification.deleteMany({
+[7m   [0m [91m                   ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/chat-lifecycle.service.ts[0m:[93m30[0m:[93m18[0m - [91merror[0m[90m TS2345: [0mArgument of type 'AppointmentStatus' is not assignable to parameter of type '"REJECTED" | "COMPLETED" | "CANCELLED"'.
+  Type '"PENDING"' is not assignable to type '"REJECTED" | "COMPLETED" | "CANCELLED"'.
+
+[7m30[0m       ].includes(newStatus)) {
+[7m  [0m [91m                 ~~~~~~~~~[0m
+
+[96msrc/services/chat-lifecycle.service.ts[0m:[93m39[0m:[93m11[0m - [91merror[0m[90m TS7053: [0mElement implicitly has an 'any' type because expression of type 'AppointmentStatus' can't be used to index type '{ CANCELLED: string; REJECTED: string; COMPLETED: string; }'.
+  Property 'PENDING' does not exist on type '{ CANCELLED: string; REJECTED: string; COMPLETED: string; }'.
+
+[7m39[0m           reasons[newStatus]
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/chat-lifecycle.service.ts[0m:[93m62[0m:[93m13[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'doctorId' does not exist in type 'ConversationWhereInput'.
+
+[7m62[0m             doctorId,
+[7m  [0m [91m            ~~~~~~~~[0m
+
+[96msrc/services/chat-lifecycle.service.ts[0m:[93m91[0m:[93m15[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'patientId' does not exist in type 'ConversationWhereInput'.
+
+[7m91[0m             { patientId: blockerId, doctorId: blockedId },
+[7m  [0m [91m              ~~~~~~~~~[0m
+
+[96msrc/services/chat-lifecycle.service.ts[0m:[93m92[0m:[93m15[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'patientId' does not exist in type 'ConversationWhereInput'.
+
+[7m92[0m             { patientId: blockedId, doctorId: blockerId }
+[7m  [0m [91m              ~~~~~~~~~[0m
+
+[96msrc/services/chat-lifecycle.service.ts[0m:[93m122[0m:[93m11[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'isActive' does not exist in type 'ConversationWhereInput'.
+
+[7m122[0m           isActive: true,
+[7m   [0m [91m          ~~~~~~~~[0m
+
+[96msrc/services/chat-lifecycle.service.ts[0m:[93m179[0m:[93m19[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'isActive' does not exist in type '(Without<ConversationUpdateInput, ConversationUncheckedUpdateInput> & ConversationUncheckedUpdateInput) | (Without<...> & ConversationUpdateInput)'.
+
+[7m179[0m           data: { isActive: true }
+[7m   [0m [91m                  ~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m26614[0m:[93m5[0m
+    [7m26614[0m     data: XOR<ConversationUpdateInput, ConversationUncheckedUpdateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: ConversationSelect<DefaultArgs> | null | undefined; include?: ConversationInclude<DefaultArgs> | null | undefined; data: (Without<...> & ConversationUncheckedUpdateInput) | (Without<...> & ConversationUpdateInput); where: ConversationWhereUniqueInput; }'
+
+[96msrc/services/chat.service.ts[0m:[93m396[0m:[93m23[0m - [91merror[0m[90m TS7053: [0mElement implicitly has an 'any' type because expression of type 'MessageType' can't be used to index type '{ IMAGE: string[]; FILE: string[]; }'.
+  Property 'TEXT' does not exist on type '{ IMAGE: string[]; FILE: string[]; }'.
+
+[7m396[0m       const allowed = allowedMimeTypes[type] || [];
+[7m   [0m [91m                      ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/cme-credits.service.ts[0m:[93m434[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m434[0m     await prisma.notification.create({
+[7m   [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/comment.service.ts[0m:[93m253[0m:[93m32[0m - [91merror[0m[90m TS2367: [0mThis comparison appears to be unintentional because the types 'UserRole | undefined' and '"VERIFIED_DOCTOR"' have no overlap.
+
+[7m253[0m       const isVerifiedDoctor = currentUser?.role === 'VERIFIED_DOCTOR' ||
+[7m   [0m [91m                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/consultation-funnel.service.ts[0m:[93m37[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'consultationFee' does not exist in type 'UserSelect<DefaultArgs>'.
+
+[7m37[0m         consultationFee: true
+[7m  [0m [91m        ~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m6292[0m:[93m5[0m
+    [7m6292[0m     select?: UserSelect<ExtArgs> | null
+    [7m    [0m [96m    ~~~~~~[0m
+    The expected type comes from property 'select' which is declared here on type '{ select?: UserSelect<DefaultArgs> | null | undefined; include?: UserInclude<DefaultArgs> | null | undefined; where: UserWhereUniqueInput; }'
+
+[96msrc/services/consultation-funnel.service.ts[0m:[93m106[0m:[93m13[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'consultationFee' does not exist in type 'UserSelect<DefaultArgs>'.
+
+[7m106[0m             consultationFee: true
+[7m   [0m [91m            ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/consultation-funnel.service.ts[0m:[93m118[0m:[93m28[0m - [91merror[0m[90m TS2551: [0mProperty 'doctor' does not exist on type '{ id: string; createdAt: Date; updatedAt: Date; status: AppointmentStatus; patientId: string; doctorId: string; startTime: Date; endTime: Date; reason: string | null; }'. Did you mean 'doctorId'?
+
+[7m118[0m       doctor: consultation.doctor,
+[7m   [0m [91m                           ~~~~~~[0m
+
+[96msrc/services/consultation-funnel.service.ts[0m:[93m174[0m:[93m13[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'consultationFee' does not exist in type 'UserSelect<DefaultArgs>'.
+
+[7m174[0m             consultationFee: true
+[7m   [0m [91m            ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/consultation-funnel.service.ts[0m:[93m388[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m388[0m     await prisma.notification.create({
+[7m   [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/consultation-funnel.service.ts[0m:[93m399[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m399[0m     await prisma.notification.create({
+[7m   [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/consultation-funnel.service.ts[0m:[93m410[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m410[0m     await prisma.notification.create({
+[7m   [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/cron-jobs.service.ts[0m:[93m5[0m:[93m18[0m - [91merror[0m[90m TS7016: [0mCould not find a declaration file for module 'node-cron'. '/Users/mohammedfaazk/Desktop/MedThread/node_modules/node-cron/src/node-cron.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/node-cron` if it exists or add a new declaration (.d.ts) file containing `declare module 'node-cron';`
+
+[7m5[0m import cron from 'node-cron';
+[7m [0m [91m                 ~~~~~~~~~~~[0m
+
+[96msrc/services/cron-jobs.service.ts[0m:[93m102[0m:[93m24[0m - [91merror[0m[90m TS2341: [0mProperty 'sendEmail' is private and only accessible within class 'EmailService'.
+
+[7m102[0m     await emailService.sendEmail({
+[7m   [0m [91m                       ~~~~~~~~~[0m
+
+[96msrc/services/cron-jobs.service.ts[0m:[93m110[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m110[0m     await prisma.notification.create({
+[7m   [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/cron-jobs.service.ts[0m:[93m164[0m:[93m26[0m - [91merror[0m[90m TS2341: [0mProperty 'sendEmail' is private and only accessible within class 'EmailService'.
+
+[7m164[0m       await emailService.sendEmail({
+[7m   [0m [91m                         ~~~~~~~~~[0m
+
+[96msrc/services/cron-jobs.service.ts[0m:[93m232[0m:[93m24[0m - [91merror[0m[90m TS2551: [0mProperty 'sendAppointmentReminderEmail' does not exist on type 'EmailService'. Did you mean 'sendAppointmentReminder'?
+
+[7m232[0m     await emailService.sendAppointmentReminderEmail(
+[7m   [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/services/email.service.ts[0m:[93m161[0m:[93m9[0m
+    [7m161[0m   async sendAppointmentReminder(data: AppointmentReminderData): Promise<boolean> {
+    [7m   [0m [96m        ~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'sendAppointmentReminder' is declared here.
+
+[96msrc/services/cron-jobs.service.ts[0m:[93m240[0m:[93m24[0m - [91merror[0m[90m TS2551: [0mProperty 'sendAppointmentReminderEmail' does not exist on type 'EmailService'. Did you mean 'sendAppointmentReminder'?
+
+[7m240[0m     await emailService.sendAppointmentReminderEmail(
+[7m   [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/services/email.service.ts[0m:[93m161[0m:[93m9[0m
+    [7m161[0m   async sendAppointmentReminder(data: AppointmentReminderData): Promise<boolean> {
+    [7m   [0m [96m        ~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'sendAppointmentReminder' is declared here.
+
+[96msrc/services/cron-jobs.service.ts[0m:[93m248[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m248[0m     await prisma.notification.createMany({
+[7m   [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/digest-email.service.ts[0m:[93m26[0m:[93m11[0m - [91merror[0m[90m TS2561: [0mObject literal may only specify known properties, but 'notificationPreferences' does not exist in type 'UserWhereInput'. Did you mean to write 'notification_preferences'?
+
+[7m26[0m           notificationPreferences: {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/digest-email.service.ts[0m:[93m31[0m:[93m11[0m - [91merror[0m[90m TS2561: [0mObject literal may only specify known properties, but 'notificationPreferences' does not exist in type 'UserInclude<DefaultArgs>'. Did you mean to write 'notification_preferences'?
+
+[7m31[0m           notificationPreferences: true
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/digest-email.service.ts[0m:[93m70[0m:[93m11[0m - [91merror[0m[90m TS2561: [0mObject literal may only specify known properties, but 'notificationPreferences' does not exist in type 'UserWhereInput'. Did you mean to write 'notification_preferences'?
+
+[7m70[0m           notificationPreferences: {
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/digest-email.service.ts[0m:[93m75[0m:[93m11[0m - [91merror[0m[90m TS2561: [0mObject literal may only specify known properties, but 'notificationPreferences' does not exist in type 'UserInclude<DefaultArgs>'. Did you mean to write 'notification_preferences'?
+
+[7m75[0m           notificationPreferences: true
+[7m  [0m [91m          ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/digest-email.service.ts[0m:[93m144[0m:[93m42[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m144[0m       const notifications = await prisma.notification.findMany({
+[7m   [0m [91m                                         ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/digest-email.service.ts[0m:[93m178[0m:[93m47[0m - [91merror[0m[90m TS2339: [0mProperty 'sendDigestEmail' does not exist on type 'EmailService'.
+
+[7m178[0m       const success = await this.emailService.sendDigestEmail(
+[7m   [0m [91m                                              ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/digest-email.service.ts[0m:[93m189[0m:[93m11[0m - [91merror[0m[90m TS2322: [0mType '{ userId: string; notificationId: any; type: string; status: string; attempts: number; sentAt: Date; }' is not assignable to type '(Without<email_queueCreateInput, email_queueUncheckedCreateInput> & email_queueUncheckedCreateInput) | (Without<...> & email_queueCreateInput)'.
+  Type '{ userId: string; notificationId: any; type: string; status: string; attempts: number; sentAt: Date; }' is not assignable to type 'Without<email_queueCreateInput, email_queueUncheckedCreateInput> & email_queueUncheckedCreateInput'.
+    Type '{ userId: string; notificationId: any; type: string; status: string; attempts: number; sentAt: Date; }' is missing the following properties from type 'email_queueUncheckedCreateInput': id, updatedAt
+
+[7m189[0m           data: {
+[7m   [0m [91m          ~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m43221[0m:[93m5[0m
+    [7m43221[0m     data: XOR<email_queueCreateInput, email_queueUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: email_queueSelect<DefaultArgs> | null | undefined; include?: email_queueInclude<DefaultArgs> | null | undefined; data: (Without<...> & email_queueUncheckedCreateInput) | (Without<...> & email_queueCreateInput); }'
+
+[96msrc/services/digest-email.service.ts[0m:[93m235[0m:[93m42[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m235[0m       const notifications = await prisma.notification.findMany({
+[7m   [0m [91m                                         ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/doctor-profile-enhanced.service.ts[0m:[93m118[0m:[93m66[0m - [91merror[0m[90m TS2339: [0mProperty 'tags' does not exist on type '{ createdAt: Date; status: string; isResolved: boolean; }'.
+
+[7m118[0m     const uniqueTopics = new Set(doctorReplies.map(r => r.thread.tags).flat()).size;
+[7m   [0m [91m                                                                 ~~~~[0m
+
+[96msrc/services/doctor-verification.service.ts[0m:[93m301[0m:[93m26[0m - [91merror[0m[90m TS2551: [0mProperty 'sendVerificationApprovedEmail' does not exist on type 'EmailService'. Did you mean 'sendVerificationEmail'?
+
+[7m301[0m       await emailService.sendVerificationApprovedEmail(updatedUser.email, updatedUser.username);
+[7m   [0m [91m                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/services/email.service.ts[0m:[93m125[0m:[93m9[0m
+    [7m125[0m   async sendVerificationEmail(data: VerificationEmailData): Promise<boolean> {
+    [7m   [0m [96m        ~~~~~~~~~~~~~~~~~~~~~[0m
+    'sendVerificationEmail' is declared here.
+
+[96msrc/services/doctor-verification.service.ts[0m:[93m371[0m:[93m26[0m - [91merror[0m[90m TS2551: [0mProperty 'sendVerificationRejectedEmail' does not exist on type 'EmailService'. Did you mean 'sendVerificationEmail'?
+
+[7m371[0m       await emailService.sendVerificationRejectedEmail(updatedUser.email, updatedUser.username, reason);
+[7m   [0m [91m                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/services/email.service.ts[0m:[93m125[0m:[93m9[0m
+    [7m125[0m   async sendVerificationEmail(data: VerificationEmailData): Promise<boolean> {
+    [7m   [0m [96m        ~~~~~~~~~~~~~~~~~~~~~[0m
+    'sendVerificationEmail' is declared here.
+
+[96msrc/services/email-queue.service.ts[0m:[93m5[0m:[93m10[0m - [91merror[0m[90m TS2724: [0m'"@prisma/client"' has no exported member named 'Notification'. Did you mean 'notifications'?
+
+[7m5[0m import { Notification } from '@prisma/client';
+[7m [0m [91m         ~~~~~~~~~~~~[0m
+
+[96msrc/services/email-queue.service.ts[0m:[93m59[0m:[93m41[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m59[0m       const notification = await prisma.notification.findUnique({
+[7m  [0m [91m                                        ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/email-queue.service.ts[0m:[93m78[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '{ userId: string; notificationId: string; type: string; status: string; }' is not assignable to type '(Without<email_queueCreateInput, email_queueUncheckedCreateInput> & email_queueUncheckedCreateInput) | (Without<...> & email_queueCreateInput)'.
+  Type '{ userId: string; notificationId: string; type: string; status: string; }' is not assignable to type 'Without<email_queueCreateInput, email_queueUncheckedCreateInput> & email_queueUncheckedCreateInput'.
+    Type '{ userId: string; notificationId: string; type: string; status: string; }' is missing the following properties from type 'email_queueUncheckedCreateInput': id, updatedAt
+
+[7m78[0m         data: {
+[7m  [0m [91m        ~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m43221[0m:[93m5[0m
+    [7m43221[0m     data: XOR<email_queueCreateInput, email_queueUncheckedCreateInput>
+    [7m     [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: email_queueSelect<DefaultArgs> | null | undefined; include?: email_queueInclude<DefaultArgs> | null | undefined; data: (Without<...> & email_queueUncheckedCreateInput) | (Without<...> & email_queueCreateInput); }'
+
+[96msrc/services/email-queue.service.ts[0m:[93m116[0m:[93m11[0m - [91merror[0m[90m TS2322: [0mType '{ userId: any; notificationId: any; type: "instant"; status: "pending"; }[]' is not assignable to type 'email_queueCreateManyInput | email_queueCreateManyInput[]'.
+  Type '{ userId: any; notificationId: any; type: "instant"; status: "pending"; }[]' is not assignable to type 'email_queueCreateManyInput[]'.
+    Type '{ userId: any; notificationId: any; type: "instant"; status: "pending"; }' is missing the following properties from type 'email_queueCreateManyInput': id, updatedAt
+
+[7m116[0m           data: jobs
+[7m   [0m [91m          ~~~~[0m
+
+[96msrc/services/email-queue.service.ts[0m:[93m255[0m:[93m75[0m - [91merror[0m[90m TS2554: [0mExpected 1 arguments, but got 2.
+
+[7m255[0m         success = await this.emailService.sendNotificationEmail(job.User, job.notifications);
+[7m   [0m [91m                                                                          ~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/follow.service.ts[0m:[93m293[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'isDeleted' does not exist in type 'PostWhereInput'.
+
+[7m293[0m         isDeleted: false,
+[7m   [0m [91m        ~~~~~~~~~[0m
+
+[96msrc/services/notification-preferences.service.ts[0m:[93m2[0m:[93m28[0m - [91merror[0m[90m TS2724: [0m'"@prisma/client"' has no exported member named 'NotificationPreferences'. Did you mean 'notification_preferences'?
+
+[7m2[0m import { NotificationType, NotificationPreferences } from '@prisma/client';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/notification-preferences.service.ts[0m:[93m24[0m:[93m38[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m24[0m       let preferences = await prisma.notificationPreferences.findUnique({
+[7m  [0m [91m                                     ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/notification-preferences.service.ts[0m:[93m54[0m:[93m40[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m54[0m       const preferences = await prisma.notificationPreferences.update({
+[7m  [0m [91m                                       ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/notification-preferences.service.ts[0m:[93m196[0m:[93m40[0m - [91merror[0m[90m TS2551: [0mProperty 'notificationPreferences' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notification_preferences'?
+
+[7m196[0m       const preferences = await prisma.notificationPreferences.create({
+[7m   [0m [91m                                       ~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m904[0m:[93m7[0m
+    [7m904[0m   get notification_preferences(): Prisma.notification_preferencesDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'notification_preferences' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m2[0m:[93m41[0m - [91merror[0m[90m TS2724: [0m'"@prisma/client"' has no exported member named 'Notification'. Did you mean 'notifications'?
+
+[7m2[0m import { NotificationType, ContentType, Notification, Prisma } from '@prisma/client';
+[7m [0m [91m                                        ~~~~~~~~~~~~[0m
+
+[96msrc/services/notification.service.ts[0m:[93m98[0m:[93m18[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m98[0m           prisma.notification.create({
+[7m  [0m [91m                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m170[0m:[93m27[0m - [91merror[0m[90m TS2724: [0m'"/Users/mohammedfaazk/Desktop/MedThread/node_modules/.prisma/client/index".Prisma' has no exported member named 'NotificationWhereInput'. Did you mean 'notificationsWhereInput'?
+
+[7m170[0m       const where: Prisma.NotificationWhereInput = {
+[7m   [0m [91m                          ~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/notification.service.ts[0m:[93m195[0m:[93m16[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m195[0m         prisma.notification.findMany({
+[7m   [0m [91m               ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m213[0m:[93m16[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m213[0m         prisma.notification.count({ where }),
+[7m   [0m [91m               ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m235[0m:[93m41[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m235[0m       const notification = await prisma.notification.findFirst({
+[7m   [0m [91m                                        ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m250[0m:[93m20[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m250[0m       await prisma.notification.update({
+[7m   [0m [91m                   ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m273[0m:[93m35[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m273[0m       const result = await prisma.notification.updateMany({
+[7m   [0m [91m                                  ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m303[0m:[93m41[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m303[0m       const notification = await prisma.notification.findFirst({
+[7m   [0m [91m                                        ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m314[0m:[93m20[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m314[0m       await prisma.notification.update({
+[7m   [0m [91m                   ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m346[0m:[93m34[0m - [91merror[0m[90m TS2551: [0mProperty 'notification' does not exist on type 'PrismaClient<{ datasources: { db: { url: string | undefined; }; }; log: ("error" | "warn")[]; }, never, DefaultArgs>'. Did you mean 'notifications'?
+
+[7m346[0m       const count = await prisma.notification.count({
+[7m   [0m [91m                                 ~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m914[0m:[93m7[0m
+    [7m914[0m   get notifications(): Prisma.notificationsDelegate<ExtArgs>;
+    [7m   [0m [96m      ~~~~~~~~~~~~~[0m
+    'notifications' is declared here.
+
+[96msrc/services/notification.service.ts[0m:[93m501[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'createdAt' does not exist on type 'AggregatedNotification'.
+
+[7m501[0m       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+[7m   [0m [91m                 ~~~~~~~~~[0m
+
+[96msrc/services/notification.service.ts[0m:[93m501[0m:[93m52[0m - [91merror[0m[90m TS2339: [0mProperty 'createdAt' does not exist on type 'AggregatedNotification'.
+
+[7m501[0m       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+[7m   [0m [91m                                                   ~~~~~~~~~[0m
+
+[96msrc/services/payment.service.ts[0m:[93m140[0m:[93m35[0m - [91merror[0m[90m TS2339: [0mProperty 'payment_intent' does not exist on type 'Invoice'.
+
+[7m140[0m     const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+[7m   [0m [91m                                  ~~~~~~~~~~~~~~[0m
+
+[96msrc/services/payment.service.ts[0m:[93m156[0m:[93m37[0m - [91merror[0m[90m TS2339: [0mProperty 'current_period_start' does not exist on type 'Response<Subscription>'.
+
+[7m156[0m         to_timestamp(${subscription.current_period_start}),
+[7m   [0m [91m                                    ~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/payment.service.ts[0m:[93m157[0m:[93m37[0m - [91merror[0m[90m TS2339: [0mProperty 'current_period_end' does not exist on type 'Response<Subscription>'.
+
+[7m157[0m         to_timestamp(${subscription.current_period_end})
+[7m   [0m [91m                                    ~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/socket-delivery.service.ts[0m:[93m2[0m:[93m10[0m - [91merror[0m[90m TS2724: [0m'"@prisma/client"' has no exported member named 'Notification'. Did you mean 'notifications'?
+
+[7m2[0m import { Notification } from '@prisma/client';
+[7m [0m [91m         ~~~~~~~~~~~~[0m
+
+[96msrc/services/two-factor.service.ts[0m:[93m1[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"otplib"' has no exported member 'authenticator'.
+
+[7m1[0m import { authenticator } from 'otplib';
+[7m [0m [91m         ~~~~~~~~~~~~~[0m
+
+[96msrc/services/two-factor.service.ts[0m:[93m43[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'twoFactorSecret' does not exist in type '(Without<UserUpdateInput, UserUncheckedUpdateInput> & UserUncheckedUpdateInput) | (Without<...> & UserUpdateInput)'.
+
+[7m43[0m         twoFactorSecret: secret
+[7m  [0m [91m        ~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m6519[0m:[93m5[0m
+    [7m6519[0m     data: XOR<UserUpdateInput, UserUncheckedUpdateInput>
+    [7m    [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: UserSelect<DefaultArgs> | null | undefined; include?: UserInclude<DefaultArgs> | null | undefined; data: (Without<UserUpdateInput, UserUncheckedUpdateInput> & UserUncheckedUpdateInput) | (Without<...> & UserUpdateInput); where: UserWhereUniqueInput; }'
+
+[96msrc/services/two-factor.service.ts[0m:[93m54[0m:[93m17[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'twoFactorSecret' does not exist in type 'UserSelect<DefaultArgs>'.
+
+[7m54[0m       select: { twoFactorSecret: true }
+[7m  [0m [91m                ~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m6292[0m:[93m5[0m
+    [7m6292[0m     select?: UserSelect<ExtArgs> | null
+    [7m    [0m [96m    ~~~~~~[0m
+    The expected type comes from property 'select' which is declared here on type '{ select?: UserSelect<DefaultArgs> | null | undefined; include?: UserInclude<DefaultArgs> | null | undefined; where: UserWhereUniqueInput; }'
+
+[96msrc/services/two-factor.service.ts[0m:[93m57[0m:[93m16[0m - [91merror[0m[90m TS2339: [0mProperty 'twoFactorSecret' does not exist on type '{ id: string; email: string; username: string; passwordHash: string; role: UserRole; verified: boolean; doctorVerificationStatus: DoctorVerificationStatus | null; ... 33 more ...; updatedAt: Date; }'.
+
+[7m57[0m     if (!user?.twoFactorSecret) {
+[7m  [0m [91m               ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/two-factor.service.ts[0m:[93m62[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'twoFactorSecret' does not exist on type '{ id: string; email: string; username: string; passwordHash: string; role: UserRole; verified: boolean; doctorVerificationStatus: DoctorVerificationStatus | null; ... 33 more ...; updatedAt: Date; }'.
+
+[7m62[0m     if (!this.verifyToken(user.twoFactorSecret, token)) {
+[7m  [0m [91m                               ~~~~~~~~~~~~~~~[0m
+
+[96msrc/services/two-factor.service.ts[0m:[93m70[0m:[93m9[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'twoFactorSecret' does not exist in type '(Without<UserUpdateInput, UserUncheckedUpdateInput> & UserUncheckedUpdateInput) | (Without<...> & UserUpdateInput)'.
+
+[7m70[0m         twoFactorSecret: null
+[7m  [0m [91m        ~~~~~~~~~~~~~~~[0m
+
+  [96m../../node_modules/.prisma/client/index.d.ts[0m:[93m6519[0m:[93m5[0m
+    [7m6519[0m     data: XOR<UserUpdateInput, UserUncheckedUpdateInput>
+    [7m    [0m [96m    ~~~~[0m
+    The expected type comes from property 'data' which is declared here on type '{ select?: UserSelect<DefaultArgs> | null | undefined; include?: UserInclude<DefaultArgs> | null | undefined; data: (Without<UserUpdateInput, UserUncheckedUpdateInput> & UserUncheckedUpdateInput) | (Without<...> & UserUpdateInput); where: UserWhereUniqueInput; }'
+
+
+Found 375 errors in 59 files.
+
+Errors  Files
+     1  src/config/razorpay.ts[90m:1[0m
+     1  src/config/stripe.ts[90m:8[0m
+     2  src/controllers/admin.controller.ts[90m:239[0m
+     2  src/controllers/notification.controller.ts[90m:227[0m
+     1  src/handlers/notification.handler.ts[90m:115[0m
+     1  src/index.ts[90m:5[0m
+     1  src/middleware/chatPermission.ts[90m:78[0m
+     2  src/middleware/requireVerifiedDoctor.ts[90m:16[0m
+     8  src/routes/account.ts[90m:12[0m
+     7  src/routes/analytics.routes.ts[90m:13[0m
+     3  src/routes/appointments.ts[90m:316[0m
+    24  src/routes/awards.ts[90m:13[0m
+     9  src/routes/badge.routes.ts[90m:14[0m
+     4  src/routes/block.routes.ts[90m:15[0m
+    11  src/routes/chat.v2.ts[90m:17[0m
+     8  src/routes/cme-credits.routes.ts[90m:15[0m
+     4  src/routes/comments.ts[90m:19[0m
+     4  src/routes/communities.ts[90m:36[0m
+     6  src/routes/consultation-funnel.routes.ts[90m:15[0m
+     6  src/routes/doctor-profile-enhanced.routes.ts[90m:14[0m
+     7  src/routes/file-upload.routes.ts[90m:15[0m
+     9  src/routes/follow.ts[90m:15[0m
+     9  src/routes/health-insights.routes.ts[90m:15[0m
+    20  src/routes/karma.ts[90m:12[0m
+     5  src/routes/posts.routes.ts[90m:20[0m
+    10  src/routes/posts.ts[90m:23[0m
+     4  src/routes/replies.ts[90m:58[0m
+     4  src/routes/users.routes.ts[90m:14[0m
+     1  src/scripts/delete-dr-navin.ts[90m:80[0m
+     1  src/scripts/delete-user.ts[90m:39[0m
+     1  src/scripts/ensure-passwords.ts[90m:13[0m
+     4  src/scripts/test-notification-triggers.ts[90m:61[0m
+     2  src/services/__tests__/chat.service.test.ts[90m:1[0m
+    17  src/services/__tests__/email.service.test.ts[90m:1[0m
+    19  src/services/__tests__/notification-preferences.service.test.ts[90m:1[0m
+    13  src/services/__tests__/notification-triggers.test.ts[90m:1[0m
+    40  src/services/__tests__/notification.service.test.ts[90m:1[0m
+     1  src/services/__tests__/socket-delivery.service.test.ts[90m:1[0m
+     2  src/services/account.service.ts[90m:102[0m
+    12  src/services/ai-symptom-analysis.service.ts[90m:72[0m
+     1  src/services/award.service.ts[90m:540[0m
+    16  src/services/badge.service.ts[90m:283[0m
+     4  src/services/block.service.ts[90m:194[0m
+     7  src/services/chat-lifecycle.service.ts[90m:30[0m
+     1  src/services/chat.service.ts[90m:396[0m
+     1  src/services/cme-credits.service.ts[90m:434[0m
+     1  src/services/comment.service.ts[90m:253[0m
+     7  src/services/consultation-funnel.service.ts[90m:37[0m
+     7  src/services/cron-jobs.service.ts[90m:5[0m
+     8  src/services/digest-email.service.ts[90m:26[0m
+     1  src/services/doctor-profile-enhanced.service.ts[90m:118[0m
+     2  src/services/doctor-verification.service.ts[90m:301[0m
+     5  src/services/email-queue.service.ts[90m:5[0m
+     1  src/services/follow.service.ts[90m:293[0m
+     4  src/services/notification-preferences.service.ts[90m:2[0m
+    13  src/services/notification.service.ts[90m:2[0m
+     3  src/services/payment.service.ts[90m:140[0m
+     1  src/services/socket-delivery.service.ts[90m:2[0m
+     6  src/services/two-factor.service.ts[90m:1[0m
+[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m Lifecycle script `build` failed with error:
+[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mcode[39m [33m2[39m
+[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mpath[39m /Users/mohammedfaazk/Desktop/MedThread/apps/api
+[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mworkspace[39m @medthread/api@0.1.0
+[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mlocation[39m /Users/mohammedfaazk/Desktop/MedThread/apps/api
+[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m command failed
+[1G[0K⠙[1G[0K[1mnpm[22m [31merror[39m [94mcommand[39m sh -c tsc
+[1G[0K⠙[1G[0K
