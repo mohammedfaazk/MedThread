@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Session management
 let sessionId: string | null = null;
@@ -26,7 +26,7 @@ export const analytics = {
    */
   trackEvent(eventName: string, eventCategory: string, properties?: Record<string, any>) {
     try {
-      axios.post(`${API_URL}/analytics/event`, {
+      axios.post(`${API_URL}/api/analytics/event`, {
         eventName,
         eventCategory,
         properties,
@@ -49,7 +49,7 @@ export const analytics = {
       // Track previous page duration
       if (currentPage && pageStartTime) {
         const duration = Date.now() - pageStartTime;
-        axios.post(`${API_URL}/analytics/pageview`, {
+        axios.post(`${API_URL}/api/analytics/pageview`, {
           page: currentPage,
           title: pageTitle,
           sessionId: getSessionId(),
@@ -63,7 +63,7 @@ export const analytics = {
       pageStartTime = Date.now();
 
       // Track new page view
-      axios.post(`${API_URL}/analytics/pageview`, {
+      axios.post(`${API_URL}/api/analytics/pageview`, {
         page: pagePath,
         title: pageTitle,
         sessionId: getSessionId(),
@@ -79,7 +79,7 @@ export const analytics = {
    */
   trackConversion(conversionType: string, value?: number, metadata?: Record<string, any>) {
     try {
-      axios.post(`${API_URL}/analytics/conversion`, {
+      axios.post(`${API_URL}/api/analytics/conversion`, {
         conversionType,
         value,
         metadata,
@@ -95,7 +95,7 @@ export const analytics = {
    */
   trackPostView(postId: string) {
     try {
-      axios.post(`${API_URL}/analytics/post-view/${postId}`)
+      axios.post(`${API_URL}/api/analytics/post-view/${postId}`)
         .catch(err => console.error('Analytics error:', err));
     } catch (error) {
       console.error('Analytics tracking error:', error);
@@ -174,7 +174,7 @@ if (typeof window !== 'undefined') {
     if (currentPage && pageStartTime) {
       const duration = Date.now() - pageStartTime;
       navigator.sendBeacon(
-        `${API_URL}/analytics/pageview`,
+        `${API_URL}/api/analytics/pageview`,
         JSON.stringify({
           page: currentPage,
           sessionId: getSessionId(),

@@ -52,34 +52,40 @@ export default function ChatInbox({
   const fetchConversations = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await axios.get(`${API_URL}/api/chat/conversations/preview`, {
-        params: { userId: currentUserId },
+      console.log('🔍 ChatInbox: Fetching conversations for user:', currentUserId)
+      
+      const response = await axios.get(`${API_URL}/api/v2/chat/conversations`, {
         headers: { Authorization: `Bearer ${token}` }
       })
 
-      setConversations(response.data)
+      console.log('✅ ChatInbox: Received conversations:', response.data.data.length)
+      
+      // Transform v2 API response to preview format
+      const previews = response.data.data.map((conv: any) => ({
+        id: conv.id,
+        participants: [
+          {
+            id: conv.appointment.patient.id,
+            username: conv.appointment.patient.username,
+            avatar: conv.appointment.patient.avatar,
+            role: conv.appointment.patient.role
+          },
+          {
+            id: conv.appointment.doctor.id,
+            username: conv.appointment.doctor.username,
+            avatar: conv.appointment.doctor.avatar,
+            role: conv.appointment.doctor.role
+          }
+        ],
+        lastMessage: conv.messages?.[0] || null,
+        unreadCount: conv.unreadCount || 0,
+        lastMessageAt: conv.messages?.[0]?.createdAt || conv.updatedAt
+      }))
+
+      setConversations(previews)
     } catch (error) {
-      console.error('Error fetching conversations:', error)
-      // Fallback to existing endpoint if preview endpoint doesn't exist
-      try {
-        const response = await axios.get(`${API_URL}/api/chat/conversations`, {
-          params: { userId: currentUserId },
-          headers: { Authorization: `Bearer ${token}` }
-        })
-
-        // Transform to preview format
-        const previews = response.data.map((conv: any) => ({
-          id: conv.id,
-          participants: conv.participants || [],
-          lastMessage: conv.messages?.[0] || null,
-          unreadCount: conv.unreadCount || 0,
-          lastMessageAt: conv.lastMessageAt || conv.messages?.[0]?.createdAt
-        }))
-
-        setConversations(previews)
-      } catch (fallbackError) {
-        console.error('Fallback fetch failed:', fallbackError)
-      }
+      console.error('❌ ChatInbox: Error fetching conversations:', error)
+      setConversations([])
     } finally {
       setLoading(false)
     }

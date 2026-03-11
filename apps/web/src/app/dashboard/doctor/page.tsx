@@ -118,9 +118,14 @@ export default function DoctorDashboard() {
     const loadMessagesCount = async () => {
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            const res = await axios.get(`${API_URL}/api/chat/conversations?userId=${effectiveUserId}`)
-            if (res.data && Array.isArray(res.data)) {
-                const unreadCount = res.data.reduce((total: number, conv: any) => {
+            const token = localStorage.getItem('auth_token')
+            const res = await axios.get(`${API_URL}/api/v2/chat/conversations`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            if (res.data && res.data.data && Array.isArray(res.data.data)) {
+                const unreadCount = res.data.data.reduce((total: number, conv: any) => {
                     return total + (conv.unreadCount || 0)
                 }, 0)
                 setMessagesCount(unreadCount)
@@ -135,10 +140,15 @@ export default function DoctorDashboard() {
         setLoadingChats(true)
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            const res = await axios.get(`${API_URL}/api/chat/conversations?userId=${effectiveUserId}`)
+            const token = localStorage.getItem('auth_token')
+            const res = await axios.get(`${API_URL}/api/v2/chat/conversations`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
             console.log('[Doctor Dashboard] Loaded conversations:', res.data)
-            if (res.data && Array.isArray(res.data)) {
-                const sortedConvs = res.data
+            if (res.data && res.data.data && Array.isArray(res.data.data)) {
+                const sortedConvs = res.data.data
                     .sort((a: any, b: any) => {
                         const aTime = a.messages?.[a.messages.length - 1]?.createdAt || a.updatedAt
                         const bTime = b.messages?.[b.messages.length - 1]?.createdAt || b.updatedAt
@@ -522,7 +532,9 @@ export default function DoctorDashboard() {
                                         </div>
                                     ) : (
                                         conversations.map((conv, index) => {
-                                            const patient = conv.participants?.find((p: any) => p.id !== effectiveUserId)
+                                            const patient = conv.appointment?.patient?.id !== effectiveUserId 
+                                                ? conv.appointment?.patient 
+                                                : conv.appointment?.doctor
                                             const lastMessage = conv.messages?.[conv.messages.length - 1]
                                             const timeAgo = lastMessage?.createdAt 
                                                 ? getTimeAgo(new Date(lastMessage.createdAt))

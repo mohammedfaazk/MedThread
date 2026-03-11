@@ -35,6 +35,12 @@ export default function ChatWindow({
   token,
   onAccessDenied
 }: ChatWindowProps) {
+  console.log('🔍 ChatWindow initialized with:', {
+    conversationId,
+    currentUserId,
+    tokenExists: !!token
+  });
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -512,10 +518,22 @@ export default function ChatWindow({
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        let errorMessage = 'Failed to send message';
+        try {
+          const error = await response.json();
+          errorMessage = error.error || errorMessage;
+        } catch (jsonError) {
+          // If response is not JSON, try to get text
+          try {
+            const textError = await response.text();
+            errorMessage = textError || `HTTP ${response.status}: ${response.statusText}`;
+          } catch (textError) {
+            errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          }
+        }
         // Remove optimistic message on error
         setMessages(prev => prev.filter(m => m.id !== tempId));
-        throw new Error(error.error || 'Failed to send message');
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -531,6 +549,15 @@ export default function ChatWindow({
       }, 0);
     } catch (error: any) {
       console.error('Error sending message:', error);
+      
+      // Log detailed error information for debugging
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+        console.error('Response data type:', typeof error.response.data);
+        console.error('Response data:', error.response.data);
+      }
+      
       alert(error.message || 'Failed to send message');
     } finally {
       setIsSending(false);

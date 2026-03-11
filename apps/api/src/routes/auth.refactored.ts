@@ -40,4 +40,11 @@ router.get('/me', authenticate, authController.me);
  */
 router.post('/logout', authenticate, authController.logout);
 
+/**
+ * @route   POST /api/auth/verify-password
+ * @desc    Verify user password for secure operations
+ * @access  Private
+ */
+router.post('/verify-password', authenticate, authController.verifyPassword);
+
 export { router as authRouter };

@@ -59,15 +59,6 @@ export const validateChatAccess = async (
               }
             }
           }
-        },
-        patient: {
-          select: { id: true }
-        },
-        doctor: {
-          select: { 
-            id: true, 
-            doctorVerificationStatus: true 
-          }
         }
       }
     });
@@ -76,22 +67,13 @@ export const validateChatAccess = async (
       conversationId,
       userId,
       conversationFound: !!conversation,
-      appointmentFound: !!conversation?.appointment,
-      isActive: conversation?.isActive
+      appointmentFound: !!conversation?.appointment
     });
 
     if (!conversation) {
       return res.status(404).json({ 
         error: 'Conversation not found',
         code: 'CONVERSATION_NOT_FOUND'
-      });
-    }
-
-    // Check if conversation is active
-    if (!conversation.isActive) {
-      return res.status(403).json({ 
-        error: 'This conversation has been deactivated',
-        code: 'CONVERSATION_INACTIVE'
       });
     }
 
@@ -237,10 +219,6 @@ export const canAccessConversation = async (
 
     if (!conversation) {
       return { allowed: false, reason: 'Conversation not found', code: 'CONVERSATION_NOT_FOUND' };
-    }
-
-    if (!conversation.isActive) {
-      return { allowed: false, reason: 'Conversation inactive', code: 'CONVERSATION_INACTIVE' };
     }
 
     if (!conversation.appointment) {

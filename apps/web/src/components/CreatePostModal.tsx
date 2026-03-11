@@ -7,7 +7,7 @@ import { useJWTAuth } from '@/context/JWTAuthContext'
 import { FileText, Image, Video, Link2, BarChart3, Bold, Italic, List } from 'lucide-react'
 import axios from 'axios'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 interface CreatePostModalProps {
   isOpen: boolean

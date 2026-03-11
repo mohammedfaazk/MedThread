@@ -48,31 +48,23 @@ export default function LoginPage() {
 
         console.log('✅ Logged in successfully');
 
-        // Redirect based on role
+        // Redirect based on role - Send everyone to main feed to see posts and communities
         const user = response.data.data.user
         if (user.role === 'ADMIN') {
           console.log('➡️ Redirecting to /admin');
           router.push('/admin')
         } else if (user.role === 'DOCTOR') {
           // Check doctor verification status
-          if (user.doctorVerificationStatus === 'APPROVED') {
-            console.log('➡️ Redirecting to /dashboard/doctor');
-            router.push('/dashboard/doctor')
-          } else if (user.doctorVerificationStatus === 'PENDING' || user.doctorVerificationStatus === 'UNDER_REVIEW') {
-            alert('Your doctor account is pending verification. You can browse but cannot post as a doctor until approved.')
-            console.log('➡️ Redirecting to / (pending verification)');
-            router.push('/')
+          if (user.doctorVerificationStatus === 'PENDING' || user.doctorVerificationStatus === 'UNDER_REVIEW') {
+            alert('Your doctor account is pending verification. You can browse and see all posts, but cannot create posts as a doctor until approved.')
           } else if (user.doctorVerificationStatus === 'REJECTED') {
-            alert('Your doctor verification was rejected. Please contact support.')
-            console.log('➡️ Redirecting to / (rejected)');
-            router.push('/')
-          } else {
-            console.log('➡️ Redirecting to /dashboard/doctor (default)');
-            router.push('/dashboard/doctor')
+            alert('Your doctor verification was rejected. Please contact support. You can still browse all posts and communities.')
           }
+          console.log('➡️ Redirecting to / (main feed with posts and communities)');
+          router.push('/')
         } else if (user.role === 'PATIENT') {
-          console.log('➡️ Redirecting to /dashboard/patient');
-          router.push('/dashboard/patient')
+          console.log('➡️ Redirecting to / (main feed with posts and communities)');
+          router.push('/')
         } else {
           console.log('➡️ Redirecting to / (unknown role)');
           router.push('/')
@@ -170,7 +162,9 @@ export default function LoginPage() {
         <div className="mt-8 pt-6 border-t border-white/30">
           <p className="text-sm text-gray-600 text-center bg-white/30 backdrop-blur-sm rounded-lg p-3">
             <strong>Test Accounts:</strong><br />
-            Admin: admin@medthread.com / Admin@123456
+            Admin: admin@medthread.com / Admin@123456<br />
+            Doctor: rifa@gmail.com / Doctor@123456<br />
+            Patient: navin@gmail.com / Patient@123456
           </p>
         </div>
       </div>

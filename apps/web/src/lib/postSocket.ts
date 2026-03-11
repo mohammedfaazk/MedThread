@@ -60,7 +60,7 @@ class PostSocketClient {
     this.userId = userId;
 
     // Create socket connection
-    this.socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004', {
+    this.socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001', {
       auth: {
         token,
       },

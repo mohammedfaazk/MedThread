@@ -94,6 +94,11 @@ export default function ChatPage() {
 
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      console.log('🔍 Attempting password verification...');
+      console.log('API_URL:', API_URL);
+      console.log('Token exists:', !!token);
+      console.log('Password length:', password.length);
+      
       const response = await fetch(`${API_URL}/api/auth/verify-password`, {
         method: 'POST',
         headers: {
@@ -103,18 +108,23 @@ export default function ChatPage() {
         body: JSON.stringify({ password })
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+      
       if (response.ok) {
+        console.log('✅ Password verification successful');
         setIsVerified(true);
         setShowPasswordModal(false);
         setPassword('');
         setPasswordError('');
       } else {
+        const errorData = await response.text();
+        console.log('❌ Password verification failed:', errorData);
         setPasswordError('Incorrect password');
       }
     } catch (error) {
       console.error('Password verification error:', error);
-      setIsVerified(true);
-      setShowPasswordModal(false);
+      setPasswordError('Verification failed. Please try again.');
     }
   };
 
@@ -177,8 +187,8 @@ export default function ChatPage() {
 
   if (showPasswordModal && userRole === 'DOCTOR') {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" style={{ zIndex: 9999 }}>
+        <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4" style={{ position: 'relative', zIndex: 10000 }}>
           <div className="flex items-center justify-center mb-6">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
               <Lock size={32} className="text-blue-600" />
@@ -208,6 +218,7 @@ export default function ChatPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your password"
                 autoFocus
+                style={{ position: 'relative', zIndex: 10001 }}
               />
               {passwordError && (
                 <p className="text-red-600 text-sm mt-2">{passwordError}</p>
@@ -216,12 +227,14 @@ export default function ChatPage() {
             <button
               onClick={handlePasswordVerification}
               className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
+              style={{ position: 'relative', zIndex: 10001 }}
             >
               Verify & Continue
             </button>
             <button
               onClick={() => router.back()}
               className="w-full py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold"
+              style={{ position: 'relative', zIndex: 10001 }}
             >
               Cancel
             </button>

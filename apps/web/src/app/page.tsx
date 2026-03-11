@@ -7,11 +7,13 @@ import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import StructuredData, { structuredDataSchemas } from '@/components/StructuredData'
-import Iridescence from '@/components/ui/Iridescence'
+import IridescenceCSS from '@/components/ui/IridescenceCSS'
 
 export default function Home() {
   const { user, role, loading } = useJWTAuth()
   const router = useRouter()
+
+  // Force recompilation to trigger ogl error
 
   return (
     <>
@@ -23,7 +25,7 @@ export default function Home() {
       <div className="min-h-screen relative">
         {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
         <div className="fixed inset-0 -z-10">
-          <Iridescence 
+          <IridescenceCSS 
             color={[0.4, 0.7, 0.9]} 
             mouseReact 
             amplitude={0.1} 

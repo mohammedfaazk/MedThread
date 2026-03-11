@@ -200,6 +200,19 @@ export class AuthService {
     return this.generateToken(user.id, user.role);
   }
 
+  async verifyPassword(userId: string, password: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true }
+    });
+
+    if (!user || !user.passwordHash) {
+      return false;
+    }
+
+    return await bcrypt.compare(password, user.passwordHash);
+  }
+
   private generateToken(userId: string, role: string): string {
     return jwt.sign(
       { userId, role },

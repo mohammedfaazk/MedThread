@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const STRIPE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '';
 
 let stripePromise: Promise<Stripe | null>;

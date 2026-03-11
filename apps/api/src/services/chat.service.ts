@@ -100,7 +100,7 @@ export class ChatService {
     // Update conversation's last message timestamp
     await prisma.conversation.update({
       where: { id: conversationId },
-      data: { lastMessageAt: new Date() }
+      data: { updatedAt: new Date() }
     });
 
     // Emit real-time event
@@ -150,7 +150,6 @@ export class ChatService {
     const messages = await prisma.message.findMany({
       where: {
         conversationId,
-        isDeleted: false,
         ...(cursor && {
           id: {
             lt: cursor // Get messages before this cursor
@@ -196,8 +195,7 @@ export class ChatService {
         isRead: false
       },
       data: {
-        isRead: true,
-        readAt: new Date()
+        isRead: true
       }
     });
 
@@ -217,7 +215,7 @@ export class ChatService {
   }
 
   /**
-   * Edit message (within 5 minutes)
+   * Edit message (within 5 minutes) - Note: Current schema doesn't support editing
    */
   async editMessage(input: UpdateMessageInput) {
     const { messageId, userId, content } = input;
@@ -242,10 +240,6 @@ export class ChatService {
       throw new Error('You can only edit your own messages');
     }
 
-    if (message.isDeleted) {
-      throw new Error('Cannot edit deleted message');
-    }
-
     // Check if within 5 minute edit window
     const now = new Date();
     const messageAge = now.getTime() - new Date(message.createdAt).getTime();
@@ -255,12 +249,11 @@ export class ChatService {
       throw new Error('Edit window expired (5 minutes)');
     }
 
+    // Since the schema doesn't have isEdited/editedAt fields, we'll just update content
     const updated = await prisma.message.update({
       where: { id: messageId },
       data: {
-        content,
-        isEdited: true,
-        editedAt: new Date()
+        content
       },
       include: {
         sender: {
@@ -286,7 +279,7 @@ export class ChatService {
   }
 
   /**
-   * Soft delete message
+   * Soft delete message - Note: Current schema doesn't support soft delete
    */
   async deleteMessage(messageId: string, userId: string) {
     const message = await prisma.message.findUnique({
@@ -301,15 +294,10 @@ export class ChatService {
       throw new Error('You can only delete your own messages');
     }
 
-    if (message.isDeleted) {
-      throw new Error('Message already deleted');
-    }
-
+    // Since schema doesn't have isDeleted field, we'll update content to show deletion
     const updated = await prisma.message.update({
       where: { id: messageId },
       data: {
-        isDeleted: true,
-        deletedAt: new Date(),
         content: '[Message deleted]'
       }
     });
@@ -336,8 +324,7 @@ export class ChatService {
       where: {
         conversationId,
         receiverId: userId,
-        isRead: false,
-        isDeleted: false
+        isRead: false
       }
     });
   }
@@ -348,11 +335,12 @@ export class ChatService {
   async getAllUnreadCounts(userId: string) {
     const conversations = await prisma.conversation.findMany({
       where: {
-        OR: [
-          { patientId: userId },
-          { doctorId: userId }
-        ],
-        isActive: true
+        appointment: {
+          OR: [
+            { patientId: userId },
+            { doctorId: userId }
+          ]
+        }
       },
       select: {
         id: true
@@ -454,7 +442,6 @@ export class ChatService {
           }
         },
         messages: {
-          where: { isDeleted: false },
           orderBy: { createdAt: 'desc' },
           take: 1,
           include: {
@@ -477,11 +464,12 @@ export class ChatService {
   async getUserConversations(userId: string) {
     const conversations = await prisma.conversation.findMany({
       where: {
-        OR: [
-          { patientId: userId },
-          { doctorId: userId }
-        ],
-        isActive: true
+        appointment: {
+          OR: [
+            { patientId: userId },
+            { doctorId: userId }
+          ]
+        }
       },
       include: {
         appointment: {
@@ -506,7 +494,6 @@ export class ChatService {
           }
         },
         messages: {
-          where: { isDeleted: false },
           orderBy: { createdAt: 'desc' },
           take: 1,
           include: {
@@ -521,7 +508,7 @@ export class ChatService {
         }
       },
       orderBy: {
-        lastMessageAt: 'desc'
+        updatedAt: 'desc'
       }
     });
 
@@ -538,14 +525,11 @@ export class ChatService {
 
   /**
    * Deactivate conversation (when appointment is cancelled or doctor loses verification)
+   * Since there's no isActive field, we'll handle this by checking appointment status
    */
   async deactivateConversation(conversationId: string, reason: string) {
-    const updated = await prisma.conversation.update({
-      where: { id: conversationId },
-      data: { isActive: false }
-    });
-
-    // Notify participants
+    // We can't actually deactivate the conversation in the database
+    // Instead, we'll emit the event to notify clients
     try {
       const io = getSocketInstance();
       io.to(conversationId).emit('conversation_deactivated', {
@@ -556,7 +540,12 @@ export class ChatService {
       console.error('Socket emission error:', socketError);
     }
 
-    return updated;
+    // Return the conversation as-is since we can't modify isActive
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId }
+    });
+
+    return conversation;
   }
 }
 

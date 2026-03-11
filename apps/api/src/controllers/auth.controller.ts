@@ -119,6 +119,38 @@ export class AuthController {
       message: 'Logout successful'
     });
   });
+
+  verifyPassword = asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    const { password } = req.body;
+    
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password required'
+      });
+    }
+
+    const isValid = await authService.verifyPassword(req.userId, password);
+    
+    if (!isValid) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid password'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Password verified'
+    });
+  });
 }
 
 export const authController = new AuthController();
