@@ -61,12 +61,14 @@ export const chatHandler = (io: Server, socket: SocketWithAuth) => {
 
       // Join the conversation room
       socket.join(conversationId);
+      console.log(`[Chat] Socket ${socket.id} joined room: ${conversationId}`);
       
       // Track active user
       if (!activeUsers.has(conversationId)) {
         activeUsers.set(conversationId, new Set());
       }
       activeUsers.get(conversationId)!.add(socket.userId);
+      console.log(`[Chat] Active users in ${conversationId}:`, Array.from(activeUsers.get(conversationId)!));
 
       // Notify others in the room
       socket.to(conversationId).emit('user_joined', {

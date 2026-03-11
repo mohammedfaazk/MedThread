@@ -104,7 +104,9 @@ export class ChatService {
     // Emit real-time event
     try {
       const io = getSocketInstance();
+      console.log(`[Chat] Emitting receive_message to conversation: ${conversationId}, message ID: ${message.id}`);
       io.to(conversationId).emit('receive_message', message);
+      console.log(`[Chat] Message emitted successfully`);
       
       // Send unread count update to receiver
       const unreadCount = await this.getUnreadCount(receiverId, conversationId);
@@ -112,6 +114,7 @@ export class ChatService {
         conversationId,
         count: unreadCount
       });
+      console.log(`[Chat] Unread count update sent to user: ${receiverId}`);
     } catch (socketError) {
       console.error('Socket emission error:', socketError);
       // Don't fail the message creation if socket fails
