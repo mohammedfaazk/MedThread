@@ -1,8 +1,6 @@
-import { PrismaClient, MessageType } from '@medthread/database';
+import { prisma, MessageType } from '@medthread/database';
 import { checkMessageRateLimit } from '../middleware/chatPermission';
 import { getSocketInstance } from '../socket';
-
-const prisma = new PrismaClient();
 
 interface CreateMessageInput {
   conversationId: string;

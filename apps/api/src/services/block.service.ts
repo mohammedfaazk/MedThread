@@ -1,7 +1,5 @@
-import { PrismaClient } from '@medthread/database';
+import { prisma } from '@medthread/database';
 import { getSocketInstance } from '../socket';
-
-const prisma = new PrismaClient();
 
 export class BlockService {
   /**

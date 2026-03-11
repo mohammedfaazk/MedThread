@@ -23,13 +23,13 @@ export default function Home() {
       <StructuredData data={structuredDataSchemas.medicalOrganization()} />
       
       <div className="min-h-screen relative">
-        {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
-        <div className="fixed inset-0 -z-10">
+        {/* Iridescent Background - MedThread brand colors (cyan/blue/purple tones) */}
+        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
           <IridescenceCSS 
-            color={[0.4, 0.7, 0.9]} 
+            color={[0.3, 0.6, 0.95]} 
             mouseReact 
-            amplitude={0.1} 
-            speed={0.8} 
+            amplitude={0.3} 
+            speed={0.6} 
           />
         </div>
 

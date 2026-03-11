@@ -1,8 +1,7 @@
 import { Router } from 'express';
-import { PrismaClient } from '@medthread/database';
+import { prisma } from '@medthread/database';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 import { conversationsStore, messagesStore, appointmentsStore, createMockConversation, saveStore } from '../lib/mockStore';
 

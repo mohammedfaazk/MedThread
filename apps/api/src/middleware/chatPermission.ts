@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, DoctorVerificationStatus, AppointmentStatus } from '@medthread/database';
+import { prisma, DoctorVerificationStatus, AppointmentStatus } from '@medthread/database';
 import { AuthRequest } from './auth';
-
-const prisma = new PrismaClient();
 
 export interface ChatPermissionRequest extends AuthRequest {
   conversationId?: string;

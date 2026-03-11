@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import { PrismaClient } from '@medthread/database';
+import { prisma } from '@medthread/database';
 import { authenticate } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { notificationService } from '../services/notification.service';
 import { NotificationType, ContentType } from '@prisma/client';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 import { appointmentsStore, availabilityStore, createMockConversation, saveStore } from '../lib/mockStore';
 
@@ -470,21 +469,29 @@ router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req,
                     createMockConversation(updated);
 
                     try {
-                        await prisma.conversation.create({
-                            data: {
-                                appointmentId: id,
-                                patientId: appointment.patientId,
-                                doctorId: appointment.doctorId,
-                                participants: {
-                                    connect: [
-                                        { id: appointment.patientId },
-                                        { id: appointment.doctorId }
-                                    ]
-                                }
-                            }
+                        // Check if conversation already exists for this appointment
+                        const existingConversation = await prisma.conversation.findUnique({
+                            where: { appointmentId: id }
                         });
+
+                        if (!existingConversation) {
+                            await prisma.conversation.create({
+                                data: {
+                                    appointmentId: id,
+                                    participants: {
+                                        connect: [
+                                            { id: appointment.patientId },
+                                            { id: appointment.doctorId }
+                                        ]
+                                    }
+                                }
+                            });
+                            console.log('[API] Conversation created for appointment:', id);
+                        } else {
+                            console.log('[API] Conversation already exists for appointment:', id);
+                        }
                     } catch (pError) {
-                        console.warn('[API] DB Conversation create failed (expected during mock testing)');
+                        console.error('[API] DB Conversation create failed:', pError);
                     }
                 }
                 

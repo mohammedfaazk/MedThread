@@ -161,10 +161,13 @@ export default function ChatWindow({
     });
 
     newSocket.on('receive_message', (message: Message) => {
+      console.log('[Chat] Received message:', message.id, 'from:', message.senderId);
+      
       setMessages(prev => {
         // Check if this message already exists (by ID)
         const exists = prev.some(m => m.id === message.id);
         if (exists) {
+          console.log('[Chat] Message already exists, skipping:', message.id);
           return prev; // Don't add duplicates
         }
         
@@ -176,12 +179,14 @@ export default function ChatWindow({
         );
         
         if (tempIndex !== -1) {
+          console.log('[Chat] Replacing temp message with real one:', message.id);
           // Replace temp message with real one
           const updated = [...prev];
           updated[tempIndex] = message;
           return updated;
         }
         
+        console.log('[Chat] Adding new message:', message.id);
         // Add new message
         return [...prev, message];
       });
@@ -537,11 +542,21 @@ export default function ChatWindow({
       }
 
       const data = await response.json();
+      console.log('[Chat] Message sent successfully:', data.data.id);
       
-      // Replace optimistic message with real one
-      setMessages(prev =>
-        prev.map(m => (m.id === tempId ? data.data : m))
-      );
+      // Check if socket already added this message (via receive_message event)
+      setMessages(prev => {
+        const socketAlreadyAdded = prev.some(m => m.id === data.data.id);
+        if (socketAlreadyAdded) {
+          console.log('[Chat] Socket already added message, removing temp:', tempId);
+          // Socket already added the real message, just remove temp
+          return prev.filter(m => m.id !== tempId);
+        }
+        
+        console.log('[Chat] Replacing temp message with real one:', tempId, '->', data.data.id);
+        // Replace optimistic message with real one
+        return prev.map(m => (m.id === tempId ? data.data : m));
+      });
       
       // Scroll again after replacement
       setTimeout(() => {

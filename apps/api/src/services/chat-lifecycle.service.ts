@@ -1,7 +1,5 @@
-import { PrismaClient, AppointmentStatus, DoctorVerificationStatus } from '@medthread/database';
+import { prisma, AppointmentStatus, DoctorVerificationStatus } from '@medthread/database';
 import { chatService } from './chat.service';
-
-const prisma = new PrismaClient();
 
 /**
  * Service to handle chat lifecycle events based on appointment and doctor status changes
