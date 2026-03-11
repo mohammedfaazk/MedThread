@@ -79,6 +79,7 @@ export function Sidebar() {
 
   const patientNav: NavItem[] = [
     { name: 'Chat with Doctors', icon: MessageSquare, href: '/chat' },
+    { name: 'Create Post', icon: PenSquare, href: '#' }, // Triggers modal (same as doctors)
     { name: 'Medication Reminder', icon: Pill, href: '/medications' },
     { name: 'Health Profile', icon: User, href: '/profile' },
     { name: 'Settings', icon: Settings, href: '/settings' },

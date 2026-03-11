@@ -126,7 +126,10 @@ export default function ChatWindow({
   // Initialize socket connection
   useEffect(() => {
     const newSocket = io(API_URL, {
-      transports: ['websocket'],
+      auth: {
+        token: token
+      },
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000

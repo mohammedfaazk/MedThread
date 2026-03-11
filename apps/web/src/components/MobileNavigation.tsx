@@ -39,12 +39,8 @@ export function MobileNavigation() {
       icon: <PenSquare size={24} />,
       label: 'Create Post',
       onClick: () => {
-        // Doctors open modal, patients navigate to /create
-        if (isDoctor) {
-          setIsCreateModalOpen(true);
-        } else {
-          router.push('/create');
-        }
+        // Both doctors and patients open modal
+        setIsCreateModalOpen(true);
       },
       className: ''
     }

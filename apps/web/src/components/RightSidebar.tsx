@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CreatePostModal } from './CreatePostModal'
 import { useUser } from '@/context/UserContext'
-import { useRouter } from 'next/navigation'
 import { UserRound, Star, TrendingUp, Info } from 'lucide-react'
 import CountUp from './enhancements/CountUp'
 
@@ -12,7 +11,6 @@ export function RightSidebar() {
   const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const { role } = useUser()
-  const router = useRouter()
 
   useEffect(() => {
     fetchTopDoctors()
@@ -92,13 +90,7 @@ export function RightSidebar() {
               A trusted community where patients connect with verified healthcare professionals for medical guidance and support.
             </p>
             <button
-              onClick={() => {
-                if (role === 'PATIENT') {
-                  router.push('/create')
-                } else {
-                  setIsCreateModalOpen(true)
-                }
-              }}
+              onClick={() => setIsCreateModalOpen(true)}
               className="block w-full py-2 bg-[#00BCD4] text-white rounded-full text-sm font-semibold hover:bg-[#00ACC1] text-center transition-all shadow-lg hover:shadow-xl"
             >
               Create Post

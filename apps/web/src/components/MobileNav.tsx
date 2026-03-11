@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, PlusCircle, MessageCircle, User, Bell } from 'lucide-react'
 import { useJWTAuth } from '@/context/JWTAuthContext'
+import { CreatePostModal } from './CreatePostModal'
 import { motion } from 'framer-motion'
 
 export function MobileNav() {
@@ -13,6 +14,7 @@ export function MobileNav() {
   const [isVisible, setIsVisible] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,7 +37,7 @@ export function MobileNav() {
   const navItems = [
     { href: '/', icon: Home, label: 'Home' },
     { href: '/search', icon: Search, label: 'Search' },
-    { href: '/create', icon: PlusCircle, label: 'Create' },
+    { href: '#', icon: PlusCircle, label: 'Create', onClick: () => setIsCreateModalOpen(true) },
     { href: '/chat', icon: MessageCircle, label: 'Chat' },
     { href: user ? '/profile' : '/login', icon: User, label: 'Profile' },
   ]
@@ -49,9 +51,59 @@ export function MobileNav() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around px-2 py-2">
-        {navItems.map(({ href, icon: Icon, label }, index) => {
+        {navItems.map(({ href, icon: Icon, label, onClick }, index) => {
           const isActive = pathname === href
           const isHovered = hoveredIndex === index
+          
+          const NavContent = (
+            <motion.div
+              animate={{
+                scale: isActive ? 1.1 : isHovered ? 1.05 : 1,
+                y: isActive ? -4 : isHovered ? -2 : 0,
+              }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              className={`flex flex-col items-center gap-1 ${
+                isActive 
+                  ? 'text-[#5CB8B2]' 
+                  : 'text-gray-600'
+              }`}
+            >
+              <motion.div
+                animate={{
+                  rotate: isActive ? [0, -10, 10, -10, 0] : 0,
+                }}
+                transition={{ duration: 0.5 }}
+                className={`p-2 rounded-xl ${
+                  isActive ? 'bg-[#5CB8B2]/10' : ''
+                }`}
+              >
+                <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
+              </motion.div>
+              <span className="text-xs font-medium">{label}</span>
+            </motion.div>
+          )
+          
+          if (onClick) {
+            return (
+              <button
+                key={label}
+                onClick={onClick}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+                className="relative flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all min-w-[60px]"
+              >
+                {NavContent}
+                {/* Active indicator dot */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeIndicator"
+                    className="absolute -bottom-1 w-1 h-1 bg-[#5CB8B2] rounded-full"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </button>
+            )
+          }
           
           return (
             <Link
@@ -61,31 +113,7 @@ export function MobileNav() {
               onMouseLeave={() => setHoveredIndex(null)}
               className="relative flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-all min-w-[60px]"
             >
-              <motion.div
-                animate={{
-                  scale: isActive ? 1.1 : isHovered ? 1.05 : 1,
-                  y: isActive ? -4 : isHovered ? -2 : 0,
-                }}
-                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                className={`flex flex-col items-center gap-1 ${
-                  isActive 
-                    ? 'text-[#5CB8B2]' 
-                    : 'text-gray-600'
-                }`}
-              >
-                <motion.div
-                  animate={{
-                    rotate: isActive ? [0, -10, 10, -10, 0] : 0,
-                  }}
-                  transition={{ duration: 0.5 }}
-                  className={`p-2 rounded-xl ${
-                    isActive ? 'bg-[#5CB8B2]/10' : ''
-                  }`}
-                >
-                  <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
-                </motion.div>
-                <span className="text-xs font-medium">{label}</span>
-              </motion.div>
+              {NavContent}
               
               {/* Active indicator dot */}
               {isActive && (
@@ -100,5 +128,10 @@ export function MobileNav() {
         })}
       </div>
     </motion.nav>
+
+    <CreatePostModal
+      isOpen={isCreateModalOpen}
+      onClose={() => setIsCreateModalOpen(false)}
+    />
   )
 }

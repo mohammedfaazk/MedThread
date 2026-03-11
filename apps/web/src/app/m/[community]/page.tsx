@@ -3,6 +3,7 @@
 import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { PostFeed } from '@/components/PostFeed'
+import { CreatePostModal } from '@/components/CreatePostModal'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -38,6 +39,7 @@ export default function CommunityPage({ params }: { params: { community: string 
   const [community, setCommunity] = useState<Community | null>(null)
   const [loading, setLoading] = useState(true)
   const [joining, setJoining] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   useEffect(() => {
     loadCommunity()
@@ -243,7 +245,7 @@ export default function CommunityPage({ params }: { params: { community: string 
 
             {user && community.isMember && (
               <button
-                onClick={() => router.push('/create')}
+                onClick={() => setIsCreateModalOpen(true)}
                 className="w-full mt-4 px-4 py-2 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition shadow-soft"
               >
                 Create Post
@@ -262,5 +264,10 @@ export default function CommunityPage({ params }: { params: { community: string 
         </aside>
       </div>
     </IridescenceLayout>
+
+    <CreatePostModal
+      isOpen={isCreateModalOpen}
+      onClose={() => setIsCreateModalOpen(false)}
+    />
   )
 }
