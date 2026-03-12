@@ -16,6 +16,7 @@ import { chatRouter } from './routes/chat';
 import { chatRouterV2 } from './routes/chat.v2';
 import { chatHandler } from './handlers/chat.handler';
 import { notificationHandler } from './handlers/notification.handler';
+import { analyticsHandler } from './handlers/analytics.handler';
 import { setSocketInstance } from './socket';
 import { doctorVerificationRouter } from './routes/doctor-verification.routes';
 import { doctorProfileEnhancedRouter } from './routes/doctor-profile-enhanced.routes';
@@ -27,6 +28,9 @@ import { adminRouter } from './routes/admin.routes';
 import { reportRouter } from './routes/report.routes';
 import { postsRouter as postsRouterV2 } from './routes/posts.routes';
 import { analyticsRouter } from './routes/analytics.routes';
+import { healthAnalyticsRouter } from './routes/health-analytics.routes';
+import { doctorAnalyticsRouter } from './routes/doctor-analytics.routes';
+import { platformAnalyticsRouter } from './routes/platform-analytics.routes';
 import { paymentRouter } from './routes/payment.routes';
 import { fileUploadRouter } from './routes/file-upload.routes';
 import { notificationRouter } from './routes/notification.routes';
@@ -71,6 +75,7 @@ io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
   chatHandler(io, socket);
   notificationHandler(io, socket);
+  analyticsHandler(io, socket);
 });
 
 // Security middleware
@@ -114,6 +119,9 @@ app.use('/api/upload', uploadRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/reports', reportRouter);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/health-analytics', healthAnalyticsRouter);
+app.use('/api/doctor-analytics', doctorAnalyticsRouter);
+app.use('/api/platform-analytics', platformAnalyticsRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/threads', threadRouter);
 app.use('/api/users', userRouter);

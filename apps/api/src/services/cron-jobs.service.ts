@@ -368,7 +368,47 @@ export class CronJobsService {
       await this.sendWeeklyDigests();
     });
 
+    // Calculate platform analytics daily at 1 AM
+    cron.schedule('0 1 * * *', async () => {
+      await this.calculateDailyAnalytics();
+    });
+
+    // Calculate health trends every 6 hours
+    cron.schedule('0 */6 * * *', async () => {
+      await this.calculateHealthTrends();
+    });
+
     console.log('[CRON] All cron jobs initialized');
+  }
+
+  /**
+   * Calculate daily platform analytics
+   */
+  async calculateDailyAnalytics() {
+    console.log('[CRON] Calculating daily analytics...');
+    
+    try {
+      const { platformAnalyticsService } = require('./platform-analytics.service');
+      await platformAnalyticsService.calculateDailyMetrics();
+      console.log('[CRON] Daily analytics calculated successfully');
+    } catch (error) {
+      console.error('[CRON] Error calculating daily analytics:', error);
+    }
+  }
+
+  /**
+   * Calculate health trends
+   */
+  async calculateHealthTrends() {
+    console.log('[CRON] Calculating health trends...');
+    
+    try {
+      const { healthAnalyticsService } = require('./health-analytics.service');
+      await healthAnalyticsService.calculateHealthTrends('hourly');
+      console.log('[CRON] Health trends calculated successfully');
+    } catch (error) {
+      console.error('[CRON] Error calculating health trends:', error);
+    }
   }
 }
 

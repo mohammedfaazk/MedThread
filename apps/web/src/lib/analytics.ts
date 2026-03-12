@@ -1,186 +1,166 @@
-import axios from 'axios';
+/**
+ * Analytics tracking utilities for the frontend
+ */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-// Session management
-let sessionId: string | null = null;
-
-function getSessionId(): string {
-  if (!sessionId) {
-    sessionId = sessionStorage.getItem('analytics_session_id');
-    if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-      sessionStorage.setItem('analytics_session_id', sessionId);
-    }
-  }
-  return sessionId;
+interface SymptomReport {
+  sessionId: string;
+  symptoms: Array<{ name: string; severity: string }>;
+  location?: {
+    city?: string;
+    region?: string;
+    country?: string;
+    lat?: number;
+    lng?: number;
+  };
+  age?: number;
+  gender?: string;
+  temperature?: number;
+  duration?: string;
 }
 
-// Page view tracking
-let currentPage: string | null = null;
-let pageStartTime: number | null = null;
+interface DoctorRating {
+  doctorId: string;
+  appointmentId?: string;
+  threadId?: string;
+  rating: number;
+  helpfulness?: number;
+  communication?: number;
+  expertise?: number;
+  feedback?: string;
+}
 
-export const analytics = {
+export class AnalyticsTracker {
+  private static sessionId: string;
+
   /**
-   * Track custom event
+   * Initialize session ID
    */
-  trackEvent(eventName: string, eventCategory: string, properties?: Record<string, any>) {
+  static initSession() {
+    if (typeof window === 'undefined') return;
+    
+    this.sessionId = localStorage.getItem('analytics_session_id') || this.generateSessionId();
+    localStorage.setItem('analytics_session_id', this.sessionId);
+  }
+
+  /**
+   * Generate unique session ID
+   */
+  private static generateSessionId(): string {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Track symptom report
+   */
+  static async trackSymptomReport(data: Omit<SymptomReport, 'sessionId'>) {
+    if (!this.sessionId) this.initSession();
+
     try {
-      axios.post(`${API_URL}/api/analytics/event`, {
-        eventName,
-        eventCategory,
-        properties,
-        sessionId: getSessionId(),
-        page: window.location.pathname,
-      }).catch(err => console.error('Analytics error:', err));
-    } catch (error) {
-      console.error('Analytics tracking error:', error);
-    }
-  },
-
-  /**
-   * Track page view
-   */
-  trackPageView(page?: string, title?: string) {
-    try {
-      const pagePath = page || window.location.pathname;
-      const pageTitle = title || document.title;
-
-      // Track previous page duration
-      if (currentPage && pageStartTime) {
-        const duration = Date.now() - pageStartTime;
-        axios.post(`${API_URL}/api/analytics/pageview`, {
-          page: currentPage,
-          title: pageTitle,
-          sessionId: getSessionId(),
-          referrer: document.referrer,
-          duration,
-        }).catch(err => console.error('Analytics error:', err));
-      }
-
-      // Start tracking new page
-      currentPage = pagePath;
-      pageStartTime = Date.now();
-
-      // Track new page view
-      axios.post(`${API_URL}/api/analytics/pageview`, {
-        page: pagePath,
-        title: pageTitle,
-        sessionId: getSessionId(),
-        referrer: document.referrer,
-      }).catch(err => console.error('Analytics error:', err));
-    } catch (error) {
-      console.error('Analytics tracking error:', error);
-    }
-  },
-
-  /**
-   * Track conversion
-   */
-  trackConversion(conversionType: string, value?: number, metadata?: Record<string, any>) {
-    try {
-      axios.post(`${API_URL}/api/analytics/conversion`, {
-        conversionType,
-        value,
-        metadata,
-        sessionId: getSessionId(),
-      }).catch(err => console.error('Analytics error:', err));
-    } catch (error) {
-      console.error('Analytics tracking error:', error);
-    }
-  },
-
-  /**
-   * Track post view
-   */
-  trackPostView(postId: string) {
-    try {
-      axios.post(`${API_URL}/api/analytics/post-view/${postId}`)
-        .catch(err => console.error('Analytics error:', err));
-    } catch (error) {
-      console.error('Analytics tracking error:', error);
-    }
-  },
-
-  /**
-   * Track button click
-   */
-  trackClick(buttonName: string, properties?: Record<string, any>) {
-    this.trackEvent('click', 'engagement', {
-      buttonName,
-      ...properties,
-    });
-  },
-
-  /**
-   * Track form submission
-   */
-  trackFormSubmit(formName: string, properties?: Record<string, any>) {
-    this.trackEvent('form_submit', 'engagement', {
-      formName,
-      ...properties,
-    });
-  },
-
-  /**
-   * Track search
-   */
-  trackSearch(query: string, results?: number) {
-    this.trackEvent('search', 'engagement', {
-      query,
-      results,
-    });
-  },
-
-  /**
-   * Track share
-   */
-  trackShare(contentType: string, contentId: string, platform?: string) {
-    this.trackEvent('share', 'engagement', {
-      contentType,
-      contentId,
-      platform,
-    });
-  },
-
-  /**
-   * Track video play
-   */
-  trackVideoPlay(videoId: string, title?: string) {
-    this.trackEvent('video_play', 'engagement', {
-      videoId,
-      title,
-    });
-  },
-
-  /**
-   * Track download
-   */
-  trackDownload(fileName: string, fileType?: string) {
-    this.trackEvent('download', 'engagement', {
-      fileName,
-      fileType,
-    });
-  },
-};
-
-// Auto-track page views on route change
-if (typeof window !== 'undefined') {
-  // Track initial page view
-  analytics.trackPageView();
-
-  // Track page unload
-  window.addEventListener('beforeunload', () => {
-    if (currentPage && pageStartTime) {
-      const duration = Date.now() - pageStartTime;
-      navigator.sendBeacon(
-        `${API_URL}/api/analytics/pageview`,
-        JSON.stringify({
-          page: currentPage,
-          sessionId: getSessionId(),
-          duration,
+      const response = await fetch(`${API_URL}/api/health-analytics/symptom-report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          sessionId: this.sessionId
         })
-      );
+      });
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to track symptom report:', error);
+      return null;
     }
-  });
+  }
+
+  /**
+   * Rate a doctor
+   */
+  static async rateDoctor(data: DoctorRating, token: string) {
+    try {
+      const response = await fetch(`${API_URL}/api/doctor-analytics/rate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to rate doctor:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get trending symptoms
+   */
+  static async getTrendingSymptoms(timeWindow: string = 'daily', limit: number = 10) {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/health-analytics/trending?timeWindow=${timeWindow}&limit=${limit}`
+      );
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get trending symptoms:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get geographic health alerts
+   */
+  static async getGeographicAlerts(region?: string) {
+    try {
+      const url = region
+        ? `${API_URL}/api/health-analytics/geographic-alerts?region=${region}`
+        : `${API_URL}/api/health-analytics/geographic-alerts`;
+      
+      const response = await fetch(url);
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get geographic alerts:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get doctor leaderboard
+   */
+  static async getDoctorLeaderboard(sortBy: string = 'helpfulnessScore', limit: number = 10) {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/doctor-analytics/leaderboard?sortBy=${sortBy}&limit=${limit}`
+      );
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get doctor leaderboard:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get doctor performance
+   */
+  static async getDoctorPerformance(doctorId: string) {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/doctor-analytics/performance/${doctorId}`
+      );
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to get doctor performance:', error);
+      return null;
+    }
+  }
+}
+
+// Initialize session on load
+if (typeof window !== 'undefined') {
+  AnalyticsTracker.initSession();
 }

@@ -881,3 +881,157 @@ enum SubscriptionStatus {
   EXPIRED
   PAST_DUE
 }
+
+// Advanced Analytics Models
+
+model SymptomReport {
+  id          String   @id @default(cuid())
+  userId      String?
+  sessionId   String
+  symptoms    Json // Array of symptoms with severity
+  location    Json? // Geographic data (city, region, country, lat/lng)
+  age         Int?
+  gender      String?
+  temperature Float?
+  duration    String? // How long symptoms have lasted
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([sessionId])
+}
+
+model HealthTrend {
+  id             String   @id @default(cuid())
+  symptom        String
+  count          Int
+  region         String?
+  severity       String? // mild, moderate, severe
+  trendDirection String? // rising, falling, stable
+  percentChange  Float?
+  timeWindow     String // hourly, daily, weekly
+  calculatedAt   DateTime @default(now())
+  metadata       Json?
+
+  @@index([symptom])
+  @@index([region])
+  @@index([calculatedAt])
+}
+
+model DoctorPerformance {
+  id                    String    @id @default(cuid())
+  doctorId              String    @unique
+  totalResponses        Int       @default(0)
+  totalPatientsHelped   Int       @default(0)
+  avgResponseTime       Int? // in minutes
+  helpfulnessScore      Float? // 0-5 rating
+  totalRatings          Int       @default(0)
+  appointmentsCompleted Int       @default(0)
+  appointmentsCancelled Int       @default(0)
+  activeEngagementScore Float? // composite score
+  lastActiveAt          DateTime?
+  calculatedAt          DateTime  @default(now())
+  metadata              Json?
+
+  @@index([doctorId])
+  @@index([helpfulnessScore])
+  @@index([activeEngagementScore])
+}
+
+model PatientOutcome {
+  id                String   @id @default(cuid())
+  patientId         String
+  doctorId          String?
+  threadId          String?
+  appointmentId     String?
+  initialSymptoms   Json
+  outcome           String // RESOLVED, IMPROVED, NO_CHANGE, WORSENED
+  recoveryTime      Int? // in days
+  followUpCount     Int      @default(0)
+  satisfactionScore Float? // 1-5
+  feedback          String?
+  createdAt         DateTime @default(now())
+  metadata          Json?
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([outcome])
+  @@index([createdAt])
+}
+
+model PlatformMetrics {
+  id                  String   @id @default(cuid())
+  date                DateTime @unique
+  totalUsers          Int      @default(0)
+  activeUsers         Int      @default(0)
+  newUsers            Int      @default(0)
+  totalDoctors        Int      @default(0)
+  activeDoctors       Int      @default(0)
+  newDoctors          Int      @default(0)
+  totalPosts          Int      @default(0)
+  totalAppointments   Int      @default(0)
+  totalSymptomReports Int      @default(0)
+  avgResponseTime     Int? // in minutes
+  peakUsageHour       Int?
+  userRetentionRate   Float?
+  doctorRetentionRate Float?
+  metadata            Json?
+
+  @@index([date])
+}
+
+model GeographicHealthData {
+  id             String   @id @default(cuid())
+  region         String // city, state, or country
+  latitude       Float?
+  longitude      Float?
+  topSymptoms    Json // Array of {symptom, count}
+  totalReports   Int      @default(0)
+  alertLevel     String? // LOW, MEDIUM, HIGH, CRITICAL
+  trendingIssues Json?
+  calculatedAt   DateTime @default(now())
+  metadata       Json?
+
+  @@index([region])
+  @@index([alertLevel])
+  @@index([calculatedAt])
+}
+
+model DoctorRating {
+  id            String   @id @default(cuid())
+  doctorId      String
+  patientId     String
+  appointmentId String?
+  threadId      String?
+  rating        Float // 1-5
+  helpfulness   Int? // 1-5
+  communication Int? // 1-5
+  expertise     Int? // 1-5
+  feedback      String?
+  createdAt     DateTime @default(now())
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([createdAt])
+}
+
+model ResearchDataset {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  dataType    String // SYMPTOMS, OUTCOMES, DEMOGRAPHICS, CORRELATIONS
+  filters     Json?
+  recordCount Int       @default(0)
+  anonymized  Boolean   @default(true)
+  requestedBy String? // Institution or researcher ID
+  approvedBy  String? // Admin ID
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED, EXPORTED
+  exportedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  metadata    Json?
+
+  @@index([status])
+  @@index([dataType])
+  @@index([createdAt])
+}
