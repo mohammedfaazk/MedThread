@@ -27,13 +27,23 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
   }
 });
 
-// Get comments by post
+// Get comments by post or by author
 router.get('/', async (req, res, next) => {
   try {
-    const { postId } = req.query;
+    const { postId, authorId, limit, offset } = req.query;
+
+    if (authorId) {
+      // Get comments by author
+      const comments = await commentService.getCommentsByAuthor(
+        authorId as string,
+        limit ? Number(limit) : 20,
+        offset ? Number(offset) : 0
+      );
+      return res.json({ success: true, data: comments });
+    }
 
     if (!postId) {
-      return res.status(400).json({ error: 'postId is required' });
+      return res.status(400).json({ error: 'postId or authorId is required' });
     }
 
     // Extract userId from token if provided (optional auth)

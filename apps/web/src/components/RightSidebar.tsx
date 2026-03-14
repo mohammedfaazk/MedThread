@@ -3,72 +3,13 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CreatePostModal } from './CreatePostModal'
 import { useUser } from '@/context/UserContext'
-import { UserRound, Star, TrendingUp, Info } from 'lucide-react'
+import { TrendingUp, Info } from 'lucide-react'
 import CountUp from './enhancements/CountUp'
+import { TopDoctorsWidget } from './TopDoctorsWidget'
 
 export function RightSidebar() {
-  const [topDoctors, setTopDoctors] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const { role } = useUser()
-
-  useEffect(() => {
-    fetchTopDoctors()
-  }, [])
-
-  const fetchTopDoctors = async () => {
-    try {
-      // Fetch from API first
-      console.log('[UI] Loading doctors from API...');
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-      
-      try {
-        const response = await fetch(`${API_URL}/api/v1/doctor-verification/verified`);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[UI] API Response:', data);
-          
-          // API returns { success: true, data: { doctors: [...] } }
-          const doctorsList = data?.data?.doctors || data?.doctors || [];
-          
-          if (doctorsList.length > 0) {
-            console.log(`[UI] Found ${doctorsList.length} verified doctors from API`);
-            // Sort by totalKarma/reputation and limit to 5
-            const sortedDoctors = doctorsList
-              .sort((a: any, b: any) => (b.totalKarma || b.reputation_score || 0) - (a.totalKarma || a.reputation_score || 0))
-              .slice(0, 5);
-            setTopDoctors(sortedDoctors);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (apiError) {
-        console.warn('[UI] API fetch failed, falling back to JSON:', apiError);
-      }
-      
-      // Fallback to local JSON data
-      console.log('[UI] Loading doctors from doctor_data.json');
-      try {
-        const response = await fetch('/doctor_data.json');
-        if (response.ok) {
-          const doctorData = await response.json();
-          // Sort by reputation_score if available, limit to 5
-          const sortedDoctors = doctorData
-            .sort((a: any, b: any) => (b.reputation_score || 0) - (a.reputation_score || 0))
-            .slice(0, 5);
-          setTopDoctors(sortedDoctors);
-        } else {
-          console.warn('[UI] Failed to load doctor_data.json');
-        }
-      } catch (jsonError) {
-        console.error('[UI] Error loading doctor_data.json:', jsonError);
-      }
-    } catch (error) {
-      console.error('Error fetching top doctors:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const trendingTopics = [
     { topic: 'COVID-19 Vaccines', posts: 234, slug: 'covid-vaccines' },
@@ -104,52 +45,8 @@ export function RightSidebar() {
           </div>
         </div>
 
-        {/* Top Doctors */}
-        <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg">
-          <div className="px-4 py-3 border-b border-cyan-200/30">
-            <h3 className="font-bold text-sm text-gray-800">Top Doctors This Week</h3>
-          </div>
-          <div className="p-3">
-            {loading ? (
-              <p className="text-xs text-center text-gray-500 py-4">Loading top doctors...</p>
-            ) : topDoctors.length === 0 ? (
-              <p className="text-xs text-center text-gray-500 py-4">No doctors found</p>
-            ) : (
-              topDoctors.map((doctor, idx) => {
-                const displayUsername = doctor.username || doctor.id;
-                const displayName = doctor.full_name || doctor.name || `Dr. ${displayUsername}`;
-                const reputation = doctor.reputation_score || doctor.reputation || doctor.totalKarma || 0;
-
-                return (
-                  <Link
-                    key={doctor.id}
-                    href={`/doctor/${displayUsername}`}
-                    className="flex items-center gap-3 py-2 hover:bg-gray-50 rounded-xl px-2 cursor-pointer transition-all"
-                  >
-                    <span className="text-sm font-bold text-gray-500 w-4">{idx + 1}</span>
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <UserRound className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">{displayName}</p>
-                      <p className="text-xs text-gray-500 truncate">{doctor.specialty || 'Verified Doctor'}</p>
-                    </div>
-                    <span className="text-xs text-[#FF4500] font-semibold flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-[#FF4500]" />
-                      <CountUp from={0} to={reputation} duration={1.5} className="inline" />
-                    </span>
-                  </Link>
-                )
-              })
-            )}
-          </div>
-          <Link
-            href="/doctors"
-            className="block px-4 py-2 text-sm text-center text-blue-600 hover:bg-cyan-50/50 border-t border-cyan-200/30 font-semibold transition-all"
-          >
-            View All Doctors
-          </Link>
-        </div>
+        {/* Top Doctors - New Enhanced Widget */}
+        <TopDoctorsWidget />
 
         {/* Trending Topics */}
         <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg">

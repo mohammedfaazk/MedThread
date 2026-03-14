@@ -9,6 +9,7 @@ interface RegisterInput {
   username: string;
   password: string;
   role: 'PATIENT' | 'DOCTOR' | 'NURSE' | 'MEDICAL_STUDENT' | 'PHARMACIST';
+  pincode?: string;
 }
 
 interface LoginInput {
@@ -62,6 +63,7 @@ export class AuthService {
         username: input.username,
         passwordHash,
         role: input.role,
+        pincode: input.pincode,
         doctorVerificationStatus: input.role === 'DOCTOR' ? 'PENDING' : null,
       },
       select: {

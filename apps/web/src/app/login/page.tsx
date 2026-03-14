@@ -29,18 +29,28 @@ export default function LoginPage() {
       return
     }
 
+    // Simple email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+
     setLoading(true)
     setError('')
 
     try {
       console.log('🔐 Attempting login with:', email);
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      console.log('🌐 API URL:', API_URL);
+      
       const response = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password
       })
 
       console.log('✅ Login response:', response.data);
+      console.log('✅ Response status:', response.status);
 
       if (response.data.success) {
         // Use the login function from context
@@ -69,11 +79,25 @@ export default function LoginPage() {
           console.log('➡️ Redirecting to / (unknown role)');
           router.push('/')
         }
+      } else {
+        console.error('❌ Login failed - API returned success: false');
+        setError('Login failed - invalid response from server');
       }
     } catch (err: any) {
       console.error('❌ Login error:', err);
       console.error('❌ Error response:', err.response?.data);
-      setError(err.response?.data?.error || err.response?.data?.message || 'Login failed')
+      console.error('❌ Error status:', err.response?.status);
+      console.error('❌ Error message:', err.message);
+      
+      if (err.response?.status === 401) {
+        setError('Invalid email or password');
+      } else if (err.response?.status === 400) {
+        setError(err.response?.data?.error || 'Invalid request');
+      } else if (err.code === 'ECONNREFUSED') {
+        setError('Cannot connect to server. Please check if the API is running.');
+      } else {
+        setError(err.response?.data?.error || err.response?.data?.message || err.message || 'Login failed');
+      }
     } finally {
       setLoading(false)
     }
@@ -109,7 +133,7 @@ export default function LoginPage() {
               Email
             </label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white/70"

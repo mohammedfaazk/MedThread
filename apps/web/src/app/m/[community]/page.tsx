@@ -4,6 +4,7 @@ import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { PostFeed } from '@/components/PostFeed'
 import { CreatePostModal } from '@/components/CreatePostModal'
+import { TopDoctorsWidget } from '@/components/TopDoctorsWidget'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
@@ -12,6 +13,24 @@ import { Users, Calendar, Shield } from 'lucide-react'
 import IridescenceLayout from '@/components/IridescenceLayout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+
+// Helper function to map community names to medical specialties
+function getCommunitySpecialty(communityName: string): string | undefined {
+  const specialtyMap: Record<string, string> = {
+    'cardiology': 'Cardiology',
+    'dermatology': 'Dermatology',
+    'general-practice': 'General Practice',
+    'pediatrics': 'Pediatrics',
+    'orthopedics': 'Orthopedics',
+    'neurology': 'Neurology',
+    'psychiatry': 'Psychiatry',
+    'oncology': 'Oncology',
+    'gynecology': 'Gynecology',
+    'ophthalmology': 'Ophthalmology'
+  };
+  
+  return specialtyMap[communityName.toLowerCase()];
+}
 
 interface Community {
   id: string
@@ -202,7 +221,12 @@ export default function CommunityPage({ params }: { params: { community: string 
         </main>
         
         {/* Community Sidebar */}
-        <aside className="w-80 hidden lg:block">
+        <aside className="w-80 hidden lg:block space-y-4">
+          {/* Top Community Doctors Widget */}
+          {community.name && (
+            <TopDoctorsWidget specialty={getCommunitySpecialty(community.name)} />
+          )}
+
           <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-6 shadow-soft sticky top-20">
             <h3 className="font-bold text-lg mb-4">About Community</h3>
             
@@ -263,11 +287,12 @@ export default function CommunityPage({ params }: { params: { community: string 
           </div>
         </aside>
       </div>
+      </div>
+      
+      <CreatePostModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </IridescenceLayout>
-
-    <CreatePostModal
-      isOpen={isCreateModalOpen}
-      onClose={() => setIsCreateModalOpen(false)}
-    />
   )
 }

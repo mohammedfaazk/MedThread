@@ -171,22 +171,37 @@ export const postService = {
       postType
     } = options;
 
-    let orderBy: any;
+    // Build the orderBy clause with priority-first sorting
+    let orderBy: any[] = [];
     
+    // Always prioritize posts with higher urgency scores first
+    // Posts without priority data (null) will come after posts with priority data
     switch (sort) {
       case 'new':
-        orderBy = { createdAt: 'desc' };
+        orderBy = [
+          { priority: { urgencyScore: 'desc' } },
+          { createdAt: 'desc' }
+        ];
         break;
       case 'top':
-        orderBy = { score: 'desc' };
+        orderBy = [
+          { priority: { urgencyScore: 'desc' } },
+          { score: 'desc' },
+          { createdAt: 'desc' }
+        ];
         break;
       case 'hot':
       case 'rising':
-        // For hot/rising, we'll sort by createdAt and apply algorithm in memory
-        orderBy = { createdAt: 'desc' };
+        orderBy = [
+          { priority: { urgencyScore: 'desc' } },
+          { createdAt: 'desc' }
+        ];
         break;
       default:
-        orderBy = { createdAt: 'desc' };
+        orderBy = [
+          { priority: { urgencyScore: 'desc' } },
+          { createdAt: 'desc' }
+        ];
     }
 
     const where: any = {
@@ -278,6 +293,7 @@ export const postService = {
           }
         },
         flair: true,
+        priority: true, // Include priority data for medical urgency
         _count: {
           select: {
             comments: true,
@@ -286,16 +302,38 @@ export const postService = {
         }
       },
       orderBy,
-      take: limit,
+      take: limit * 2, // Fetch more to ensure we have enough after custom sorting
       skip: offset
     });
 
+    // Apply custom priority-based sorting
+    const sortedPosts = posts.sort((a, b) => {
+      // First, sort by priority (posts with priority data come first)
+      const aUrgency = a.priority?.urgencyScore || -1; // Use -1 for posts without priority
+      const bUrgency = b.priority?.urgencyScore || -1;
+      
+      if (aUrgency !== bUrgency) {
+        return bUrgency - aUrgency; // Higher urgency first
+      }
+      
+      // If urgency is the same, apply secondary sorting
+      switch (sort) {
+        case 'top':
+          return (b.score || 0) - (a.score || 0);
+        case 'new':
+        case 'hot':
+        case 'rising':
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    }).slice(0, limit); // Take only the requested limit after sorting
+
     // Apply hot/rising algorithm if needed
     if (sort === 'hot' || sort === 'rising') {
-      return this.applyRankingAlgorithm(posts, sort);
+      return this.applyRankingAlgorithm(sortedPosts, sort);
     }
 
-    return posts;
+    return sortedPosts;
   },
 
   async getPostById(postId: string, userId?: string) {

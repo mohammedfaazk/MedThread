@@ -71,6 +71,7 @@ export function Sidebar() {
 
   const doctorNav: NavItem[] = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/doctor' },
+    { name: 'Appointments', icon: Calendar, href: '/dashboard/doctor/appointments' },
     { name: 'Chat with Patients', icon: MessageSquare, href: '/chat' },
     { name: 'Discussion Threads', icon: PenSquare, href: '#' }, // Triggers modal (Create Post)
     { name: 'Profile', icon: User, href: '/profile' },

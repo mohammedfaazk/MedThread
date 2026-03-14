@@ -7,13 +7,15 @@ export const registerSchema = z.object({
     .max(30, 'Username must not exceed 30 characters')
     .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
   password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
+    .min(8, 'Password must be at least 8 characters'),
   role: z.enum(['PATIENT', 'DOCTOR', 'NURSE', 'MEDICAL_STUDENT', 'PHARMACIST'], {
     errorMap: () => ({ message: 'Invalid role' })
-  })
+  }),
+  pincode: z.union([
+    z.string().regex(/^\d{6}$/, 'Pincode must be exactly 6 digits'),
+    z.string().length(0),
+    z.undefined()
+  ]).optional()
 });
 
 export const loginSchema = z.object({

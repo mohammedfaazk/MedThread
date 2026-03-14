@@ -106,102 +106,103 @@ export default function HiddenPostsPage() {
   return (
     <IridescenceLayout>
       <div className="min-h-screen bg-gradient-to-br from-cream-50 via-white to-blue-50">
-      <NavbarEnhanced />
-      <div className="flex">
-        <Sidebar />
-        
-        <main className="flex-1 ml-64 p-8">
-          <div className="max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-charcoal mb-2 flex items-center gap-2">
-                <EyeOff className="w-8 h-8" />
-                Hidden Posts
-              </h1>
-              <p className="text-gray-600">
-                Posts you've hidden from your feed. Click "Unhide" to show them again.
-              </p>
-            </div>
-
-            {/* Loading State */}
-            {loading && (
-              <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center shadow-lg">
-                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading hidden posts...</p>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!loading && hiddenPosts.length === 0 && (
-              <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-12 text-center shadow-lg">
-                <EyeOff className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h2 className="text-xl font-semibold text-charcoal mb-2">No Hidden Posts</h2>
-                <p className="text-gray-600 mb-4">
-                  You haven't hidden any posts yet. Hidden posts will appear here.
+        <NavbarEnhanced />
+        <div className="flex">
+          <Sidebar />
+          
+          <main className="flex-1 ml-64 p-8">
+            <div className="max-w-4xl mx-auto">
+              {/* Header */}
+              <div className="mb-6">
+                <h1 className="text-3xl font-bold text-charcoal mb-2 flex items-center gap-2">
+                  <EyeOff className="w-8 h-8" />
+                  Hidden Posts
+                </h1>
+                <p className="text-gray-600">
+                  Posts you've hidden from your feed. Click "Unhide" to show them again.
                 </p>
-                <Link
-                  href="/"
-                  className="inline-block px-6 py-3 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition shadow-lg"
-                >
-                  Browse Posts
-                </Link>
               </div>
-            )}
 
-            {/* Hidden Posts List */}
-            {!loading && hiddenPosts.length > 0 && (
-              <div className="space-y-4">
-                {hiddenPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all p-4"
+              {/* Loading State */}
+              {loading && (
+                <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center shadow-lg">
+                  <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading hidden posts...</p>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!loading && hiddenPosts.length === 0 && (
+                <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-12 text-center shadow-lg">
+                  <EyeOff className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+                  <h2 className="text-xl font-semibold text-charcoal mb-2">No Hidden Posts</h2>
+                  <p className="text-gray-600 mb-4">
+                    You haven't hidden any posts yet. Hidden posts will appear here.
+                  </p>
+                  <Link
+                    href="/"
+                    className="inline-block px-6 py-3 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition shadow-lg"
                   >
-                    <div className="flex items-start gap-4">
-                      {/* Post Info */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
-                          <Link href={`/m/${post.community}`} className="font-semibold hover:underline">
-                            m/{post.community}
+                    Browse Posts
+                  </Link>
+                </div>
+              )}
+
+              {/* Hidden Posts List */}
+              {!loading && hiddenPosts.length > 0 && (
+                <div className="space-y-4">
+                  {hiddenPosts.map((post) => (
+                    <div
+                      key={post.id}
+                      className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all p-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Post Info */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
+                            <Link href={`/m/${post.community}`} className="font-semibold hover:underline">
+                              m/{post.community}
+                            </Link>
+                            <span className="text-gray-400">•</span>
+                            <span>Posted by u/{post.author}</span>
+                            <span className="text-gray-400">•</span>
+                            <span>{post.timeAgo}</span>
+                          </div>
+
+                          <Link href={`/post/${post.id}`}>
+                            <h2 className="text-lg font-semibold text-charcoal mb-2 hover:text-blue-600">
+                              {post.title}
+                            </h2>
                           </Link>
-                          <span className="text-gray-400">•</span>
-                          <span>Posted by u/{post.author}</span>
-                          <span className="text-gray-400">•</span>
-                          <span>{post.timeAgo}</span>
+
+                          {post.content && (
+                            <p className="text-sm text-gray-700 mb-3 line-clamp-2">
+                              {post.content}
+                            </p>
+                          )}
+
+                          <div className="flex items-center gap-4 text-xs text-gray-600">
+                            <span>{post.score} points</span>
+                            <span>{post.comments} comments</span>
+                          </div>
                         </div>
 
-                        <Link href={`/post/${post.id}`}>
-                          <h2 className="text-lg font-semibold text-charcoal mb-2 hover:text-blue-600">
-                            {post.title}
-                          </h2>
-                        </Link>
-
-                        {post.content && (
-                          <p className="text-sm text-gray-700 mb-3 line-clamp-2">
-                            {post.content}
-                          </p>
-                        )}
-
-                        <div className="flex items-center gap-4 text-xs text-gray-600">
-                          <span>{post.score} points</span>
-                          <span>{post.comments} comments</span>
-                        </div>
+                        {/* Unhide Button */}
+                        <button
+                          onClick={() => handleUnhide(post.id)}
+                          className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition shadow-lg"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Unhide
+                        </button>
                       </div>
-
-                      {/* Unhide Button */}
-                      <button
-                        onClick={() => handleUnhide(post.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition shadow-lg"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Unhide
-                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </main>
+                  ))}
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
       </div>
     </IridescenceLayout>
   )

@@ -10,9 +10,16 @@ import ReportButton from '@/components/ReportButton'
 import IridescenceLayout from '@/components/IridescenceLayout'
 import { CountUpNumber } from '@/components/enhancements/CountUpNumber'
 import { getImageUrl } from '@/lib/imageUrl'
+import { DoctorPublicStats } from '@/components/analytics/DoctorPublicStats'
+import { DoctorProfileGraphs } from '@/components/doctor/DoctorProfileGraphs'
+import { AnalyticsTracker } from '@/lib/analytics'
 
 export default function UserProfilePage({ params }: { params: { username: string } }) {
   const [showBooking, setShowBooking] = useState(false)
+  const [activeTab, setActiveTab] = useState<'posts' | 'comments' | 'about'>('posts')
+  const [userPosts, setUserPosts] = useState<any[]>([])
+  const [userComments, setUserComments] = useState<any[]>([])
+  const [loadingContent, setLoadingContent] = useState(false)
   const { user: currentUser, role: currentUserRole, profileId: currentProfileId, loading: contextLoading } = useUser()
   const [profileUser, setProfileUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -22,6 +29,48 @@ export default function UserProfilePage({ params }: { params: { username: string
   useEffect(() => {
     fetchProfile()
   }, [params.username])
+
+  useEffect(() => {
+    if (profileUser && activeTab !== 'about') {
+      fetchUserContent()
+    }
+  }, [profileUser, activeTab])
+
+  const fetchUserContent = async () => {
+    if (!profileUser?.id) return
+    
+    setLoadingContent(true)
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      
+      if (activeTab === 'posts') {
+        // Fetch user's posts
+        const postsResponse = await axios.get(`${API_URL}/api/v1/posts?authorId=${profileUser.id}`)
+        // Posts API returns array directly, not wrapped in success object
+        const posts = Array.isArray(postsResponse.data) ? postsResponse.data : []
+        setUserPosts(posts)
+      } else if (activeTab === 'comments') {
+        // Fetch user's comments
+        const commentsResponse = await axios.get(`${API_URL}/api/v1/comments?authorId=${profileUser.id}`)
+        // Comments API returns { success: true, data: [...] }
+        if (commentsResponse.data.success) {
+          setUserComments(commentsResponse.data.data || [])
+        } else {
+          setUserComments([])
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user content:', error)
+      // Set empty arrays on error
+      if (activeTab === 'posts') {
+        setUserPosts([])
+      } else if (activeTab === 'comments') {
+        setUserComments([])
+      }
+    } finally {
+      setLoadingContent(false)
+    }
+  }
 
   const fetchProfile = async () => {
     try {
@@ -261,7 +310,22 @@ export default function UserProfilePage({ params }: { params: { username: string
                   <>
                     {/* Message button */}
                     <Link href={`/profile?tab=consultation&doctor=${doctorId}`}>
-                      <button className="px-6 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50">
+                      <button 
+                        className="px-6 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50"
+                        onClick={async () => {
+                          // Track message click conversion
+                          const token = localStorage.getItem('auth_token');
+                          if (token && effectiveCurrentUserId) {
+                            await AnalyticsTracker.trackCommentConversion({
+                              commentId: 'profile_message_click', // Special identifier for direct profile messages
+                              doctorId: profileUser.id,
+                              patientId: effectiveCurrentUserId,
+                              postId: 'profile_message_click',
+                              action: 'message_click'
+                            }, token);
+                          }
+                        }}
+                      >
                         Message
                       </button>
                     </Link>
@@ -298,6 +362,20 @@ export default function UserProfilePage({ params }: { params: { username: string
             </div>
             </div>
 
+            {/* Doctor Analytics Stats - Only show for doctors */}
+            {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') && (
+              <div className="mt-6 border-t border-gray-200 pt-6">
+                <DoctorPublicStats doctorId={profileUser.id} />
+              </div>
+            )}
+
+            {/* Doctor Profile Graphs - Only show for doctors */}
+            {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') && (
+              <div className="mt-6">
+                <DoctorProfileGraphs doctorId={profileUser.id} />
+              </div>
+            )}
+
             {/* Appointment Booking Section */}
             {showBooking && profileUser.role === 'VERIFIED_DOCTOR' && currentUserRole === 'PATIENT' && (
             <div className="mt-8 border-t border-gray-200 pt-6">
@@ -313,14 +391,224 @@ export default function UserProfilePage({ params }: { params: { username: string
             )}
 
             <div className="mt-8 border-t border-gray-200 pt-6">
-            <div className="flex gap-6 border-b border-gray-200">
-              <button className="px-4 py-2 font-semibold border-b-2 border-[#00BCD4]">Posts</button>
-              <button className="px-4 py-2 text-gray-600 hover:bg-gray-50">Comments</button>
-              <button className="px-4 py-2 text-gray-600 hover:bg-gray-50">About</button>
-            </div>
+              <div className="flex gap-6 border-b border-gray-200">
+                <button 
+                  onClick={() => setActiveTab('posts')}
+                  className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
+                    activeTab === 'posts' 
+                      ? 'border-[#00BCD4] text-[#00BCD4]' 
+                      : 'border-transparent text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Posts
+                </button>
+                <button 
+                  onClick={() => setActiveTab('comments')}
+                  className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
+                    activeTab === 'comments' 
+                      ? 'border-[#00BCD4] text-[#00BCD4]' 
+                      : 'border-transparent text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Comments
+                </button>
+                <button 
+                  onClick={() => setActiveTab('about')}
+                  className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
+                    activeTab === 'about' 
+                      ? 'border-[#00BCD4] text-[#00BCD4]' 
+                      : 'border-transparent text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  About
+                </button>
+              </div>
 
-            <div className="mt-6">
-              <p className="text-gray-600">No posts yet</p>
+              <div className="mt-6">
+                {/* Posts Tab Content */}
+                {activeTab === 'posts' && (
+                  <div>
+                    {loadingContent ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-gray-600">Loading posts...</span>
+                      </div>
+                    ) : userPosts.length > 0 ? (
+                      <div className="space-y-4">
+                        {userPosts.map((post) => (
+                          <div key={post.id} className="bg-white/60 rounded-lg p-4 border border-gray-200">
+                            <Link href={`/post/${post.id}`} className="hover:text-blue-600">
+                              <h3 className="font-semibold text-lg mb-2">{post.title}</h3>
+                            </Link>
+                            <p className="text-gray-600 text-sm mb-2">
+                              {post.content?.substring(0, 200)}
+                              {post.content?.length > 200 && '...'}
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                              <span>👍 {post.upvotes || 0}</span>
+                              <span>💬 {post.commentCount || 0}</span>
+                              {post.community && (
+                                <Link href={`/m/${post.community.name}`} className="text-blue-600 hover:underline">
+                                  m/{post.community.name}
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600">No posts yet</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {profileUser.username || 'This user'} hasn't created any posts.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Comments Tab Content */}
+                {activeTab === 'comments' && (
+                  <div>
+                    {loadingContent ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="ml-2 text-gray-600">Loading comments...</span>
+                      </div>
+                    ) : userComments.length > 0 ? (
+                      <div className="space-y-4">
+                        {userComments.map((comment) => (
+                          <div key={comment.id} className="bg-white/60 rounded-lg p-4 border border-gray-200">
+                            <p className="text-gray-800 mb-2">{comment.content}</p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
+                              <span>👍 {comment.upvotes || 0}</span>
+                              {comment.post && (
+                                <Link href={`/post/${comment.post.id}`} className="text-blue-600 hover:underline">
+                                  on "{comment.post.title?.substring(0, 50)}..."
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-600">No comments yet</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {profileUser.username || 'This user'} hasn't made any comments.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* About Tab Content */}
+                {activeTab === 'about' && (
+                  <div className="space-y-6">
+                    <div className="bg-white/60 rounded-lg p-6 border border-gray-200">
+                      <h3 className="font-semibold text-lg mb-4">Profile Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Username</label>
+                          <p className="text-gray-800">{profileUser.username || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Role</label>
+                          <p className="text-gray-800">
+                            {profileUser.role === 'VERIFIED_DOCTOR' ? 'Verified Doctor' : 
+                             profileUser.role === 'DOCTOR' ? 'Doctor' : 'Patient'}
+                          </p>
+                        </div>
+                        {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') && (
+                          <>
+                            {(profileUser.specialty || profileUser.specialization) && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Specialty</label>
+                                <p className="text-gray-800">{profileUser.specialty || profileUser.specialization}</p>
+                              </div>
+                            )}
+                            {profileUser.yearsOfExperience && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Experience</label>
+                                <p className="text-gray-800">{profileUser.yearsOfExperience} years</p>
+                              </div>
+                            )}
+                            {profileUser.hospitalAffiliation && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">Hospital</label>
+                                <p className="text-gray-800">{profileUser.hospitalAffiliation}</p>
+                              </div>
+                            )}
+                            {profileUser.medicalLicenseNumber && (
+                              <div>
+                                <label className="text-sm font-medium text-gray-600">License Number</label>
+                                <p className="text-gray-800">{profileUser.medicalLicenseNumber}</p>
+                              </div>
+                            )}
+                            {profileUser.clinicAddress && (
+                              <div className="md:col-span-2">
+                                <label className="text-sm font-medium text-gray-600">Clinic Address</label>
+                                <p className="text-gray-800">{profileUser.clinicAddress}</p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Member Since</label>
+                          <p className="text-gray-800">
+                            {profileUser.createdAt 
+                              ? new Date(profileUser.createdAt).toLocaleDateString()
+                              : 'Not available'
+                            }
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-600">Total Karma</label>
+                          <p className="text-gray-800">
+                            <CountUpNumber value={profileUser.totalKarma || 0} />
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bio section if available */}
+                    {profileUser.bio && (
+                      <div className="bg-white/60 rounded-lg p-6 border border-gray-200">
+                        <h3 className="font-semibold text-lg mb-4">Bio</h3>
+                        <p className="text-gray-800 whitespace-pre-wrap">{profileUser.bio}</p>
+                      </div>
+                    )}
+
+                    {/* Education section for doctors */}
+                    {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') && (
+                      <div className="bg-white/60 rounded-lg p-6 border border-gray-200">
+                        <h3 className="font-semibold text-lg mb-4">Education & Qualifications</h3>
+                        <div className="space-y-3">
+                          {profileUser.medicalUniversity && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Medical University</label>
+                              <p className="text-gray-800">{profileUser.medicalUniversity}</p>
+                            </div>
+                          )}
+                          {profileUser.graduationYear && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">Graduation Year</label>
+                              <p className="text-gray-800">{profileUser.graduationYear}</p>
+                            </div>
+                          )}
+                          {profileUser.licenseIssuingAuthority && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-600">License Authority</label>
+                              <p className="text-gray-800">{profileUser.licenseIssuingAuthority}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>

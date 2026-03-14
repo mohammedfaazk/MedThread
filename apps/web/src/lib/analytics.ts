@@ -48,7 +48,97 @@ export class AnalyticsTracker {
    * Generate unique session ID
    */
   private static generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `session_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  }
+
+  /**
+   * Track page view
+   */
+  static trackPageView(url: string) {
+    if (typeof window === 'undefined') return;
+    console.log('Page view tracked:', url);
+  }
+
+  /**
+   * Track post view
+   */
+  static trackPostView(postId: string) {
+    if (typeof window === 'undefined') return;
+    console.log('Post view tracked:', postId);
+  }
+
+  /**
+   * Track generic event
+   */
+  static trackEvent(eventName: string, category: string, data?: any) {
+    if (typeof window === 'undefined') return;
+    console.log('Event tracked:', { eventName, category, data });
+  }
+
+  /**
+   * Track comment conversion (profile visit or message click)
+   */
+  static async trackCommentConversion(data: {
+    commentId: string;
+    doctorId: string;
+    patientId: string;
+    postId: string;
+    action: 'profile_visit' | 'message_click';
+  }, token?: string) {
+    try {
+      const headers: any = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/enhanced-analytics/track-conversion`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(data)
+      });
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to track comment conversion:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Track clinic visit (appointment booking)
+   */
+  static async trackClinicVisit(doctorId: string, patientId: string, token?: string) {
+    try {
+      const headers: any = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/api/enhanced-analytics/track-clinic-visit`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ doctorId, patientId })
+      });
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to track clinic visit:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Track share action
+   */
+  static trackShare(type: string, id: string, method: string) {
+    if (typeof window === 'undefined') return;
+    console.log('Share tracked:', { type, id, method });
   }
 
   /**
@@ -164,3 +254,7 @@ export class AnalyticsTracker {
 if (typeof window !== 'undefined') {
   AnalyticsTracker.initSession();
 }
+
+// Export as default and named export for compatibility
+export const analytics = AnalyticsTracker;
+export default AnalyticsTracker;

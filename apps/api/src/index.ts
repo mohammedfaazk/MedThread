@@ -31,6 +31,11 @@ import { analyticsRouter } from './routes/analytics.routes';
 import { healthAnalyticsRouter } from './routes/health-analytics.routes';
 import { doctorAnalyticsRouter } from './routes/doctor-analytics.routes';
 import { platformAnalyticsRouter } from './routes/platform-analytics.routes';
+import enhancedAnalyticsRouter from './routes/enhanced-analytics';
+import doctorProfileAnalyticsRouter from './routes/doctor-profile-analytics.routes';
+import postPriorityRouter from './routes/post-priority.routes';
+import adminUserActivityRouter from './routes/admin-user-activity.routes';
+import regionalSymptomAnalyticsRouter from './routes/regional-symptom-analytics.routes';
 import { paymentRouter } from './routes/payment.routes';
 import { fileUploadRouter } from './routes/file-upload.routes';
 import { notificationRouter } from './routes/notification.routes';
@@ -47,6 +52,8 @@ import { profileRouter } from './routes/profile.routes';
 import { followRouter } from './routes/follow';
 import { badgeRouter } from './routes/badge.routes';
 import { blockRouter } from './routes/block.routes';
+import healthProfileRouter from './routes/health-profile';
+import dietPlanRouter from './routes/diet-plan';
 import { usersRouter } from './routes/users.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
@@ -122,6 +129,11 @@ app.use('/api/analytics', analyticsRouter);
 app.use('/api/health-analytics', healthAnalyticsRouter);
 app.use('/api/doctor-analytics', doctorAnalyticsRouter);
 app.use('/api/platform-analytics', platformAnalyticsRouter);
+app.use('/api/enhanced-analytics', enhancedAnalyticsRouter);
+app.use('/api/doctor-profile-analytics', doctorProfileAnalyticsRouter);
+app.use('/api/post-priority', postPriorityRouter);
+app.use('/api/admin-user-activity', adminUserActivityRouter);
+app.use('/api/regional-symptom-analytics', regionalSymptomAnalyticsRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/threads', threadRouter);
 app.use('/api/users', userRouter);
@@ -162,6 +174,10 @@ app.use('/api/badges', badgeRouter);
 
 // Block System
 app.use('/api/block', blockRouter);
+
+// Health Profile & Diet Planner
+app.use('/api/v1/health-profile', healthProfileRouter);
+app.use('/api/v1/diet-plan', dietPlanRouter);
 
 // Users System (v2)
 app.use('/api/v2/users', usersRouter);

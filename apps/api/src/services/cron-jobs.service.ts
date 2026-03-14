@@ -378,6 +378,16 @@ export class CronJobsService {
       await this.calculateHealthTrends();
     });
 
+    // Send patient feedback notifications daily at 9 AM
+    cron.schedule('0 9 * * *', async () => {
+      await this.sendFeedbackNotifications();
+    });
+
+    // Calculate community activity daily at 2 AM
+    cron.schedule('0 2 * * *', async () => {
+      await this.calculateCommunityActivity();
+    });
+
     console.log('[CRON] All cron jobs initialized');
   }
 
@@ -408,6 +418,36 @@ export class CronJobsService {
       console.log('[CRON] Health trends calculated successfully');
     } catch (error) {
       console.error('[CRON] Error calculating health trends:', error);
+    }
+  }
+
+  /**
+   * Send patient feedback notifications
+   */
+  async sendFeedbackNotifications() {
+    console.log('[CRON] Sending patient feedback notifications...');
+    
+    try {
+      const { feedbackNotificationService } = require('./feedback-notification.service');
+      const result = await feedbackNotificationService.sendPendingFeedbackNotifications();
+      console.log(`[CRON] Sent ${result.notificationsSent} feedback notifications`);
+    } catch (error) {
+      console.error('[CRON] Error sending feedback notifications:', error);
+    }
+  }
+
+  /**
+   * Calculate community activity tiers
+   */
+  async calculateCommunityActivity() {
+    console.log('[CRON] Calculating community activity...');
+    
+    try {
+      const { enhancedAnalyticsService } = require('./enhanced-analytics.service');
+      const result = await enhancedAnalyticsService.analyzeCommunityActivity();
+      console.log(`[CRON] Analyzed ${result.length} communities`);
+    } catch (error) {
+      console.error('[CRON] Error calculating community activity:', error);
     }
   }
 }

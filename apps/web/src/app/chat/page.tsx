@@ -331,7 +331,7 @@ export default function ChatPage() {
             <span>Messages</span>
           </Link>
           
-          <Link href="/appointments">
+          <Link href={userRole === 'DOCTOR' ? '/dashboard/doctor/appointments' : '/appointments'}>
             <Calendar size={20} />
             <span>Appointments</span>
           </Link>

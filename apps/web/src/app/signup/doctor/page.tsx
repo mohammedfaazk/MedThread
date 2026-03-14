@@ -28,6 +28,7 @@ export default function DoctorSignupPage() {
     phone: '',
     password: '',
     confirm_password: '',
+    pincode: '',
     
     // Step 2: Professional Info
     license_number: '',
@@ -64,14 +65,15 @@ export default function DoctorSignupPage() {
     
     if (!formData.password || formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters'
-    } else if (!/[A-Z]/.test(formData.password)) {
-      newErrors.password = 'Password must contain uppercase letter'
-    } else if (!/[0-9]/.test(formData.password)) {
-      newErrors.password = 'Password must contain a number'
     }
     
     if (formData.password !== formData.confirm_password) {
       newErrors.confirm_password = "Passwords don't match"
+    }
+    
+    // Validate pincode (required)
+    if (!formData.pincode || !/^\d{6}$/.test(formData.pincode)) {
+      newErrors.pincode = 'Pincode is required and must be exactly 6 digits'
     }
     
     setErrors(newErrors)
@@ -178,9 +180,14 @@ export default function DoctorSignupPage() {
       // Step 1: Register user account
       const registerResponse = await axios.post(`${API_URL}/api/auth/register`, {
         email: formData.email,
-        username: formData.full_name.toLowerCase().replace(/\s+/g, '_'),
+        username: formData.full_name
+          .toLowerCase()
+          .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters
+          .replace(/\s+/g, '_') // Replace spaces with underscores
+          .substring(0, 30), // Ensure max 30 characters
         password: formData.password,
-        role: 'DOCTOR'
+        role: 'DOCTOR',
+        pincode: formData.pincode
       })
 
       if (!registerResponse.data.success) {
@@ -371,6 +378,25 @@ export default function DoctorSignupPage() {
                   />
                 </div>
                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Pincode <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <MapPin className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={formData.pincode}
+                    onChange={(e) => handleInputChange('pincode', e.target.value)}
+                    className="w-full pl-10 h-10 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter your 6-digit pincode"
+                    required
+                    maxLength={6}
+                    pattern="\d{6}"
+                  />
+                </div>
+                {errors.pincode && <p className="text-red-500 text-xs mt-1">{errors.pincode}</p>}
+                <p className="text-xs text-gray-500 mt-1">Required for regional doctor filtering and location-based services</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

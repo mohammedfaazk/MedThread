@@ -463,8 +463,30 @@ router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req,
                     console.error('Failed to create appointment update notification:', notifError);
                 }
 
-                // If approved, create a conversation
+                // If approved, create a conversation AND track conversion
                 if (status === 'APPROVED') {
+                    // Track conversion - appointment approval increases conversion count
+                    try {
+                        // Directly increment conversion count for appointment approvals
+                        await prisma.doctorPerformance.upsert({
+                            where: { doctorId: appointment.doctorId },
+                            create: {
+                                doctorId: appointment.doctorId,
+                                conversionCount: 1,
+                                clinicVisitCount: 1,
+                                totalPostsCommented: 0,
+                                totalCommentsCount: 0
+                            },
+                            update: {
+                                conversionCount: { increment: 1 },
+                                clinicVisitCount: { increment: 1 }
+                            }
+                        });
+                        console.log('[API] Tracked appointment approval as conversion');
+                    } catch (conversionError) {
+                        console.error('[API] Failed to track conversion:', conversionError);
+                    }
+
                     // Even if DB update succeeded, we might want to ensure mock store has it for testing
                     createMockConversation(updated);
 
@@ -518,6 +540,28 @@ router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req,
             console.log('[API] Updated In-Memory store');
 
             if (status === 'APPROVED') {
+                // Track conversion for in-memory appointments too
+                try {
+                    // Directly increment conversion count for appointment approvals
+                    await prisma.doctorPerformance.upsert({
+                        where: { doctorId: appointmentsStore[index].doctorId },
+                        create: {
+                            doctorId: appointmentsStore[index].doctorId,
+                            conversionCount: 1,
+                            clinicVisitCount: 1,
+                            totalPostsCommented: 0,
+                            totalCommentsCount: 0
+                        },
+                        update: {
+                            conversionCount: { increment: 1 },
+                            clinicVisitCount: { increment: 1 }
+                        }
+                    });
+                    console.log('[API] Tracked in-memory appointment approval as conversion');
+                } catch (conversionError) {
+                    console.error('[API] Failed to track in-memory conversion:', conversionError);
+                }
+
                 const conv = createMockConversation(appointmentsStore[index]);
                 console.log('[API] Created Mock Conversation for approved appointment:', conv.id);
             }

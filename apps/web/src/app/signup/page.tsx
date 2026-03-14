@@ -65,6 +65,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [pincode, setPincode] = useState('')
 
   // Doctor-specific fields
   const [medicalLicenseNumber, setMedicalLicenseNumber] = useState('')
@@ -149,7 +150,7 @@ export default function SignupPage() {
     setError('')
     
     // Validation
-    if (!email || !username || !password) {
+    if (!email || !username || !password || !pincode) {
       setError('Please fill all required fields')
       return
     }
@@ -174,15 +175,22 @@ export default function SignupPage() {
       return
     }
 
+    // Validate pincode (required for both patients and doctors)
+    if (!/^\d{6}$/.test(pincode)) {
+      setError('Pincode is required and must be exactly 6 digits')
+      return
+    }
+
     setLoading(true)
 
     try {
-      console.log('Registering patient with:', { email, username, role: 'PATIENT' })
+      console.log('Registering patient with:', { email, username, role: 'PATIENT', pincode })
       const response = await axios.post(`${API_URL}/api/auth/register`, {
         email,
         username,
         password,
-        role: 'PATIENT'
+        role: 'PATIENT',
+        pincode
       })
 
       if (response.data.success) {
@@ -204,7 +212,7 @@ export default function SignupPage() {
     setError('')
 
     // Common validation
-    if (!email || !username || !password) {
+    if (!email || !username || !password || !pincode) {
       setError('Please fill all required fields')
       return
     }
@@ -260,16 +268,23 @@ export default function SignupPage() {
       return
     }
 
+    // Validate pincode (required for both patients and doctors)
+    if (!/^\d{6}$/.test(pincode)) {
+      setError('Pincode is required and must be exactly 6 digits')
+      return
+    }
+
     setLoading(true)
 
     try {
-      console.log('Registering doctor with:', { email, username, role: 'DOCTOR' })
+      console.log('Registering doctor with:', { email, username, role: 'DOCTOR', pincode })
       // Step 1: Register as doctor
       const registerResponse = await axios.post(`${API_URL}/api/auth/register`, {
         email,
         username,
         password,
-        role: 'DOCTOR'
+        role: 'DOCTOR',
+        pincode
       })
 
       if (registerResponse.data.success) {
@@ -360,7 +375,8 @@ export default function SignupPage() {
           <button
             type="button"
             onClick={() => {
-              router.push('/signup/doctor')
+              setUserType('doctor')
+              setError('')
             }}
             className={`flex-1 py-4 rounded-xl font-semibold transition-all transform hover:scale-105 ${
               userType === 'doctor'
@@ -482,6 +498,25 @@ export default function SignupPage() {
                   {password === confirmPassword ? '✓ Passwords match' : '✗ Passwords do not match'}
                 </p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Pincode <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="Enter your 6-digit pincode"
+                maxLength={6}
+                pattern="\d{6}"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Required for regional filtering and location-based services
+              </p>
             </div>
           </div>
 

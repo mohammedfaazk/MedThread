@@ -7,6 +7,7 @@ import { UserRound, Stethoscope, Pin, Edit2, Trash2, MoreHorizontal } from 'luci
 import { AwardButton } from './AwardButton'
 import { AwardDisplay } from './AwardDisplay'
 import ReportButton from './ReportButton'
+import { PostPriorityBadge } from './feed/PostPriorityBadge'
 import { analytics } from '@/lib/analytics'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
@@ -39,6 +40,14 @@ interface PostCardProps {
   isSaved?: boolean
   community: string
   editedAt?: string | null
+  // Priority system props
+  urgencyScore?: number
+  priorityLevel?: 'HIGH' | 'MEDIUM' | 'LOW'
+  detectedSymptoms?: Array<{
+    symptom: string
+    weight: number
+    category: string
+  }>
 }
 
 export function PostCard({
@@ -62,7 +71,10 @@ export function PostCard({
   userVote,
   isSaved,
   community,
-  editedAt
+  editedAt,
+  urgencyScore = 0,
+  priorityLevel = 'LOW',
+  detectedSymptoms = []
 }: PostCardProps) {
   const { votePost, savePost, hidePost } = useStore()
   const { user } = useJWTAuth()
@@ -342,6 +354,18 @@ export function PostCard({
                 </div>
               )}
             </div>
+
+            {/* Priority Badge - Show for patient posts with priority analysis */}
+            {authorType === 'patient' && urgencyScore >= 0 && (
+              <div className="mb-3" onClick={(e) => e.stopPropagation()}>
+                <PostPriorityBadge
+                  priority={priorityLevel}
+                  urgencyScore={urgencyScore}
+                  detectedSymptoms={detectedSymptoms}
+                  showDetails={false}
+                />
+              </div>
+            )}
 
             {/* Title */}
             {isEditing ? (

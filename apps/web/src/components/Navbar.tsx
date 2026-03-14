@@ -311,7 +311,10 @@ export function Navbar() {
                     {isDoctor ? (
                       <Link href="/dashboard/doctor" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Doctor Dashboard</Link>
                     ) : (
-                      <Link href="/dashboard/patient" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Patient Dashboard</Link>
+                      <>
+                        <Link href="/dashboard/patient" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Patient Dashboard</Link>
+                        <Link href="/find-hospitals" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-emerald-600 transition-all">🏥 Find Hospitals</Link>
+                      </>
                     )}
                     <Link href="/settings" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Settings</Link>
                     <Link href="/saved" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Saved Posts</Link>

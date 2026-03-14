@@ -240,6 +240,53 @@ export const commentService = {
     return this.buildCommentTree(comments, userVotes);
   },
 
+  async getCommentsByAuthor(authorId: string, limit: number = 20, offset: number = 0) {
+    const comments = await prisma.comment.findMany({
+      where: {
+        authorId,
+        isRemoved: false,
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            role: true,
+            avatar: true,
+            totalKarma: true,
+            specialty: true,
+            doctorVerificationStatus: true,
+          }
+        },
+        post: {
+          select: {
+            id: true,
+            title: true,
+            community: {
+              select: {
+                name: true,
+                displayName: true
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            replies: true,
+            votes: true,
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: limit,
+      skip: offset
+    });
+
+    return comments;
+  },
+
   buildCommentTree(comments: any[], userVotes: Record<string, number> = {}) {
     const commentMap = new Map();
     const rootComments: any[] = [];

@@ -8,6 +8,7 @@ import { AwardButton } from './AwardButton'
 import { AwardDisplay } from './AwardDisplay'
 import ReportButton from './ReportButton'
 import { analytics } from '@/lib/analytics'
+import Link from 'next/link'
 import axios from 'axios'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -228,10 +229,20 @@ export function Comment({
         <div className="flex-1">
           {/* Header */}
           <div className="flex items-center gap-2 text-xs text-gray-600 mb-1">
-            <span className="font-semibold hover:underline cursor-pointer text-charcoal flex items-center gap-1">
-              {authorType === 'doctor' ? <Stethoscope className="w-3 h-3" /> : <User className="w-3 h-3" />}
-              {isDeleted ? '[deleted]' : author}
-            </span>
+            {isDeleted ? (
+              <span className="font-semibold text-charcoal flex items-center gap-1">
+                {authorType === 'doctor' ? <Stethoscope className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                [deleted]
+              </span>
+            ) : (
+              <Link 
+                href={`/u/${author}`}
+                className="font-semibold hover:underline cursor-pointer text-charcoal flex items-center gap-1 transition-colors hover:text-blue-600"
+              >
+                {authorType === 'doctor' ? <Stethoscope className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                {author}
+              </Link>
+            )}
             {verified && !isDeleted && (
               <span className="px-2 py-0.5 bg-blue-600 text-white rounded-full text-xs font-bold flex items-center gap-1">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">

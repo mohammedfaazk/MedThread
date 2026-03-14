@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import { useUser } from '@/context/UserContext';
+import { AnalyticsTracker } from '@/lib/analytics';
 
 interface AvailabilitySlot {
     id: string;
@@ -128,6 +129,10 @@ export const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({
                 endTime: selectedSlot.endTime,
                 reason
             });
+
+            // Track clinic visit conversion
+            const token = localStorage.getItem('auth_token');
+            await AnalyticsTracker.trackClinicVisit(doctorId, patientId, token || undefined);
 
             alert('Appointment request sent! Waiting for doctor approval.');
             setSelectedSlot(null);

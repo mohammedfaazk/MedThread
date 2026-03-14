@@ -42,6 +42,14 @@ interface Post {
   isSaved?: boolean
   isHidden?: boolean
   editedAt?: string | null
+  // Priority system fields
+  urgencyScore?: number
+  priorityLevel?: 'HIGH' | 'MEDIUM' | 'LOW'
+  detectedSymptoms?: Array<{
+    symptom: string
+    weight: number
+    category: string
+  }>
 }
 
 interface Comment {
@@ -159,6 +167,10 @@ export const useStore = create<AppState>()(
             isSaved: post.isSaved || false,
             isHidden: post.isHidden || false,
             editedAt: post.editedAt || null,
+            // Priority system fields
+            urgencyScore: post.priority?.urgencyScore || 0,
+            priorityLevel: post.priority?.priorityLevel || 'LOW',
+            detectedSymptoms: post.priority?.detectedSymptoms || []
           }))
           
           set({ posts: transformedPosts, loading: false })

@@ -387,7 +387,10 @@ export default function DoctorDashboard() {
                                         ))
                                     )}
                                     {pendingAppointments.length > 0 && (
-                                        <button className="w-full py-3 text-sm text-gray-600 hover:text-gray-900 font-semibold flex items-center justify-center gap-2">
+                                        <button 
+                                            onClick={() => router.push('/dashboard/doctor/appointments')}
+                                            className="w-full py-3 text-sm text-gray-600 hover:text-gray-900 font-semibold flex items-center justify-center gap-2"
+                                        >
                                             View All
                                             <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
                                         </button>
