@@ -1,0 +1,25 @@
+{
+  "name": "kendall-ai-assistant",
+  "version": "1.0.0",
+  "description": "Voice-first multilingual healthcare assistant with emergency detection",
+  "main": "components/Chat.tsx",
+  "dependencies": {
+    "axios": "^1.13.3"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.12.0",
+    "motion": "^12.23.24",
+    "lucide-react": "^0.487.0"
+  },
+  "keywords": [
+    "healthcare",
+    "voice-assistant",
+    "multilingual",
+    "ai",
+    "gemini",
+    "speech-recognition",
+    "emergency-detection"
+  ]
+}

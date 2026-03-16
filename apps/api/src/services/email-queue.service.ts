@@ -214,7 +214,18 @@ export class EmailQueueService {
       for (const job of jobs) {
         await this.processJob(job);
       }
+      
+      // Reset circuit breaker on success
+      this.resetCircuitBreaker();
     } catch (error) {
+      // Check if error is due to missing EmailQueue table/model
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('emailQueue') || errorMessage.includes('findMany') || errorMessage.includes('undefined')) {
+        console.warn('[EMAIL_QUEUE] EmailQueue table not found in schema. Stopping email queue processing.');
+        this.stopProcessing();
+        return;
+      }
+      
       console.error('[EMAIL_QUEUE] Error processing queue:', error);
       this.recordFailure();
     }

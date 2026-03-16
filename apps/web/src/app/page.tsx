@@ -5,15 +5,18 @@ import { PostFeed } from '@/components/PostFeed'
 import { RightSidebar } from '@/components/RightSidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import StructuredData, { structuredDataSchemas } from '@/components/StructuredData'
 import IridescenceCSS from '@/components/ui/IridescenceCSS'
+
+// Lazy-load Kendall so it doesn't affect initial page load
+const KendallChat = lazy(() => import('@/components/KendallChat'))
 
 export default function Home() {
   const { user, role, loading } = useJWTAuth()
   const router = useRouter()
 
-  // Force recompilation to trigger ogl error
+  const isPatient = !loading && user && role === 'PATIENT'
 
   return (
     <>
@@ -41,6 +44,13 @@ export default function Home() {
           </main>
           <RightSidebar />
         </div>
+
+        {/* Kendall AI Assistant — visible only to logged-in patients */}
+        {isPatient && (
+          <Suspense fallback={null}>
+            <KendallChat />
+          </Suspense>
+        )}
       </div>
     </>
   )

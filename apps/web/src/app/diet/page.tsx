@@ -131,9 +131,10 @@ export default function DietPlannerPage() {
         setHealthProfile(response.data.data)
         setShowMCQ(false)
       }
-    } catch (error) {
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || 'Failed to save health profile. Please try again.'
       console.error('Failed to save health profile:', error)
-      alert('Failed to save health profile. Please try again.')
+      alert(msg)
     }
   }
 

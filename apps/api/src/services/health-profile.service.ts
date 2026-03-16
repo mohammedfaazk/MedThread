@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@medthread/database'
 
 export class HealthProfileService {
   async createOrUpdateHealthProfile(userId: string, data: any) {
@@ -20,8 +18,12 @@ export class HealthProfileService {
       })
 
       return { success: true, data: healthProfile }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating/updating health profile:', error)
+      // P2003 = foreign key constraint — userId doesn't exist in User table (stale JWT)
+      if (error?.code === 'P2003') {
+        return { success: false, error: 'User account not found. Please log out and log back in.' }
+      }
       return { success: false, error: 'Failed to save health profile' }
     }
   }

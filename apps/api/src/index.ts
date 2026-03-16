@@ -193,8 +193,12 @@ httpServer.listen(PORT, () => {
   console.log(`🏥 MedThread API running on port ${PORT}`);
   
   // Start email queue processing
-  console.log('📧 Starting email queue worker...');
-  emailQueueService.startProcessing();
+  try {
+    console.log('📧 Starting email queue worker...');
+    emailQueueService.startProcessing();
+  } catch (error) {
+    console.warn('⚠️  Email queue worker failed to start (EmailQueue table may not exist):', error instanceof Error ? error.message : error);
+  }
   
   // Initialize cron jobs
   console.log('⏰ Initializing cron jobs...');

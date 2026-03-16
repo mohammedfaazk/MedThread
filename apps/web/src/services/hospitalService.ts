@@ -12,6 +12,12 @@ export interface Hospital {
   emergency?: boolean;
 }
 
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+];
+
 // Haversine formula to calculate distance between two points on Earth
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371; // Radius of the earth in km
@@ -30,64 +36,66 @@ function deg2rad(deg: number): number {
 }
 
 export const hospitalService = {
-  async findNearbyHospitals(lat: number, lng: number): Promise<Hospital[]> {
-    try {
-      // Overpass QL query: Find nodes/ways with amenity=hospital within 50km
-      const query = `
-        [out:json];
-        (
-          node["amenity"="hospital"](around:50000,${lat},${lng});
-          way["amenity"="hospital"](around:50000,${lat},${lng});
-          node["amenity"="clinic"](around:50000,${lat},${lng});
-        );
-        out center;
-      `;
+  async findNearbyHospitals(lat: number, lng: number, radiusMeters = 10000): Promise<Hospital[]> {
+    // Compact query with server-side timeout + smaller radius for speed
+    const query = `[out:json][timeout:25];(node["amenity"="hospital"](around:${radiusMeters},${lat},${lng});way["amenity"="hospital"](around:${radiusMeters},${lat},${lng});node["amenity"="clinic"](around:${radiusMeters},${lat},${lng}););out center;`;
 
-      const response = await axios.get('https://overpass-api.de/api/interpreter', {
-        params: { data: query }
-      });
+    let response: any = null;
+    for (const mirror of OVERPASS_MIRRORS) {
+      try {
+        response = await axios.get(mirror, {
+          params: { data: query },
+          timeout: 20000, // 20s client-side timeout per mirror
+        });
+        break; // success — stop trying mirrors
+      } catch (err: any) {
+        const status = err?.response?.status;
+        // Only retry on gateway/timeout errors
+        if (status === 504 || status === 502 || status === 429 || !status) continue;
+        throw err;
+      }
+    }
 
-      const elements = response.data.elements;
-
-      const hospitals: Hospital[] = elements.map((el: any) => {
-        const latitude = el.lat || el.center?.lat;
-        const longitude = el.lon || el.center?.lon;
-
-        // Extract tags
-        const tags = el.tags || {};
-
-        // Try to construct a better address
-        let address = tags['addr:full'] || tags['addr:street']
-          ? [tags['addr:housenumber'], tags['addr:street'], tags['addr:city'], tags['addr:postcode']].filter(Boolean).join(', ')
-          : null;
-
-        if (!address) {
-          // Fallback to other meaningful tags if address is missing
-          const details = [tags['operator'], tags['network']].filter(Boolean).join(' • ');
-          address = details || "";
-        }
-
-        const dist = calculateDistance(lat, lng, latitude, longitude);
-
-        return {
-          id: el.id,
-          name: tags.name || "Unnamed Facility",
-          lat: latitude,
-          lng: longitude,
-          distance: parseFloat(dist.toFixed(1)),
-          address: address, // Can be empty string, UI will handle
-          phone: tags['phone'] || tags['contact:phone'] || tags['mobile'],
-          website: tags['website'] || tags['contact:website'] || tags['url'],
-          emergency: tags['emergency'] === 'yes'
-        };
-      }).filter((h: Hospital) => h.lat && h.lng);
-
-      // Sort by distance (closest first)
-      return hospitals.sort((a, b) => (a.distance || 0) - (b.distance || 0));
-
-    } catch (error) {
-      console.error("Error fetching hospitals:", error);
+    if (!response) {
+      // All mirrors failed — try once more with a wider radius on the first mirror
+      if (radiusMeters < 25000) {
+        return this.findNearbyHospitals(lat, lng, 25000);
+      }
+      console.error('All Overpass mirrors failed');
       return [];
     }
+
+    const elements = response.data.elements;
+
+    const hospitals: Hospital[] = elements.map((el: any) => {
+      const latitude = el.lat || el.center?.lat;
+      const longitude = el.lon || el.center?.lon;
+      const tags = el.tags || {};
+
+      let address: string = tags['addr:full'] || (tags['addr:street']
+        ? [tags['addr:housenumber'], tags['addr:street'], tags['addr:city'], tags['addr:postcode']].filter(Boolean).join(', ')
+        : '');
+
+      if (!address) {
+        address = [tags['operator'], tags['network']].filter(Boolean).join(' • ') || '';
+      }
+
+      const dist = calculateDistance(lat, lng, latitude, longitude);
+
+      return {
+        id: el.id,
+        name: tags.name || 'Unnamed Facility',
+        lat: latitude,
+        lng: longitude,
+        distance: parseFloat(dist.toFixed(1)),
+        address,
+        phone: tags['phone'] || tags['contact:phone'] || tags['mobile'],
+        website: tags['website'] || tags['contact:website'] || tags['url'],
+        emergency: tags['emergency'] === 'yes',
+      };
+    }).filter((h: Hospital) => h.lat && h.lng);
+
+    // Sort by distance (closest first)
+    return hospitals.sort((a, b) => (a.distance || 0) - (b.distance || 0));
   }
 };

@@ -48,10 +48,10 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
     setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications?limit=10`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications?limit=10`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           },
         }
       );
@@ -102,11 +102,11 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
   const markAsRead = async (notificationId: string) => {
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/${notificationId}/read`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/${notificationId}/read`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           },
         }
       );
@@ -127,11 +127,11 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
   const markAllAsRead = async () => {
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/notifications/mark-all-read`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/notifications/mark-all-read`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
           },
         }
       );

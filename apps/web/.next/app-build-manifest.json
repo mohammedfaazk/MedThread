@@ -5,6 +5,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/global-error.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -21,15 +26,21 @@
       "static/chunks/main-app.js",
       "static/chunks/app/not-found.js"
     ],
-    "/chat/page": [
+    "/find-hospitals/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/chat/page.js"
+      "static/css/app/find-hospitals/page.css",
+      "static/chunks/app/find-hospitals/page.js"
     ],
-    "/page": [
+    "/dashboard/patient/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/dashboard/patient/page.js"
+    ],
+    "/diet/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/diet/page.js"
     ]
   }
 }

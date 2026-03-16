@@ -95,7 +95,7 @@ export class NotificationService {
       // 3. Create notification records
       const notifications = await prisma.$transaction(
         unblockedRecipients.map((recipientId) =>
-          prisma.notification.create({
+          prisma.notifications.create({
             data: {
               type,
               recipientId,
@@ -192,7 +192,7 @@ export class NotificationService {
 
       // Execute queries in parallel
       const [notifications, total] = await Promise.all([
-        prisma.notification.findMany({
+        prisma.notifications.findMany({
           where,
           skip,
           take: limit,
@@ -210,7 +210,7 @@ export class NotificationService {
             },
           },
         }),
-        prisma.notification.count({ where }),
+        prisma.notifications.count({ where }),
       ]);
 
       return {
@@ -232,7 +232,7 @@ export class NotificationService {
   async markAsRead(notificationId: string, userId: string): Promise<void> {
     try {
       // Verify the notification belongs to the user
-      const notification = await prisma.notification.findFirst({
+      const notification = await prisma.notifications.findFirst({
         where: {
           id: notificationId,
           recipientId: userId,
@@ -247,7 +247,7 @@ export class NotificationService {
         return; // Already read
       }
 
-      await prisma.notification.update({
+      await prisma.notifications.update({
         where: { id: notificationId },
         data: {
           isRead: true,
@@ -270,7 +270,7 @@ export class NotificationService {
    */
   async markAllAsRead(userId: string): Promise<number> {
     try {
-      const result = await prisma.notification.updateMany({
+      const result = await prisma.notifications.updateMany({
         where: {
           recipientId: userId,
           isRead: false,
@@ -300,7 +300,7 @@ export class NotificationService {
   async deleteNotification(notificationId: string, userId: string): Promise<void> {
     try {
       // Verify the notification belongs to the user
-      const notification = await prisma.notification.findFirst({
+      const notification = await prisma.notifications.findFirst({
         where: {
           id: notificationId,
           recipientId: userId,
@@ -311,7 +311,7 @@ export class NotificationService {
         throw new Error('Notification not found or access denied');
       }
 
-      await prisma.notification.update({
+      await prisma.notifications.update({
         where: { id: notificationId },
         data: {
           isDeleted: true,
@@ -343,7 +343,7 @@ export class NotificationService {
       }
 
       // Fetch from database
-      const count = await prisma.notification.count({
+      const count = await prisma.notifications.count({
         where: {
           recipientId: userId,
           isRead: false,
@@ -526,3 +526,4 @@ export class NotificationService {
 
 // Export singleton instance
 export const notificationService = new NotificationService();
+

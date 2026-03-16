@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@medthread/database'
 import Groq from 'groq-sdk'
-
-const prisma = new PrismaClient()
 
 // Initialize Groq client only if API key is available
 let groq: Groq | null = null
