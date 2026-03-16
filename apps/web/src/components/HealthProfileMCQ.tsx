@@ -41,6 +41,13 @@ const sections = [
 ]
 
 export function HealthProfileMCQ({ onComplete, onClose, initialData = {} }: HealthProfileMCQProps) {
+  // Coerce any null values from DB into empty strings so textarea never gets null
+  const safeInitial = initialData
+    ? Object.fromEntries(
+        Object.entries(initialData).map(([k, v]) => [k, v === null ? (Array.isArray(v) ? [] : '') : v])
+      )
+    : {}
+
   const [currentSection, setCurrentSection] = useState(0)
   const [formData, setFormData] = useState<HealthProfileData>({
     ageGroup: '',
@@ -59,7 +66,7 @@ export function HealthProfileMCQ({ onComplete, onClose, initialData = {} }: Heal
     primaryGoal: '',
     sleepHours: '',
     waterIntake: '',
-    ...initialData
+    ...safeInitial
   })
 
   const updateField = (field: keyof HealthProfileData, value: any) => {

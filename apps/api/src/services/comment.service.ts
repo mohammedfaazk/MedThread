@@ -192,6 +192,13 @@ export const commentService = {
   },
 
   async getCommentsByPost(postId: string, userId?: string) {
+    // Fetch the post author's pincode for proximity sorting
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { author: { select: { pincode: true } } },
+    });
+    const patientPincode = post?.author?.pincode ?? null;
+
     const comments = await prisma.comment.findMany({
       where: {
         postId,
@@ -207,6 +214,7 @@ export const commentService = {
             totalKarma: true,
             specialty: true,
             doctorVerificationStatus: true,
+            pincode: true,
           }
         },
         _count: {
@@ -236,8 +244,44 @@ export const commentService = {
       }, {} as Record<string, number>);
     }
 
-    // Build comment tree
-    return this.buildCommentTree(comments, userVotes);
+    // Build comment tree, then sort top-level comments with doctor proximity boost
+    const tree = this.buildCommentTree(comments, userVotes);
+    return this.sortByDoctorProximity(tree, patientPincode);
+  },
+
+  /**
+   * Sort top-level comments so that doctor replies closest to the patient's
+   * pincode appear first. Non-doctor comments follow after.
+   *
+   * Proximity tiers (lower = closer):
+   *   0 — exact pincode match
+   *   1 — same first-3-digit prefix  (same city zone)
+   *   2 — same first-2-digit prefix  (same broad region)
+   *   3 — same first digit           (same state zone)
+   *   4 — doctor but no pincode / no match
+   *   5 — non-doctor comment
+   */
+  sortByDoctorProximity(comments: any[], patientPincode: string | null): any[] {
+    const proximityTier = (doctorPincode: string | null): number => {
+      if (!patientPincode || !doctorPincode) return 4;
+      if (doctorPincode === patientPincode) return 0;
+      if (doctorPincode.slice(0, 3) === patientPincode.slice(0, 3)) return 1;
+      if (doctorPincode.slice(0, 2) === patientPincode.slice(0, 2)) return 2;
+      if (doctorPincode[0] === patientPincode[0]) return 3;
+      return 4;
+    };
+
+    return [...comments].sort((a, b) => {
+      const isDocA = a.author?.role === 'DOCTOR' || a.author?.role === 'VERIFIED_DOCTOR';
+      const isDocB = b.author?.role === 'DOCTOR' || b.author?.role === 'VERIFIED_DOCTOR';
+
+      const tierA = isDocA ? proximityTier(a.author?.pincode ?? null) : 5;
+      const tierB = isDocB ? proximityTier(b.author?.pincode ?? null) : 5;
+
+      if (tierA !== tierB) return tierA - tierB;
+      // Within the same tier, sort by score descending
+      return (b.score ?? 0) - (a.score ?? 0);
+    });
   },
 
   async getCommentsByAuthor(authorId: string, limit: number = 20, offset: number = 0) {

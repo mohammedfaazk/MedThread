@@ -5,32 +5,23 @@ import { asyncHandler } from '../middleware/asyncHandler';
 
 export const profileRouter = Router();
 
-// Public routes
+// Public routes (specific paths first, before /:username wildcard)
 profileRouter.get(
   '/check-username',
   asyncHandler(profileController.checkUsernameAvailability.bind(profileController))
 );
 
-profileRouter.get(
-  '/:username',
-  asyncHandler(profileController.getProfileByUsername.bind(profileController))
-);
-
-profileRouter.get(
-  '/:username/posts',
-  asyncHandler(profileController.getUserPosts.bind(profileController))
-);
-
-profileRouter.get(
-  '/:username/comments',
-  asyncHandler(profileController.getUserComments.bind(profileController))
-);
-
-// Protected routes
+// Protected /me routes — MUST come before /:username wildcard
 profileRouter.get(
   '/me/profile',
   authenticate,
   asyncHandler(profileController.getCurrentProfile.bind(profileController))
+);
+
+profileRouter.get(
+  '/me/stats',
+  authenticate,
+  asyncHandler(profileController.getPatientStats.bind(profileController))
 );
 
 profileRouter.put(
@@ -74,6 +65,22 @@ profileRouter.post(
   '/me/2fa/disable',
   authenticate,
   asyncHandler(profileController.disable2FA.bind(profileController))
+);
+
+// Public wildcard routes — MUST come after all /me/* routes
+profileRouter.get(
+  '/:username',
+  asyncHandler(profileController.getProfileByUsername.bind(profileController))
+);
+
+profileRouter.get(
+  '/:username/posts',
+  asyncHandler(profileController.getUserPosts.bind(profileController))
+);
+
+profileRouter.get(
+  '/:username/comments',
+  asyncHandler(profileController.getUserComments.bind(profileController))
 );
 
 export default profileRouter;

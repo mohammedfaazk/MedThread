@@ -53,6 +53,7 @@ export default function TrendingPage() {
           </div>
         </main>
       </div>
+      </div>
     </IridescenceLayout>
   )
 }

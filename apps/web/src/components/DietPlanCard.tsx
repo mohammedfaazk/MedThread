@@ -11,16 +11,25 @@ import {
   Zap,
   Apple,
   Beef,
-  Wheat
+  Wheat,
+  Droplets,
+  AlertTriangle,
+  TrendingUp
 } from 'lucide-react'
+
+interface Dish {
+  name: string
+  calories: number
+  description?: string
+  protein_g?: number
+  carbs_g?: number
+  fats_g?: number
+  fiber_g?: number
+}
 
 interface Meal {
   name: string
-  dishes: Array<{
-    name: string
-    calories: number
-    description?: string
-  }>
+  dishes: Dish[]
   totalCalories: number
   timeSlot: string
 }
@@ -39,12 +48,24 @@ interface DietPlan {
   planData: {
     meals: Meal[]
     totalCalories: number
+    recommendations?: {
+      hydration: string
+      fiberGoal: string
+      nutrientGaps: string[]
+      foodsToLimit: string[]
+    }
   }
   nutritionalInfo: NutritionalInfo
   dietaryNote: string
   generatedAt: string
   savedAt: string | null
   isActive: boolean
+  recommendations?: {
+    hydration: string
+    fiberGoal: string
+    nutrientGaps: string[]
+    foodsToLimit: string[]
+  }
 }
 
 interface DietPlanCardProps {
@@ -162,6 +183,56 @@ export function DietPlanCard({ dietPlan, onSave, onRegenerate }: DietPlanCardPro
             <SummaryItem label="Fiber" value={`${nutritionalInfo.fiber}g`} />
           </div>
         </div>
+
+        {/* Recommendations */}
+        {dietPlan.recommendations && (
+          <div className="mt-6 space-y-4">
+            <h4 className="font-bold text-gray-900">Recommendations</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <Droplets className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-blue-800 uppercase tracking-wide mb-1">Hydration</p>
+                  <p className="text-sm text-blue-700">{dietPlan.recommendations.hydration}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <TrendingUp className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-green-800 uppercase tracking-wide mb-1">Fiber Goal</p>
+                  <p className="text-sm text-green-700">{dietPlan.recommendations.fiberGoal}</p>
+                </div>
+              </div>
+            </div>
+            {dietPlan.recommendations.nutrientGaps?.length > 0 && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide mb-2">Potential Nutrient Gaps</p>
+                <ul className="space-y-1">
+                  {dietPlan.recommendations.nutrientGaps.map((g, i) => (
+                    <li key={i} className="text-sm text-amber-700 flex items-start gap-2">
+                      <span className="mt-1 shrink-0">•</span>{g}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {dietPlan.recommendations.foodsToLimit?.length > 0 && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <p className="text-xs font-semibold text-red-800 uppercase tracking-wide">Foods to Limit</p>
+                </div>
+                <ul className="space-y-1">
+                  {dietPlan.recommendations.foodsToLimit.map((f, i) => (
+                    <li key={i} className="text-sm text-red-700 flex items-start gap-2">
+                      <span className="mt-1 shrink-0">•</span>{f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -225,15 +296,33 @@ function MealCard({ meal }: { meal: Meal }) {
 
       <div className="space-y-3">
         {meal.dishes.map((dish, index) => (
-          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div className="flex-1">
-              <h4 className="font-semibold text-gray-900">{dish.name}</h4>
-              {dish.description && (
-                <p className="text-sm text-gray-600 mt-1">{dish.description}</p>
-              )}
-            </div>
-            <div className="text-sm font-semibold text-gray-700">
-              {dish.calories} cal
+          <div key={index} className="p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="font-semibold text-gray-900 text-sm">{dish.name}</h4>
+                {dish.description && (
+                  <p className="text-xs text-gray-500 mt-0.5">{dish.description}</p>
+                )}
+                {(dish.protein_g !== undefined || dish.carbs_g !== undefined) && (
+                  <div className="flex gap-3 mt-1.5">
+                    {dish.protein_g !== undefined && (
+                      <span className="text-xs text-red-600 font-medium">P: {dish.protein_g}g</span>
+                    )}
+                    {dish.carbs_g !== undefined && (
+                      <span className="text-xs text-orange-600 font-medium">C: {dish.carbs_g}g</span>
+                    )}
+                    {dish.fats_g !== undefined && (
+                      <span className="text-xs text-yellow-600 font-medium">F: {dish.fats_g}g</span>
+                    )}
+                    {dish.fiber_g !== undefined && (
+                      <span className="text-xs text-green-600 font-medium">Fiber: {dish.fiber_g}g</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="text-sm font-semibold text-gray-700 ml-3 shrink-0">
+                {dish.calories} cal
+              </div>
             </div>
           </div>
         ))}

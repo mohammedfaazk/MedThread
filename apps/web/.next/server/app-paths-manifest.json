@@ -1,6 +1,9 @@
 {
   "/page": "app/page.js",
-  "/find-hospitals/page": "app/find-hospitals/page.js",
+  "/communities/create/page": "app/communities/create/page.js",
+  "/m/[community]/page": "app/m/[community]/page.js",
+  "/post/[id]/page": "app/post/[id]/page.js",
+  "/login/page": "app/login/page.js",
   "/dashboard/patient/page": "app/dashboard/patient/page.js",
-  "/diet/page": "app/diet/page.js"
+  "/not-found": "app/not-found.js"
 }

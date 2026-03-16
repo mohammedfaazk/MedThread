@@ -12,6 +12,7 @@ interface User {
     banner?: string;
     bio?: string;
     specialty?: string;
+    pincode?: string;
 }
 
 interface AuthContextType {

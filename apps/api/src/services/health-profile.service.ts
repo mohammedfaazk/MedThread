@@ -1,30 +1,64 @@
 import { prisma } from '@medthread/database'
 
+// All valid HealthProfile fields (excluding id, userId, createdAt, updatedAt which are managed by Prisma)
+const HEALTH_PROFILE_FIELDS = new Set([
+  'ageGroup', 'biologicalSex', 'nationality', 'weightRange', 'heightRange',
+  'activityLevel', 'medicalConditions', 'currentMedications', 'foodAllergies',
+  'riskLevel', 'dietType', 'religiousRestrictions', 'foodsToAvoid', 'cookingAccess',
+  'primaryGoal', 'sleepHours', 'waterIntake', 'completedAt',
+])
+
+function sanitize(data: any) {
+  return Object.fromEntries(
+    Object.entries(data).filter(([k]) => HEALTH_PROFILE_FIELDS.has(k))
+  )
+}
+
 export class HealthProfileService {
   async createOrUpdateHealthProfile(userId: string, data: any) {
-    try {
-      const healthProfile = await prisma.healthProfile.upsert({
-        where: { userId },
-        update: {
-          ...data,
-          completedAt: new Date(),
-          updatedAt: new Date()
-        },
-        create: {
-          userId,
-          ...data,
-          completedAt: new Date()
+    const clean = sanitize(data)
+    // Retry once on P2003 (foreign key) — can happen if called immediately after user creation
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const healthProfile = await prisma.healthProfile.upsert({
+          where: { userId },
+          update: { ...clean, updatedAt: new Date() },
+          create: { userId, ...clean }
+        })
+        return { success: true, data: healthProfile }
+      } catch (error: any) {
+        console.error('Error creating/updating health profile:', error)
+        if (error?.code === 'P2003' && attempt === 0) {
+          await new Promise(r => setTimeout(r, 300))
+          continue
         }
-      })
+        if (error?.code === 'P2003') {
+          return { success: false, error: 'User account not found. Please log out and log back in.' }
+        }
+        return { success: false, error: `Failed to save health profile: ${error?.message}` }
+      }
+    }
+    return { success: false, error: 'Failed to save health profile' }
+  }
 
+  // Only creates a profile if one doesn't already exist — never overwrites
+  async createIfNotExists(userId: string, data: any) {
+    try {
+      const existing = await prisma.healthProfile.findUnique({ where: { userId } })
+      if (existing) return { success: true, data: existing }
+      const clean = sanitize(data)
+      const healthProfile = await prisma.healthProfile.create({ data: { userId, ...clean } })
       return { success: true, data: healthProfile }
     } catch (error: any) {
-      console.error('Error creating/updating health profile:', error)
-      // P2003 = foreign key constraint — userId doesn't exist in User table (stale JWT)
       if (error?.code === 'P2003') {
-        return { success: false, error: 'User account not found. Please log out and log back in.' }
+        await new Promise(r => setTimeout(r, 300))
+        try {
+          const clean = sanitize(data)
+          const healthProfile = await prisma.healthProfile.create({ data: { userId, ...clean } })
+          return { success: true, data: healthProfile }
+        } catch { /* ignore */ }
       }
-      return { success: false, error: 'Failed to save health profile' }
+      return { success: false, error: 'Failed to initialise health profile' }
     }
   }
 

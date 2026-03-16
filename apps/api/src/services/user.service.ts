@@ -9,6 +9,7 @@ interface UpdateUserInput {
   avatar?: string;
   banner?: string;
   username?: string;
+  pincode?: string;
 }
 
 export class UserService {
@@ -25,6 +26,7 @@ export class UserService {
         bio: true,
         avatar: true,
         banner: true,
+        pincode: true,
         postKarma: true,
         commentKarma: true,
         totalKarma: true,
@@ -136,6 +138,7 @@ export class UserService {
         bio: true,
         avatar: true,
         banner: true,
+        pincode: true,
       }
     });
 

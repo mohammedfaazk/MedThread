@@ -97,12 +97,43 @@ export class ProfileController {
     }
   }
 
+  async getPatientStats(req: AuthRequest, res: Response) {
+    try {
+      const userId = req.userId!;
+      const now = new Date();
+
+      const [user, totalAppointments, upcomingAppointments, completedAppointments, totalPosts, totalComments] = await Promise.all([
+        prisma.user.findUnique({ where: { id: userId }, select: { createdAt: true } }),
+        prisma.appointment.count({ where: { patientId: userId } }),
+        prisma.appointment.count({ where: { patientId: userId, scheduledAt: { gte: now }, status: { in: ['PENDING', 'CONFIRMED'] } } }),
+        prisma.appointment.count({ where: { patientId: userId, status: 'COMPLETED' } }),
+        prisma.post.count({ where: { authorId: userId } }),
+        prisma.comment.count({ where: { authorId: userId } }),
+      ]);
+
+      res.json({
+        success: true,
+        data: {
+          totalAppointments,
+          upcomingAppointments,
+          completedAppointments,
+          totalPosts,
+          totalComments,
+          karma: 0,
+          joinedDate: user?.createdAt?.toISOString() ?? null,
+        }
+      });
+    } catch (error: any) {
+      res.status(error.statusCode || 500).json({ success: false, error: error.message });
+    }
+  }
+
   /**
    * Update user profile
    */
   async updateProfile(req: AuthRequest, res: Response) {
     try {
-      const { bio, specialty, website, location, username } = req.body;
+      const { bio, specialty, website, location, username, pincode } = req.body;
       
       // Validate bio length
       if (bio && bio.length > 500) {
@@ -131,19 +162,18 @@ export class ProfileController {
         }
       }
 
-      const updateData: any = {
-        bio,
-        specialty,
-      };
+      const updateData: any = {};
 
-      if (username) {
-        updateData.username = username;
-      }
+      if (bio !== undefined) updateData.bio = bio;
+      if (specialty !== undefined) updateData.specialty = specialty;
+      if (username) updateData.username = username;
+      if (pincode !== undefined) updateData.pincode = pincode;
 
       const user = await userService.updateUser(req.userId!, updateData);
 
       res.json({ success: true, data: user });
     } catch (error: any) {
+      console.error('[updateProfile] Error:', error?.message, error?.code, error?.meta);
       res.status(error.statusCode || 500).json({ 
         success: false, 
         error: error.message 

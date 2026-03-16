@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import axios from 'axios'
 import { useJWTAuth } from '@/context/JWTAuthContext'
+import dynamic from 'next/dynamic'
+
+const HealthOnboarding = dynamic(() => import('@/components/HealthOnboarding'), { ssr: false })
 
 // Medical specialties list
 const SPECIALTIES = [
@@ -55,6 +58,8 @@ export default function SignupPage() {
   const router = useRouter()
   const { login } = useJWTAuth()
   const [userType, setUserType] = useState<'patient' | 'doctor'>('patient')
+  const [showHealthOnboarding, setShowHealthOnboarding] = useState(false)
+  const [registeredToken, setRegisteredToken] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -196,8 +201,9 @@ export default function SignupPage() {
       if (response.data.success) {
         // Use the login function from context to properly set auth state
         login(response.data.data.token, response.data.data.user)
-        alert('Account created successfully! Welcome to MedThread.')
-        router.push('/')
+        // Show health onboarding for new patients
+        setRegisteredToken(response.data.data.token)
+        setShowHealthOnboarding(true)
       }
     } catch (err: any) {
       console.error('Patient registration error:', err.response?.data)
@@ -347,6 +353,13 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 py-8">
+      {showHealthOnboarding && (
+        <HealthOnboarding
+          token={registeredToken}
+          onComplete={() => { setShowHealthOnboarding(false); router.push('/') }}
+          onSkip={() => { setShowHealthOnboarding(false); router.push('/') }}
+        />
+      )}
       <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl p-8 w-full max-w-3xl border border-white/20">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Create Account</h1>

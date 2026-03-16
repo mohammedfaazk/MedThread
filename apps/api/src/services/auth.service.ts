@@ -29,6 +29,7 @@ interface AuthResponse {
     banner?: string;
     bio?: string;
     specialty?: string;
+    pincode?: string;
   };
 }
 
@@ -76,6 +77,7 @@ export class AuthService {
         banner: true,
         bio: true,
         specialty: true,
+        pincode: true,
       }
     });
 
@@ -94,6 +96,7 @@ export class AuthService {
         banner: user.banner || undefined,
         bio: user.bio || undefined,
         specialty: user.specialty || undefined,
+        pincode: user.pincode || undefined,
       },
     };
   }
@@ -120,6 +123,7 @@ export class AuthService {
         banner: true,
         bio: true,
         specialty: true,
+        pincode: true,
       }
     });
 
@@ -172,6 +176,7 @@ export class AuthService {
         banner: user.banner || undefined,
         bio: user.bio || undefined,
         specialty: user.specialty || undefined,
+        pincode: user.pincode || undefined,
       },
     };
   }

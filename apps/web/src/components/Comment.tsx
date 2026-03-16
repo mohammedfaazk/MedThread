@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '@/store/useStore'
 import { useJWTAuth } from '@/context/JWTAuthContext'
-import { User, Stethoscope, CheckCircle } from 'lucide-react'
+import { User, Stethoscope, CheckCircle, MapPin } from 'lucide-react'
 import { AwardButton } from './AwardButton'
 import { AwardDisplay } from './AwardDisplay'
 import ReportButton from './ReportButton'
@@ -29,6 +29,7 @@ interface CommentProps {
   timeAgo: string
   userVote?: 1 | -1 | null
   isCollapsed?: boolean
+  locationTier?: number
   onAddReply?: (parentId: string, replyContent: string) => void
 }
 
@@ -45,6 +46,7 @@ export function Comment({
   timeAgo,
   userVote,
   isCollapsed,
+  locationTier,
   onAddReply
 }: CommentProps) {
   const [collapsed, setCollapsed] = useState(isCollapsed || false)
@@ -249,6 +251,21 @@ export function Comment({
                   <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 Verified Doctor
+              </span>
+            )}
+            {/* Proximity badge — only shown for doctor comments */}
+            {authorType === 'doctor' && !isDeleted && locationTier !== undefined && locationTier <= 3 && (
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
+                locationTier === 0 ? 'bg-emerald-100 text-emerald-700' :
+                locationTier === 1 ? 'bg-teal-100 text-teal-700' :
+                locationTier === 2 ? 'bg-cyan-100 text-cyan-700' :
+                'bg-sky-100 text-sky-700'
+              }`}>
+                <MapPin className="w-3 h-3" />
+                {locationTier === 0 ? 'Same area' :
+                 locationTier === 1 ? 'Nearby' :
+                 locationTier === 2 ? 'Same region' :
+                 'Same state'}
               </span>
             )}
             <span className="text-gray-500">• {timeAgo}</span>

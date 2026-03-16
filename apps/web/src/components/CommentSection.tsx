@@ -23,6 +23,8 @@ interface CommentData {
   replies: CommentData[]
   timeAgo: string
   userVote?: 1 | -1 | null
+  locationTier?: number
+  authorPincode?: string
 }
 
 interface CommentSectionProps {

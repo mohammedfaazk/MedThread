@@ -378,6 +378,7 @@ export const postService = {
     let userVote = null;
     let isSaved = false;
     let isHidden = false;
+    let userEndorsed = false;
 
     if (userId) {
       const vote = await prisma.vote.findUnique({
@@ -409,6 +410,11 @@ export const postService = {
         }
       });
       isHidden = !!hidden;
+
+      const endorsement = await prisma.doctorEndorsement.findUnique({
+        where: { postId_doctorId: { postId, doctorId: userId } }
+      });
+      userEndorsed = !!endorsement;
     }
 
     return {
@@ -416,6 +422,7 @@ export const postService = {
       userVote,
       isSaved,
       isHidden,
+      userEndorsed,
     };
   },
 

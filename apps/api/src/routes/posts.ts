@@ -159,6 +159,71 @@ router.post('/:id/hide', auth, requireVerifiedDoctor, async (req, res, next) => 
   }
 });
 
+// Endorse post - only doctors can endorse, only doctor-authored posts
+router.post('/:id/endorse', auth, async (req, res, next) => {
+  try {
+    const { prisma } = await import('@medthread/database');
+    const doctorId = req.userId!;
+
+    // Verify endorser is a doctor
+    const endorser = await prisma.user.findUnique({
+      where: { id: doctorId },
+      select: { role: true, doctorVerificationStatus: true }
+    });
+
+    if (!endorser || (endorser.role !== 'DOCTOR' && endorser.role !== 'VERIFIED_DOCTOR')) {
+      return res.status(403).json({ success: false, error: 'Only doctors can endorse posts' });
+    }
+
+    // Get the post and its author
+    const post = await prisma.post.findUnique({
+      where: { id: req.params.id },
+      select: { authorId: true, author: { select: { role: true } } }
+    });
+
+    if (!post) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
+
+    // Only doctor-authored posts can be endorsed
+    if (post.author.role !== 'DOCTOR' && post.author.role !== 'VERIFIED_DOCTOR') {
+      return res.status(400).json({ success: false, error: 'Only posts by doctors can be endorsed' });
+    }
+
+    // Prevent self-endorsement
+    if (post.authorId === doctorId) {
+      return res.status(400).json({ success: false, error: 'You cannot endorse your own post' });
+    }
+
+    // Toggle endorsement
+    const existing = await prisma.doctorEndorsement.findUnique({
+      where: { postId_doctorId: { postId: req.params.id, doctorId } }
+    });
+
+    if (existing) {
+      // Remove endorsement
+      await prisma.doctorEndorsement.delete({ where: { id: existing.id } });
+      await prisma.post.update({
+        where: { id: req.params.id },
+        data: { endorsementCount: { decrement: 1 } }
+      });
+      return res.json({ success: true, endorsed: false });
+    } else {
+      // Add endorsement
+      await prisma.doctorEndorsement.create({
+        data: { postId: req.params.id, doctorId }
+      });
+      await prisma.post.update({
+        where: { id: req.params.id },
+        data: { endorsementCount: { increment: 1 } }
+      });
+      return res.json({ success: true, endorsed: true });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
 
 

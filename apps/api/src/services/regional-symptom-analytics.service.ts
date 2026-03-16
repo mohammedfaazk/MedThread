@@ -1,10 +1,9 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@medthread/database';
 
 // Pincode to location mapping service
 interface LocationData {
   pincode: string;
+  area: string;   // locality / neighbourhood
   city: string;
   district: string;
   state: string;
@@ -21,21 +20,152 @@ export class RegionalSymptomAnalyticsService {
    * Resolve pincode to geographic hierarchy (city → district → state)
    */
   private async resolvePincodeToLocation(pincode: string): Promise<LocationData | null> {
-    // This is a simplified mapping - in production, you'd use a proper pincode API
     const pincodeMap: Record<string, LocationData> = {
-      '600094': { pincode: '600094', city: 'Chennai', district: 'Chennai District', state: 'Tamil Nadu', country: 'India' },
-      '110001': { pincode: '110001', city: 'New Delhi', district: 'Central Delhi', state: 'Delhi', country: 'India' },
-      '400001': { pincode: '400001', city: 'Mumbai', district: 'Mumbai City', state: 'Maharashtra', country: 'India' },
-      '560001': { pincode: '560001', city: 'Bangalore', district: 'Bangalore Urban', state: 'Karnataka', country: 'India' },
-      '700001': { pincode: '700001', city: 'Kolkata', district: 'Kolkata', state: 'West Bengal', country: 'India' },
-      '500001': { pincode: '500001', city: 'Hyderabad', district: 'Hyderabad', state: 'Telangana', country: 'India' },
-      '411001': { pincode: '411001', city: 'Pune', district: 'Pune', state: 'Maharashtra', country: 'India' },
-      '380001': { pincode: '380001', city: 'Ahmedabad', district: 'Ahmedabad', state: 'Gujarat', country: 'India' },
-      '302001': { pincode: '302001', city: 'Jaipur', district: 'Jaipur', state: 'Rajasthan', country: 'India' },
-      '226001': { pincode: '226001', city: 'Lucknow', district: 'Lucknow', state: 'Uttar Pradesh', country: 'India' }
+      // Tamil Nadu — Chennai
+      '600001': { pincode: '600001', area: 'Parrys', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600002': { pincode: '600002', area: 'Sowcarpet', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600003': { pincode: '600003', area: 'Triplicane', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600010': { pincode: '600010', area: 'Kilpauk', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600017': { pincode: '600017', area: 'Nungambakkam', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600020': { pincode: '600020', area: 'Adyar', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600094': { pincode: '600094', area: 'Choolaimedu', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600095': { pincode: '600095', area: 'Anna Nagar', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600096': { pincode: '600096', area: 'Mogappair', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600040': { pincode: '600040', area: 'T. Nagar', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600042': { pincode: '600042', area: 'Velachery', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600100': { pincode: '600100', area: 'Porur', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      // Delhi
+      '110001': { pincode: '110001', area: 'Connaught Place', city: 'New Delhi', district: 'Central Delhi', state: 'Delhi', country: 'India' },
+      '110005': { pincode: '110005', area: 'Karol Bagh', city: 'New Delhi', district: 'Central Delhi', state: 'Delhi', country: 'India' },
+      '110019': { pincode: '110019', area: 'Kalkaji', city: 'New Delhi', district: 'South Delhi', state: 'Delhi', country: 'India' },
+      // Mumbai
+      '400001': { pincode: '400001', area: 'Fort', city: 'Mumbai', district: 'Mumbai City', state: 'Maharashtra', country: 'India' },
+      '400050': { pincode: '400050', area: 'Bandra', city: 'Mumbai', district: 'Mumbai Suburban', state: 'Maharashtra', country: 'India' },
+      '400069': { pincode: '400069', area: 'Andheri', city: 'Mumbai', district: 'Mumbai Suburban', state: 'Maharashtra', country: 'India' },
+      // Bangalore
+      '560001': { pincode: '560001', area: 'MG Road', city: 'Bangalore', district: 'Bangalore Urban', state: 'Karnataka', country: 'India' },
+      '560034': { pincode: '560034', area: 'Koramangala', city: 'Bangalore', district: 'Bangalore Urban', state: 'Karnataka', country: 'India' },
+      '560037': { pincode: '560037', area: 'Indiranagar', city: 'Bangalore', district: 'Bangalore Urban', state: 'Karnataka', country: 'India' },
+      // Kolkata
+      '700001': { pincode: '700001', area: 'BBD Bagh', city: 'Kolkata', district: 'Kolkata', state: 'West Bengal', country: 'India' },
+      '700019': { pincode: '700019', area: 'Ballygunge', city: 'Kolkata', district: 'Kolkata', state: 'West Bengal', country: 'India' },
+      // Hyderabad
+      '500001': { pincode: '500001', area: 'Abids', city: 'Hyderabad', district: 'Hyderabad', state: 'Telangana', country: 'India' },
+      '500034': { pincode: '500034', area: 'Banjara Hills', city: 'Hyderabad', district: 'Hyderabad', state: 'Telangana', country: 'India' },
+      // Pune
+      '411001': { pincode: '411001', area: 'Shivajinagar', city: 'Pune', district: 'Pune', state: 'Maharashtra', country: 'India' },
+      '411004': { pincode: '411004', area: 'Kothrud', city: 'Pune', district: 'Pune', state: 'Maharashtra', country: 'India' },
+      // Ahmedabad
+      '380001': { pincode: '380001', area: 'Lal Darwaja', city: 'Ahmedabad', district: 'Ahmedabad', state: 'Gujarat', country: 'India' },
+      // Jaipur
+      '302001': { pincode: '302001', area: 'Badi Chaupar', city: 'Jaipur', district: 'Jaipur', state: 'Rajasthan', country: 'India' },
+      // Lucknow
+      '226001': { pincode: '226001', area: 'Hazratganj', city: 'Lucknow', district: 'Lucknow', state: 'Uttar Pradesh', country: 'India' },
+
+      // Tamil Nadu — Chennai (extended)
+      '600006': { pincode: '600006', area: 'Egmore', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600007': { pincode: '600007', area: 'Park Town', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600008': { pincode: '600008', area: 'Vepery', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600011': { pincode: '600011', area: 'Chetpet', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600014': { pincode: '600014', area: 'Mylapore', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600015': { pincode: '600015', area: 'Mandaveli', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600018': { pincode: '600018', area: 'Kodambakkam', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600024': { pincode: '600024', area: 'Guindy', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600025': { pincode: '600025', area: 'Saidapet', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600026': { pincode: '600026', area: 'Sholinganallur', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600028': { pincode: '600028', area: 'Perungudi', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600041': { pincode: '600041', area: 'Pallikaranai', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600045': { pincode: '600045', area: 'Medavakkam', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600097': { pincode: '600097', area: 'Ambattur', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600099': { pincode: '600099', area: 'Avadi', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600119': { pincode: '600119', area: 'Perumbakkam', city: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', country: 'India' },
+      '600130': { pincode: '600130', area: 'Siruseri', city: 'Chennai', district: 'Kanchipuram', state: 'Tamil Nadu', country: 'India' },
     };
 
-    return pincodeMap[pincode] || null;
+    if (pincodeMap[pincode]) return pincodeMap[pincode];
+
+    // Prefix-based fallback — derive state/city from first 3 digits
+    return this.fallbackFromPrefix(pincode);
+  }
+
+  /**
+   * Derive a partial location from pincode prefix when exact match is missing.
+   * Indian pincode zones: 1xx=Delhi/HP/UP, 2xx=UP/Uttarakhand, 3xx=Rajasthan/Gujarat,
+   * 4xx=Maharashtra/MP/CG, 5xx=AP/Telangana/Karnataka, 6xx=Tamil Nadu/Kerala,
+   * 7xx=West Bengal/Odisha/NE, 8xx=Odisha/Bihar/Jharkhand, 9xx=Army PO
+   */
+  private fallbackFromPrefix(pincode: string): LocationData | null {
+    if (!/^\d{6}$/.test(pincode)) return null;
+
+    const first = pincode[0];
+    const first3 = pincode.slice(0, 3);
+
+    // Fine-grained 3-digit prefix overrides
+    const prefix3Map: Record<string, { city: string; district: string; state: string }> = {
+      '600': { city: 'Chennai',   district: 'Chennai',   state: 'Tamil Nadu' },
+      '601': { city: 'Chennai',   district: 'Kanchipuram', state: 'Tamil Nadu' },
+      '602': { city: 'Chennai',   district: 'Tiruvallur', state: 'Tamil Nadu' },
+      '603': { city: 'Chennai',   district: 'Kanchipuram', state: 'Tamil Nadu' },
+      '604': { city: 'Villupuram', district: 'Villupuram', state: 'Tamil Nadu' },
+      '605': { city: 'Puducherry', district: 'Puducherry', state: 'Puducherry' },
+      '606': { city: 'Cuddalore', district: 'Cuddalore', state: 'Tamil Nadu' },
+      '607': { city: 'Cuddalore', district: 'Cuddalore', state: 'Tamil Nadu' },
+      '608': { city: 'Cuddalore', district: 'Cuddalore', state: 'Tamil Nadu' },
+      '609': { city: 'Nagapattinam', district: 'Nagapattinam', state: 'Tamil Nadu' },
+      '610': { city: 'Thanjavur', district: 'Thanjavur', state: 'Tamil Nadu' },
+      '620': { city: 'Tiruchirappalli', district: 'Tiruchirappalli', state: 'Tamil Nadu' },
+      '625': { city: 'Madurai',   district: 'Madurai',   state: 'Tamil Nadu' },
+      '641': { city: 'Coimbatore', district: 'Coimbatore', state: 'Tamil Nadu' },
+      '682': { city: 'Kochi',     district: 'Ernakulam', state: 'Kerala' },
+      '695': { city: 'Thiruvananthapuram', district: 'Thiruvananthapuram', state: 'Kerala' },
+      '110': { city: 'New Delhi', district: 'Central Delhi', state: 'Delhi' },
+      '400': { city: 'Mumbai',    district: 'Mumbai City', state: 'Maharashtra' },
+      '411': { city: 'Pune',      district: 'Pune',      state: 'Maharashtra' },
+      '560': { city: 'Bangalore', district: 'Bangalore Urban', state: 'Karnataka' },
+      '500': { city: 'Hyderabad', district: 'Hyderabad', state: 'Telangana' },
+      '700': { city: 'Kolkata',   district: 'Kolkata',   state: 'West Bengal' },
+      '380': { city: 'Ahmedabad', district: 'Ahmedabad', state: 'Gujarat' },
+      '302': { city: 'Jaipur',    district: 'Jaipur',    state: 'Rajasthan' },
+      '226': { city: 'Lucknow',   district: 'Lucknow',   state: 'Uttar Pradesh' },
+    };
+
+    // Broad 1-digit zone fallback
+    const zone1Map: Record<string, { state: string; city: string }> = {
+      '1': { state: 'Delhi / Uttar Pradesh', city: 'Unknown' },
+      '2': { state: 'Uttar Pradesh',         city: 'Unknown' },
+      '3': { state: 'Rajasthan / Gujarat',   city: 'Unknown' },
+      '4': { state: 'Maharashtra',           city: 'Unknown' },
+      '5': { state: 'Andhra Pradesh / Karnataka', city: 'Unknown' },
+      '6': { state: 'Tamil Nadu / Kerala',   city: 'Unknown' },
+      '7': { state: 'West Bengal',           city: 'Unknown' },
+      '8': { state: 'Bihar / Odisha',        city: 'Unknown' },
+    };
+
+    if (prefix3Map[first3]) {
+      const p = prefix3Map[first3];
+      return {
+        pincode,
+        area: `Area ${pincode}`,
+        city: p.city,
+        district: p.district,
+        state: p.state,
+        country: 'India',
+      };
+    }
+
+    if (zone1Map[first]) {
+      const z = zone1Map[first];
+      return {
+        pincode,
+        area: `Area ${pincode}`,
+        city: z.city,
+        district: 'Unknown',
+        state: z.state,
+        country: 'India',
+      };
+    }
+
+    return null;
   }
 
   /**
@@ -530,6 +660,88 @@ export class RegionalSymptomAnalyticsService {
       totalAlerts: alerts.length,
       alerts
     };
+  }
+
+  /**
+   * Get symptom heatmap scoped to a user's pincode geography
+   * Supports: area | city | district | state | country
+   */
+  async getSymptomsByPincode(pincode: string, scope: 'area' | 'city' | 'district' | 'state' | 'country', timeWindow: 'week' | 'month' | 'quarter' = 'month') {
+    const location = await this.resolvePincodeToLocation(pincode);
+    if (!location) {
+      return { success: false, error: 'Pincode not found in our database', location: null, symptoms: [], totalReports: 0 };
+    }
+
+    const daysBack = { week: 7, month: 30, quarter: 90 }[timeWindow];
+    const since = new Date(Date.now() - daysBack * 24 * 60 * 60 * 1000);
+
+    // Build filter based on scope
+    const where: any = { reportedAt: { gte: since } };
+    if (scope === 'area') where.pincode = pincode;
+    else if (scope === 'city') where.city = location.city;
+    else if (scope === 'district') where.district = location.district;
+    else if (scope === 'state') where.state = location.state;
+    else if (scope === 'country') where.country = location.country;
+
+    const reports = await prisma.symptomReport.findMany({
+      where,
+      select: { symptoms: true, severity: true, city: true, district: true, state: true, pincode: true }
+    });
+
+    // Aggregate symptom frequencies
+    const symptomCounts: Record<string, { count: number; high: number; medium: number; low: number }> = {};
+    const severityCounts = { HIGH: 0, MEDIUM: 0, LOW: 0 };
+
+    reports.forEach(report => {
+      severityCounts[report.severity as keyof typeof severityCounts]++;
+      (report.symptoms as string[]).forEach(symptom => {
+        if (!symptomCounts[symptom]) symptomCounts[symptom] = { count: 0, high: 0, medium: 0, low: 0 };
+        symptomCounts[symptom].count++;
+        if (report.severity === 'HIGH') symptomCounts[symptom].high++;
+        else if (report.severity === 'MEDIUM') symptomCounts[symptom].medium++;
+        else symptomCounts[symptom].low++;
+      });
+    });
+
+    const symptoms = Object.entries(symptomCounts)
+      .map(([symptom, stats]) => ({
+        symptom,
+        count: stats.count,
+        severity: { high: stats.high, medium: stats.medium, low: stats.low },
+        // Heatmap intensity 0–100
+        intensity: Math.min(100, Math.round((stats.count / Math.max(reports.length, 1)) * 100 + (stats.high * 10)))
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      success: true,
+      location: {
+        pincode,
+        area: location.area,
+        city: location.city,
+        district: location.district,
+        state: location.state,
+        country: location.country,
+        scopeLabel: scope === 'area' ? location.area
+          : scope === 'city' ? location.city
+          : scope === 'district' ? location.district
+          : scope === 'state' ? location.state
+          : location.country
+      },
+      scope,
+      period: `Last ${daysBack} days`,
+      totalReports: reports.length,
+      severityDistribution: severityCounts,
+      symptoms,
+    };
+  }
+
+  /**
+   * Resolve a pincode to its full geographic hierarchy (for display)
+   */
+  async resolveLocation(pincode: string) {
+    const loc = await this.resolvePincodeToLocation(pincode);
+    return loc;
   }
 
   /**

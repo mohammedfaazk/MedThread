@@ -1,5 +1,6 @@
 'use client'
 
+// Profile settings page
 import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
@@ -22,9 +23,21 @@ export default function ProfileSettingsPage() {
     specialty: '',
     website: '',
     location: '',
-    address: '',
     pincode: ''
   })
+  const [healthConditions, setHealthConditions] = useState<Record<string, boolean | null>>({
+    diabetes: null,
+    heartDisease: null,
+    highBloodPressure: null,
+    highCholesterol: null,
+    kidneyDisease: null,
+    thyroid: null,
+    foodAllergies: null,
+    pregnant: null,
+  })
+  const [otherConditions, setOtherConditions] = useState('')
+  const [healthLoading, setHealthLoading] = useState(false)
+  const [healthSaved, setHealthSaved] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [bannerPreview, setBannerPreview] = useState<string | null>(null)
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
@@ -45,12 +58,17 @@ export default function ProfileSettingsPage() {
       const token = localStorage.getItem('auth_token')
       if (!token) return
 
-      const response = await axios.get(`${API_URL}/api/profile/me/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const [profileRes, healthRes] = await Promise.allSettled([
+        axios.get(`${API_URL}/api/profile/me/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API_URL}/api/v1/health-profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ])
 
-      if (response.data.success) {
-        const profileData = response.data.data
+      if (profileRes.status === 'fulfilled' && profileRes.value.data.success) {
+        const profileData = profileRes.value.data.data
         setProfile(profileData)
         setFormData({
           username: profileData.username || '',
@@ -58,14 +76,76 @@ export default function ProfileSettingsPage() {
           specialty: profileData.specialty || '',
           website: '',
           location: '',
-          address: profileData.address || '',
           pincode: profileData.pincode || ''
         })
         setAvatarPreview(getImageUrl(profileData.avatar))
         setBannerPreview(getImageUrl(profileData.banner))
       }
+
+      if (healthRes.status === 'fulfilled' && healthRes.value.data.success && healthRes.value.data.data) {
+        const hp = healthRes.value.data.data
+        const conditions = Array.isArray(hp.medicalConditions) ? hp.medicalConditions as string[] : []
+        const hasData = conditions.length > 0 || (Array.isArray(hp.foodAllergies) && hp.foodAllergies.length > 0)
+        setHealthConditions({
+          diabetes: conditions.includes('Diabetes') ? true : hasData ? false : null,
+          heartDisease: conditions.includes('Heart Disease') ? true : hasData ? false : null,
+          highBloodPressure: conditions.includes('High Blood Pressure') ? true : hasData ? false : null,
+          highCholesterol: conditions.includes('High Cholesterol') ? true : hasData ? false : null,
+          kidneyDisease: conditions.includes('Kidney Disease') ? true : hasData ? false : null,
+          thyroid: conditions.includes('Thyroid Problems') ? true : hasData ? false : null,
+          foodAllergies: Array.isArray(hp.foodAllergies) && (hp.foodAllergies as string[]).length > 0 ? true : hasData ? false : null,
+          pregnant: conditions.includes('Pregnancy') ? true : hasData ? false : null,
+        })
+        const known = ['Diabetes', 'Heart Disease', 'High Blood Pressure', 'High Cholesterol', 'Kidney Disease', 'Thyroid Problems', 'Pregnancy']
+        const other = conditions.filter((c: string) => !known.includes(c))
+        if (other.length > 0) setOtherConditions(other.join(', '))
+      }
     } catch (error) {
       console.error('Failed to fetch profile:', error)
+    }
+  }
+
+  const saveHealthConditions = async () => {
+    setHealthLoading(true)
+    setHealthSaved(false)
+    const token = localStorage.getItem('auth_token')
+    if (!token) return
+
+    const medicalConditions: string[] = []
+    if (healthConditions.diabetes) medicalConditions.push('Diabetes')
+    if (healthConditions.heartDisease) medicalConditions.push('Heart Disease')
+    if (healthConditions.highBloodPressure) medicalConditions.push('High Blood Pressure')
+    if (healthConditions.highCholesterol) medicalConditions.push('High Cholesterol')
+    if (healthConditions.kidneyDisease) medicalConditions.push('Kidney Disease')
+    if (healthConditions.thyroid) medicalConditions.push('Thyroid Problems')
+    if (healthConditions.pregnant) medicalConditions.push('Pregnancy')
+    if (otherConditions.trim()) medicalConditions.push(otherConditions.trim())
+
+    const foodAllergies = healthConditions.foodAllergies ? ['Food Allergies'] : []
+
+    const riskLevel = (() => {
+      if (
+        (medicalConditions.includes('Diabetes') && medicalConditions.includes('High Blood Pressure')) ||
+        (medicalConditions.includes('Heart Disease') && medicalConditions.includes('High Cholesterol')) ||
+        (medicalConditions.includes('Kidney Disease') && medicalConditions.includes('Diabetes'))
+      ) return 'HIGH'
+      if (medicalConditions.length >= 2) return 'MEDIUM'
+      if (medicalConditions.length === 1) return 'LOW'
+      return 'NONE'
+    })()
+
+    try {
+      await axios.put(
+        `${API_URL}/api/v1/health-profile`,
+        { medicalConditions, foodAllergies, riskLevel },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setHealthSaved(true)
+      setTimeout(() => setHealthSaved(false), 3000)
+    } catch (err) {
+      console.error('Failed to save health conditions:', err)
+    } finally {
+      setHealthLoading(false)
     }
   }
 
@@ -219,7 +299,6 @@ export default function ProfileSettingsPage() {
       // Update profile
       const profileUpdateData: any = {
         bio: formData.bio,
-        address: formData.address,
         pincode: formData.pincode
       }
       
@@ -251,7 +330,8 @@ export default function ProfileSettingsPage() {
           username: formData.username || user.username,
           specialty: isDoctor ? formData.specialty : user.specialty,
           avatar: newAvatarUrl || user.avatar,
-          banner: newBannerUrl || user.banner
+          banner: newBannerUrl || user.banner,
+          pincode: formData.pincode || (user as any).pincode,
         }
         
         localStorage.setItem('user', JSON.stringify(updatedUser))
@@ -458,21 +538,6 @@ export default function ProfileSettingsPage() {
                 </div>
               )}
 
-              {/* Address */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 mb-2">
-                  Address
-                </label>
-                <textarea
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 resize-none"
-                  placeholder="Enter your full address"
-                />
-              </div>
-
               {/* Pincode */}
               <div>
                 <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -491,6 +556,78 @@ export default function ProfileSettingsPage() {
                   Used for area-wise doctor recommendations
                 </p>
               </div>
+
+              {/* Health Conditions - Only for Patients */}
+              {role === 'PATIENT' && (
+                <div className="border-t border-gray-200 pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">Health Conditions</h2>
+                      <p className="text-sm text-gray-500">Used to personalize your diet plans</p>
+                    </div>
+                    {healthSaved && (
+                      <span className="text-sm text-green-600 font-medium">✓ Saved</span>
+                    )}
+                  </div>
+
+                  {[
+                    { key: 'diabetes', label: 'Diabetes', icon: '🩸' },
+                    { key: 'heartDisease', label: 'Heart Disease', icon: '❤️' },
+                    { key: 'highBloodPressure', label: 'High Blood Pressure', icon: '💉' },
+                    { key: 'highCholesterol', label: 'High Cholesterol', icon: '🫀' },
+                    { key: 'kidneyDisease', label: 'Kidney Disease', icon: '🫘' },
+                    { key: 'thyroid', label: 'Thyroid Problems', icon: '🦋' },
+                    { key: 'foodAllergies', label: 'Food Allergies', icon: '🚫' },
+                    { key: 'pregnant', label: 'Currently Pregnant', icon: '🤰' },
+                  ].map(({ key, label, icon }) => (
+                    <div key={key} className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
+                      <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <span>{icon}</span>{label}
+                      </span>
+                      <div className="flex gap-2">
+                        {(['Yes', 'No'] as const).map(opt => {
+                          const val = opt === 'Yes'
+                          const active = healthConditions[key] === val
+                          return (
+                            <button
+                              key={opt}
+                              type="button"
+                              onClick={() => setHealthConditions(prev => ({ ...prev, [key]: prev[key] === val ? null : val }))}
+                              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                                active
+                                  ? opt === 'Yes' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+                                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                              }`}
+                            >
+                              {opt}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="mt-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Other conditions (optional)</label>
+                    <input
+                      type="text"
+                      value={otherConditions}
+                      onChange={e => setOtherConditions(e.target.value)}
+                      placeholder="e.g., Asthma, PCOS..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={saveHealthConditions}
+                    disabled={healthLoading}
+                    className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    {healthLoading ? 'Saving...' : 'Save Health Info'}
+                  </button>
+                </div>
+              )}
 
               {/* Submit Button */}
               <div className="flex gap-3 pt-4">

@@ -97,6 +97,7 @@ model User {
   userActivityLogs                                UserActivityLog[]
   patientHealthProfile                            PatientHealthProfile?
   symptomReports                                  SymptomReport[]
+  doctorEndorsements                              DoctorEndorsement[]   @relation("DoctorEndorsements")
 
   @@index([email])
   @@index([username])
@@ -143,6 +144,7 @@ model Post {
   downvotes        Int                 @default(0)
   score            Int                 @default(0)
   commentCount     Int                 @default(0)
+  endorsementCount Int                 @default(0)
   isNSFW           Boolean             @default(false)
   isSpoiler        Boolean             @default(false)
   isPinned         Boolean             @default(false)
@@ -170,6 +172,7 @@ model Post {
   conversions      CommentConversion[]
   priority         PostPriority?
   symptomReports   SymptomReport[]
+  endorsements     DoctorEndorsement[]
 
   @@index([authorId])
   @@index([communityId])
@@ -1267,6 +1270,7 @@ model HealthProfile {
   medicalConditions       Json? // Array of conditions
   currentMedications      String? // Free text
   foodAllergies           Json? // Array of allergies
+  riskLevel               String? // NONE, LOW, MEDIUM, HIGH
   // Dietary Preferences
   dietType                String? // Vegetarian, Vegan, Non-Vegetarian, Eggetarian, Pescatarian
   religiousRestrictions   String? // Halal, Kosher, Hindu Vegetarian, No restrictions
@@ -1303,4 +1307,17 @@ model DietPlan {
   @@index([userId])
   @@index([healthProfileId])
   @@index([generatedAt])
+}
+
+model DoctorEndorsement {
+  id        String   @id @default(cuid())
+  postId    String
+  doctorId  String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  doctor    User     @relation("DoctorEndorsements", fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, doctorId])
+  @@index([postId])
+  @@index([doctorId])
 }

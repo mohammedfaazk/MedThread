@@ -42,6 +42,9 @@ interface Post {
   isSaved?: boolean
   isHidden?: boolean
   editedAt?: string | null
+  // Endorsement
+  endorsementCount?: number
+  userEndorsed?: boolean
   // Priority system fields
   urgencyScore?: number
   priorityLevel?: 'HIGH' | 'MEDIUM' | 'LOW'
@@ -70,6 +73,9 @@ interface Comment {
   isCollapsed?: boolean
   userVote?: 1 | -1 | null
   timeAgo: string
+  // Location proximity fields
+  locationTier?: number   // 0=exact, 1=city zone, 2=region, 3=state zone, 4=doctor/no match, 5=non-doctor
+  authorPincode?: string
 }
 
 interface AppState {
@@ -167,6 +173,8 @@ export const useStore = create<AppState>()(
             isSaved: post.isSaved || false,
             isHidden: post.isHidden || false,
             editedAt: post.editedAt || null,
+            endorsementCount: post.endorsementCount || 0,
+            userEndorsed: post.userEndorsed || false,
             // Priority system fields
             urgencyScore: post.priority?.urgencyScore || 0,
             priorityLevel: post.priority?.priorityLevel || 'LOW',
@@ -337,7 +345,11 @@ export const useStore = create<AppState>()(
       
       fetchComments: async (postId) => {
         try {
-          const response = await axios.get(`${API_URL}/api/v1/comments?postId=${postId}`)
+          const token = localStorage.getItem('auth_token')
+          const headers: Record<string, string> = {}
+          if (token) headers['Authorization'] = `Bearer ${token}`
+
+          const response = await axios.get(`${API_URL}/api/v1/comments?postId=${postId}`, { headers })
           const apiComments = response.data
           
           // Transform API comments to match our Comment interface
@@ -360,6 +372,8 @@ export const useStore = create<AppState>()(
               isCollapsed: false,
               userVote: comment.userVote || null,
               timeAgo: getTimeAgo(comment.createdAt),
+              locationTier: comment.locationTier,
+              authorPincode: comment.author?.pincode,
             }))
           }
           

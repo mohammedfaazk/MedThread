@@ -23,6 +23,7 @@ import {
     Utensils,
     Clock,
     Star,
+    TrendingUp,
     CheckCircle2,
     UserRound,
     Pill
@@ -277,6 +278,28 @@ export default function PatientDashboard() {
                                         className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition"
                                     >
                                         Analyze Symptoms
+                                    </button>
+                                </SpotlightCard>
+                                </AnimatedCard>
+
+                                {/* Symptom Trends Card */}
+                                <AnimatedCard delay={0.25}>
+                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <GlassIcon icon={TrendingUp} color="red" label="Trends" size={24} />
+                                        <span className="bg-rose-50 text-rose-700 px-2 py-1 rounded text-[10px] font-semibold uppercase">
+                                            Regional
+                                        </span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Symptom Trends</h3>
+                                    <p className="text-gray-500 text-sm mb-4 flex-1">
+                                        See what symptoms are trending in your area, city, state, and across India.
+                                    </p>
+                                    <button
+                                        onClick={() => router.push('/trends')}
+                                        className="w-full py-3 bg-rose-500 text-white rounded-xl font-semibold hover:bg-rose-600 transition"
+                                    >
+                                        View Trends
                                     </button>
                                 </SpotlightCard>
                                 </AnimatedCard>

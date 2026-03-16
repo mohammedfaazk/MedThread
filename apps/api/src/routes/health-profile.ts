@@ -10,7 +10,6 @@ router.get('/', authenticate, async (req, res) => {
   try {
     const userId = (req as any).userId
     const result = await healthProfileService.getHealthProfile(userId)
-    
     res.json(result)
   } catch (error) {
     console.error('Health profile fetch error:', error)
@@ -18,32 +17,50 @@ router.get('/', authenticate, async (req, res) => {
   }
 })
 
-// Create or update health profile
+// Create or update health profile — all fields optional, no required-field validation
 router.post('/', authenticate, async (req, res) => {
   try {
     const userId = (req as any).userId
-    const data = req.body
-    
-    // Validate required fields
-    const requiredFields = ['ageGroup', 'biologicalSex', 'nationality', 'weightRange', 'heightRange', 'activityLevel']
-    const missingFields = requiredFields.filter(field => !data[field])
-    
-    if (missingFields.length > 0) {
-      return res.status(400).json({
-        success: false,
-        error: `Missing required fields: ${missingFields.join(', ')}`
-      })
-    }
-    
-    const result = await healthProfileService.createOrUpdateHealthProfile(userId, data)
-    
+    const result = await healthProfileService.createOrUpdateHealthProfile(userId, req.body)
     if (result.success) {
       res.status(201).json(result)
     } else {
-      res.status(400).json(result)
+      res.status(500).json(result)
     }
   } catch (error) {
     console.error('Health profile creation error:', error)
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+})
+
+// Init — creates an empty profile only if none exists, never overwrites
+router.post('/init', authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).userId
+    const result = await healthProfileService.createIfNotExists(userId, {
+      medicalConditions: [],
+      foodAllergies: [],
+      riskLevel: 'NONE',
+    })
+    res.json(result)
+  } catch (error) {
+    console.error('Health profile init error:', error)
+    res.status(500).json({ success: false, error: 'Internal server error' })
+  }
+})
+
+// Partial update — merge into existing profile
+router.put('/', authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).userId
+    const result = await healthProfileService.createOrUpdateHealthProfile(userId, req.body)
+    if (result.success) {
+      res.json(result)
+    } else {
+      res.status(500).json(result)
+    }
+  } catch (error) {
+    console.error('Health profile update error:', error)
     res.status(500).json({ success: false, error: 'Internal server error' })
   }
 })
@@ -53,7 +70,6 @@ router.delete('/', authenticate, async (req, res) => {
   try {
     const userId = (req as any).userId
     const result = await healthProfileService.deleteHealthProfile(userId)
-    
     res.json(result)
   } catch (error) {
     console.error('Health profile deletion error:', error)

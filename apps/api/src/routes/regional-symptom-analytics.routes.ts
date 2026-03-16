@@ -92,4 +92,41 @@ router.get('/alerts', optionalAuth, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/regional-symptom-analytics/by-pincode
+ * Get symptom heatmap scoped to a user's pincode + chosen geographic scope
+ * Query: pincode, scope (area|city|district|state|country), timeWindow
+ */
+router.get('/by-pincode', authenticate, async (req, res) => {
+  try {
+    const { pincode, scope, timeWindow } = req.query;
+    if (!pincode) return res.status(400).json({ success: false, error: 'pincode is required' });
+
+    const data = await regionalSymptomAnalyticsService.getSymptomsByPincode(
+      pincode as string,
+      (scope as 'area' | 'city' | 'district' | 'state' | 'country') || 'city',
+      (timeWindow as 'week' | 'month' | 'quarter') || 'month'
+    );
+    res.json(data);
+  } catch (error: any) {
+    console.error('Error fetching symptoms by pincode:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/regional-symptom-analytics/resolve-pincode
+ * Resolve a pincode to its geographic hierarchy
+ */
+router.get('/resolve-pincode', authenticate, async (req, res) => {
+  try {
+    const { pincode } = req.query;
+    if (!pincode) return res.status(400).json({ success: false, error: 'pincode is required' });
+    const location = await regionalSymptomAnalyticsService.resolveLocation(pincode as string);
+    res.json({ success: !!location, data: location });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
