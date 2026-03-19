@@ -745,6 +745,73 @@ export class RegionalSymptomAnalyticsService {
   }
 
   /**
+   * Create a SymptomReport directly from a patient post using explicitly selected symptom chips.
+   * Called immediately after post creation — no keyword scanning needed.
+   */
+  async collectFromPatientPost(postId: string, userId: string, symptoms: string[], duration?: string) {
+    if (!symptoms || symptoms.length === 0) return null;
+
+    // Get user's pincode
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        pincode: true,
+        patientHealthProfile: { select: { ageGroup: true, biologicalSex: true } }
+      }
+    });
+
+    if (!user?.pincode) return null;
+
+    const location = await this.resolvePincodeToLocation(user.pincode);
+    if (!location) return null;
+
+    const normalizedSymptoms = symptoms.map(s => s.toLowerCase());
+    const severity = this.calculateSeverity(normalizedSymptoms);
+
+    // Parse ageGroup string into a representative integer (midpoint of range)
+    const ageGroupToInt: Record<string, number> = {
+      '18-25': 21, '26-35': 30, '36-45': 40, '46-60': 53, '60+': 65
+    };
+    const ageInt = user.patientHealthProfile?.ageGroup
+      ? (ageGroupToInt[user.patientHealthProfile.ageGroup] ?? null)
+      : null;
+
+    // Upsert — one report per post (avoid duplicates on retry)
+    const existing = await prisma.symptomReport.findFirst({ where: { postId } });
+    if (existing) {
+      return prisma.symptomReport.update({
+        where: { id: existing.id },
+        data: {
+          symptoms: normalizedSymptoms,
+          detectedSymptoms: normalizedSymptoms.map(s => ({ symptom: s, confidence: 1.0, source: 'chip' })),
+          severity,
+          duration,
+        }
+      });
+    }
+
+    return prisma.symptomReport.create({
+      data: {
+        userId,
+        postId,
+        symptoms: normalizedSymptoms,
+        detectedSymptoms: normalizedSymptoms.map(s => ({ symptom: s, confidence: 1.0, source: 'chip' })),
+        location,
+        pincode: location.pincode,
+        city: location.city,
+        district: location.district,
+        state: location.state,
+        country: location.country,
+        age: ageInt,
+        gender: user.patientHealthProfile?.biologicalSex ?? null,
+        severity,
+        duration,
+        reportedAt: new Date(),
+      }
+    });
+  }
+
+  /**
    * Generate alert message based on data
    */
   private generateAlertMessage(alert: any): string {

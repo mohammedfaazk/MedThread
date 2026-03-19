@@ -129,4 +129,29 @@ router.get('/resolve-pincode', authenticate, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/regional-symptom-analytics/report-from-post
+ * Create a SymptomReport from a patient post using chip-selected symptoms.
+ * Called immediately after post creation.
+ * Body: { postId, symptoms: string[], duration?: string }
+ */
+router.post('/report-from-post', authenticate, async (req, res) => {
+  try {
+    const { postId, symptoms, duration } = req.body;
+    if (!postId || !Array.isArray(symptoms) || symptoms.length === 0) {
+      return res.status(400).json({ success: false, error: 'postId and symptoms[] are required' });
+    }
+    const report = await regionalSymptomAnalyticsService.collectFromPatientPost(
+      postId,
+      req.userId!,
+      symptoms,
+      duration
+    );
+    res.json({ success: true, data: report });
+  } catch (error: any) {
+    console.error('Error creating symptom report from post:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;

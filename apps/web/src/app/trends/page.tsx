@@ -70,7 +70,7 @@ function heatTextColor(intensity: number): string {
 }
 
 export default function TrendsPage() {
-  const { user, role, loading } = useJWTAuth()
+  const { user, role, loading, refreshUser } = useJWTAuth()
   const router = useRouter()
 
   const [scope, setScope] = useState<Scope>('city')
@@ -82,6 +82,12 @@ export default function TrendsPage() {
   useEffect(() => {
     if (!loading && (!user || role !== 'PATIENT')) router.push('/')
   }, [user, role, loading, router])
+
+  // Refresh user from API on mount so a pincode saved in /settings/profile
+  // is visible immediately without requiring re-login.
+  useEffect(() => {
+    refreshUser()
+  }, [])
 
   const fetchTrends = useCallback(async () => {
     if (!user) return
@@ -350,13 +356,13 @@ function NoPincodePrompt() {
       <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-4" />
       <h3 className="text-lg font-semibold text-gray-800 mb-2">No pincode on your profile</h3>
       <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
-        Add your pincode to your profile so we can show symptom trends in your area.
+        Add your pincode in Profile Settings so we can show symptom trends in your area.
       </p>
       <button
-        onClick={() => router.push('/profile')}
+        onClick={() => router.push('/settings/profile')}
         className="px-6 py-2.5 bg-rose-500 text-white rounded-xl font-medium hover:bg-rose-600 transition-colors"
       >
-        Update Profile
+        Update Pincode in Profile
       </button>
     </div>
   )

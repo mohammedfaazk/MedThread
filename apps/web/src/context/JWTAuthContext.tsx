@@ -21,6 +21,7 @@ interface AuthContextType {
     loading: boolean;
     login: (token: string, userData: User) => void;
     logout: () => void;
+    refreshUser: () => Promise<void>;
     isDoctorVerified: boolean;
     isDoctorPending: boolean;
 }
@@ -31,6 +32,7 @@ const JWTAuthContext = createContext<AuthContextType>({
     loading: true,
     login: () => {},
     logout: () => {},
+    refreshUser: async () => {},
     isDoctorVerified: false,
     isDoctorPending: false,
 });
@@ -95,6 +97,42 @@ export const JWTAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setRole(null);
     };
 
+    // Re-fetch user profile from API and update localStorage + state.
+    // Use this after saving pincode/profile so /trends picks it up immediately.
+    const refreshUser = async () => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            if (!token) return;
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/profile/me/profile`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (!json.success) return;
+            const fresh: User = {
+                id: json.data.id,
+                username: json.data.username,
+                email: json.data.email,
+                role: json.data.role,
+                doctorVerificationStatus: json.data.doctorVerificationStatus,
+                avatar: json.data.avatar,
+                banner: json.data.banner,
+                bio: json.data.bio,
+                specialty: json.data.specialty,
+                pincode: json.data.pincode,
+            };
+            localStorage.setItem('user', JSON.stringify(fresh));
+            setUser(fresh);
+            if (fresh.role === 'DOCTOR' && fresh.doctorVerificationStatus === 'APPROVED') {
+                setRole('VERIFIED_DOCTOR');
+            } else {
+                setRole(fresh.role);
+            }
+        } catch {
+            // non-critical
+        }
+    };
+
     const isDoctorVerified = user?.role === 'DOCTOR' && user?.doctorVerificationStatus === 'APPROVED';
     const isDoctorPending = user?.role === 'DOCTOR' && 
         (user?.doctorVerificationStatus === 'PENDING' || user?.doctorVerificationStatus === 'UNDER_REVIEW');
@@ -106,6 +144,7 @@ export const JWTAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
             loading, 
             login, 
             logout,
+            refreshUser,
             isDoctorVerified,
             isDoctorPending
         }}>

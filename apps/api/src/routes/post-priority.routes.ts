@@ -22,6 +22,23 @@ router.post('/analyze/:postId', authenticate, async (req, res) => {
 });
 
 /**
+ * POST /api/post-priority/analyze-from-chips/:postId
+ * Analyze priority using structured chip data from PatientCreatePostModal.
+ * More accurate than text scanning — uses sum scoring + LLM on description.
+ * Body: { symptoms, duration, age, gender, existingConditions, description }
+ */
+router.post('/analyze-from-chips/:postId', authenticate, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const analysis = await postPriorityService.analyzeFromChips(postId, req.body);
+    res.json({ success: true, data: analysis });
+  } catch (error: any) {
+    console.error('Error analyzing post priority from chips:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
  * GET /api/post-priority/doctor-feed
  * Get prioritized feed for doctors with urgency-based sorting
  */

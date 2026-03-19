@@ -1,15 +1,20 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { CreatePostModal } from './CreatePostModal'
-import { useUser } from '@/context/UserContext'
+import dynamic from 'next/dynamic'
+import { useJWTAuth } from '@/context/JWTAuthContext'
+
+const CreatePostModal = dynamic(() => import('./CreatePostModal').then(m => ({ default: m.CreatePostModal })), { ssr: false })
+const PatientCreatePostModal = dynamic(() => import('./PatientCreatePostModal').then(m => ({ default: m.PatientCreatePostModal })), { ssr: false })
 import { TrendingUp, Info } from 'lucide-react'
 import CountUp from './enhancements/CountUp'
 import { TopDoctorsWidget } from './TopDoctorsWidget'
 
 export function RightSidebar() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const { role } = useUser()
+  const { role } = useJWTAuth()
+
+  const isPatient = role === 'PATIENT'
 
   const trendingTopics = [
     { topic: 'COVID-19 Vaccines', posts: 234, slug: 'covid-vaccines' },
@@ -34,7 +39,7 @@ export function RightSidebar() {
               onClick={() => setIsCreateModalOpen(true)}
               className="block w-full py-2 bg-[#00BCD4] text-white rounded-full text-sm font-semibold hover:bg-[#00ACC1] text-center transition-all shadow-lg hover:shadow-xl"
             >
-              Create Post
+              {isPatient ? 'Ask a Question' : 'Create Post'}
             </button>
             <Link
               href="/communities/create"
@@ -114,10 +119,10 @@ export function RightSidebar() {
         </div>
       </div>
 
-      <CreatePostModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+      {isPatient
+        ? <PatientCreatePostModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+        : <CreatePostModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      }
     </aside>
   )
 }

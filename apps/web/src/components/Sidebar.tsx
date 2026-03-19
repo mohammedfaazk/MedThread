@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CreatePostModal } from './CreatePostModal'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
+
+const CreatePostModal = dynamic(() => import('./CreatePostModal').then(m => ({ default: m.CreatePostModal })), { ssr: false })
 import { useRouter, usePathname } from 'next/navigation'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import axios from 'axios'

@@ -5,12 +5,13 @@ import { PostFeed } from '@/components/PostFeed'
 import { RightSidebar } from '@/components/RightSidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, lazy, Suspense } from 'react'
+import { useEffect } from 'react'
 import StructuredData, { structuredDataSchemas } from '@/components/StructuredData'
 import IridescenceCSS from '@/components/ui/IridescenceCSS'
+import dynamic from 'next/dynamic'
 
 // Lazy-load Kendall so it doesn't affect initial page load
-const KendallChat = lazy(() => import('@/components/KendallChat'))
+const KendallChat = dynamic(() => import('@/components/KendallChat'), { ssr: false })
 
 export default function Home() {
   const { user, role, loading } = useJWTAuth()
@@ -46,11 +47,7 @@ export default function Home() {
         </div>
 
         {/* Kendall AI Assistant — visible only to logged-in patients */}
-        {isPatient && (
-          <Suspense fallback={null}>
-            <KendallChat />
-          </Suspense>
-        )}
+        {isPatient && <KendallChat />}
       </div>
     </>
   )

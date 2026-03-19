@@ -13,7 +13,7 @@ import { getImageUrl } from '@/lib/imageUrl'
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 export default function ProfileSettingsPage() {
-  const { user, role } = useJWTAuth()
+  const { user, role, refreshUser } = useJWTAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [profile, setProfile] = useState<any>(null)
@@ -323,20 +323,8 @@ export default function ProfileSettingsPage() {
       )
 
       if (response.data.success) {
-        // Update the user object in localStorage and auth context
-        const updatedUser = {
-          ...user,
-          bio: formData.bio,
-          username: formData.username || user.username,
-          specialty: isDoctor ? formData.specialty : user.specialty,
-          avatar: newAvatarUrl || user.avatar,
-          banner: newBannerUrl || user.banner,
-          pincode: formData.pincode || (user as any).pincode,
-        }
-        
-        localStorage.setItem('user', JSON.stringify(updatedUser))
-        
-        // Force a page reload to update all components with new user data
+        // Refresh user in auth context so pincode is immediately available (e.g. /trends)
+        await refreshUser()
         alert('Profile updated successfully!')
         window.location.reload()
       }

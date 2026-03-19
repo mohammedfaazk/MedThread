@@ -4,15 +4,17 @@ import { useStore } from '@/store/useStore'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import Link from 'next/link'
 import { UserRound, Stethoscope, Pin, Edit2, Trash2, MoreHorizontal } from 'lucide-react'
-import { AwardButton } from './AwardButton'
-import { AwardDisplay } from './AwardDisplay'
-import ReportButton from './ReportButton'
-import { PostPriorityBadge } from './feed/PostPriorityBadge'
+import dynamic from 'next/dynamic'
 import { analytics } from '@/lib/analytics'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useClickSpark } from '@/hooks/useClickSpark'
-import SpotlightCard from './enhancements/SpotlightCard'
+
+const AwardButton = dynamic(() => import('./AwardButton').then(m => ({ default: m.AwardButton })), { ssr: false })
+const AwardDisplay = dynamic(() => import('./AwardDisplay').then(m => ({ default: m.AwardDisplay })), { ssr: false })
+const ReportButton = dynamic(() => import('./ReportButton'), { ssr: false })
+const PostPriorityBadge = dynamic(() => import('./feed/PostPriorityBadge').then(m => ({ default: m.PostPriorityBadge })), { ssr: false })
+const SpotlightCard = dynamic(() => import('./enhancements/SpotlightCard'), { ssr: false })
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 

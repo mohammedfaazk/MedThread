@@ -3,9 +3,13 @@
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Home, Users, BookOpen, PenSquare } from 'lucide-react';
-import Dock, { DockItemData } from './enhancements/Dock';
-import { CreatePostModal } from './CreatePostModal';
+import dynamic from 'next/dynamic';
+import type { DockItemData } from './enhancements/Dock';
 import { useJWTAuth } from '@/context/JWTAuthContext';
+
+const Dock = dynamic(() => import('./enhancements/Dock'), { ssr: false });
+const CreatePostModal = dynamic(() => import('./CreatePostModal').then(m => ({ default: m.CreatePostModal })), { ssr: false });
+const PatientCreatePostModal = dynamic(() => import('./PatientCreatePostModal').then(m => ({ default: m.PatientCreatePostModal })), { ssr: false });
 
 export function MobileNavigation() {
   const router = useRouter();
@@ -60,10 +64,10 @@ export function MobileNavigation() {
       </div>
 
       {/* Create Post Modal */}
-      <CreatePostModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+      {role === 'PATIENT'
+        ? <PatientCreatePostModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+        : <CreatePostModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+      }
     </>
   );
 }

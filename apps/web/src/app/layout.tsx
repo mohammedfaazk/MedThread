@@ -7,8 +7,10 @@ import { DEFAULT_SEO } from '@/lib/seo'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import { MobileNavigation } from '@/components/MobileNavigation'
-import GlobalClickSpark from '@/components/GlobalClickSpark'
+import dynamic from 'next/dynamic'
+
+const MobileNavigation = dynamic(() => import('@/components/MobileNavigation').then(m => ({ default: m.MobileNavigation })), { ssr: false })
+const GlobalClickSpark = dynamic(() => import('@/components/GlobalClickSpark'), { ssr: false })
 
 export const metadata: Metadata = {
   title: {
