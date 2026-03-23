@@ -9,6 +9,7 @@ import { useEffect } from 'react'
 import StructuredData, { structuredDataSchemas } from '@/components/StructuredData'
 import IridescenceCSS from '@/components/ui/IridescenceCSS'
 import dynamic from 'next/dynamic'
+import { MedicalDisclaimer, EmergencyBanner } from '@/components/MedicalDisclaimer'
 
 // Lazy-load Kendall so it doesn't affect initial page load
 const KendallChat = dynamic(() => import('@/components/KendallChat'), { ssr: false })
@@ -41,6 +42,8 @@ export default function Home() {
         <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
           <Sidebar />
           <main className="flex-1 max-w-[640px]">
+            <EmergencyBanner className="mb-6" />
+            <MedicalDisclaimer className="mb-6" />
             <PostFeed />
           </main>
           <RightSidebar />

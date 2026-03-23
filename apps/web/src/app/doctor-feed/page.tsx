@@ -5,6 +5,7 @@ import { Navbar } from '@/components/Navbar';
 import { PriorityFeedFilter } from '@/components/feed/PriorityFeedFilter';
 import { PostPriorityBadge } from '@/components/feed/PostPriorityBadge';
 import { useUser } from '@/context/UserContext';
+import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 import Link from 'next/link';
 import { MessageSquare, ThumbsUp, Clock, User } from 'lucide-react';
 
@@ -125,6 +126,9 @@ export default function DoctorFeedPage() {
       <Navbar />
       
       <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Medical Disclaimer */}
+        <MedicalDisclaimer className="mb-6" />
+        
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Medical Priority Feed</h1>

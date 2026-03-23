@@ -1,0 +1,553 @@
+// 🔥 REVOLUTIONARY FEATURES DATABASE SCHEMA
+// The most advanced healthcare database schema ever created
+
+// ============================================
+// AI DISEASE DETECTIVE
+// ============================================
+
+model AIDiseasePrediction {
+  id              String   @id @default(cuid())
+  userId          String
+  detectedDisease String
+  confidence      Float    // 0-1
+  dataPoints      Json     // All data sources used
+  earlyWarning    Boolean  @default(false)
+  yearsEarly      Float?   // How many years before symptoms
+  recommendedTests Json    // Confirmatory tests
+  urgency         String   // IMMEDIATE, URGENT, MONITOR, LOW
+  symptoms        Json?    // Predicted symptoms
+  progression     Json?    // Disease progression timeline
+  preventionPlan  Json     // How to prevent/delay
+  createdAt       DateTime @default(now())
+  confirmedAt     DateTime?
+  actualOutcome   String?  // Track accuracy
+  
+  @@index([userId])
+  @@index([urgency])
+  @@index([confidence])
+  @@index([createdAt])
+}
+
+model MultiModalHealthData {
+  id              String   @id @default(cuid())
+  userId          String
+  dataType        String   // TEXT, VOICE, IMAGE, BEHAVIOR, BIOMETRIC
+  rawData         Json
+  extractedFeatures Json   // AI-extracted features
+  timestamp       DateTime @default(now())
+  source          String   // APP, WEARABLE, CAMERA, MICROPHONE
+  
+  @@index([userId])
+  @@index([dataType])
+  @@index([timestamp])
+}
+
+// ============================================
+// EMOTION-BASED HEALTH ANALYZER
+// ============================================
+
+model EmotionAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  textContent     String?
+  voiceUrl        String?
+  emotionScores   Json     // happiness, sadness, anger, fear, etc.
+  mentalHealthIndicators Json // depression, anxiety, stress scores
+  linguisticFeatures Json  // word choice, sentence structure
+  voiceFeatures   Json?    // pitch, tone, speed, pauses
+  riskLevel       String   // NONE, LOW, MEDIUM, HIGH, CRITICAL
+  detectedConditions Json? // Possible mental health conditions
+  confidence      Float
+  timestamp       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([riskLevel])
+  @@index([timestamp])
+}
+
+model EmotionalTimeline {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime
+  avgMood         Float    // -1 to 1
+  moodVariability Float    // How much mood changed
+  stressLevel     Float    // 0-10
+  anxietyLevel    Float    // 0-10
+  depressionScore Float    // 0-10
+  triggers        Json?    // Identified triggers
+  
+  @@unique([userId, date])
+  @@index([userId])
+  @@index([date])
+}
+
+// ============================================
+// HEALTH FUTURE SIMULATOR
+// ============================================
+
+model HealthFutureSimulation {
+  id              String   @id @default(cuid())
+  userId          String
+  simulationType  String   // CURRENT_PATH, OPTIMIZED_PATH, CUSTOM
+  timeframe       Int      // Years into future
+  predictions     Json     // Year-by-year predictions
+  diseaseRisks    Json     // Disease probabilities over time
+  qualityOfLife   Json     // QoL scores over time
+  lifeExpectancy  Float    // Predicted years
+  interventions   Json?    // Recommended changes
+  impactAnalysis  Json?    // Impact of each intervention
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([simulationType])
+}
+
+model LifestyleImpactModel {
+  id              String   @id @default(cuid())
+  factor          String   // SMOKING, EXERCISE, DIET, SLEEP, etc.
+  change          String   // What change was made
+  impactOnDisease Json     // Impact on each disease
+  impactOnLifespan Float   // Years added/removed
+  confidence      Float
+  researchBasis   Json     // Scientific studies
+  
+  @@index([factor])
+}
+
+// ============================================
+// HEALTH BATTLES (GAMIFICATION)
+// ============================================
+
+model HealthBattle {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  battleType      String   // STEPS, WEIGHT_LOSS, BP_REDUCTION, etc.
+  goal            Json     // Target metrics
+  duration        Int      // Days
+  startDate       DateTime
+  endDate         DateTime
+  prizePool       Float?
+  entryFee        Float?
+  participants    Json     // Array of participant IDs
+  leaderboard     Json     // Real-time rankings
+  rules           Json
+  verification    String   // SELF_REPORT, DOCTOR_VERIFIED, DEVICE_SYNC
+  status          String   // UPCOMING, ACTIVE, COMPLETED, CANCELLED
+  winnerId        String?
+  createdBy       String
+  createdAt       DateTime @default(now())
+  
+  @@index([battleType])
+  @@index([status])
+  @@index([startDate])
+}
+
+model BattleParticipant {
+  id              String   @id @default(cuid())
+  battleId        String
+  userId          String
+  joinedAt        DateTime @default(now())
+  currentProgress Json     // Real-time metrics
+  dailyUpdates    Json     // Day-by-day progress
+  rank            Int?
+  completed       Boolean  @default(false)
+  prize           Float?
+  
+  @@unique([battleId, userId])
+  @@index([battleId])
+  @@index([userId])
+}
+
+// ============================================
+// HEALTH TWIN FINDER
+// ============================================
+
+model HealthProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  profileVector   Json     // Multi-dimensional health vector
+  conditions      Json     // All health conditions
+  medications     Json     // All medications
+  lifestyle       Json     // Lifestyle factors
+  genetics        Json?    // Genetic markers
+  demographics    Json     // Age, gender, location, etc.
+  lastUpdated     DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+model HealthTwinMatch {
+  id              String   @id @default(cuid())
+  userId          String
+  twinUserId      String
+  similarityScore Float    // 0-100
+  matchedFactors  Json     // What makes them twins
+  outcomes        Json?    // Twin's health outcomes
+  treatments      Json?    // What worked for twin
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([similarityScore])
+}
+
+// ============================================
+// INSTANT DIAGNOSIS CAMERA
+// ============================================
+
+model ImageDiagnosis {
+  id              String   @id @default(cuid())
+  userId          String
+  imageUrl        String
+  bodyPart        String   // SKIN, EYE, TONGUE, NAIL, WOUND, etc.
+  aiAnalysis      Json     // Detected features
+  diagnoses       Json     // Possible conditions with confidence
+  topDiagnosis    String
+  confidence      Float
+  urgency         String   // EMERGENCY, URGENT, ROUTINE, MONITOR
+  recommendations Json     // Next steps
+  similarCases    Json?    // Similar diagnosed cases
+  doctorReview    String?  // Doctor's opinion if reviewed
+  reviewedAt      DateTime?
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([urgency])
+  @@index([topDiagnosis])
+}
+
+model DiagnosisTracking {
+  id              String   @id @default(cuid())
+  userId          String
+  condition       String
+  images          Json     // Array of image URLs with timestamps
+  progressScore   Float    // -100 to 100 (worse to better)
+  healingRate     Float?   // Percentage per day
+  treatment       String?
+  notes           String?
+  
+  @@index([userId])
+  @@index([condition])
+}
+
+// ============================================
+// VOICE HEALTH MONITOR
+// ============================================
+
+model VoiceAnalysis {
+  id              String   @id @default(cuid())
+  userId          String
+  audioUrl        String
+  duration        Float    // Seconds
+  voiceFeatures   Json     // Pitch, tone, speed, tremor, etc.
+  detectedConditions Json  // Possible conditions
+  baseline        Json?    // User's normal voice
+  deviation       Float?   // How different from baseline
+  riskLevel       String   // NONE, LOW, MEDIUM, HIGH
+  timestamp       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([riskLevel])
+  @@index([timestamp])
+}
+
+model VoiceBaseline {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  normalFeatures  Json     // User's typical voice features
+  recordedSamples Int      @default(0)
+  lastUpdated     DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// ============================================
+// PRECISION MEDICINE AI
+// ============================================
+
+model MedicationPrediction {
+  id              String   @id @default(cuid())
+  userId          String
+  condition       String
+  recommendedDrugs Json    // Ranked list with scores
+  effectiveness   Json     // Predicted effectiveness per drug
+  sideEffects     Json     // Predicted side effects per drug
+  optimalDosage   Json     // Personalized dosage
+  interactions    Json     // Drug interactions
+  geneticFactors  Json?    // Genetic considerations
+  confidence      Float
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([condition])
+}
+
+model MedicationOutcome {
+  id              String   @id @default(cuid())
+  userId          String
+  medication      String
+  dosage          String
+  effectiveness   Float    // 0-10 user rating
+  sideEffects     Json     // Experienced side effects
+  adherence       Float    // 0-100 percentage
+  duration        Int      // Days taken
+  outcome         String   // EFFECTIVE, INEFFECTIVE, STOPPED
+  
+  @@index([userId])
+  @@index([medication])
+}
+
+// ============================================
+// DNA-BASED OPTIMIZATION
+// ============================================
+
+model GeneticProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  rawData         Json?    // Raw genetic data
+  analyzedMarkers Json     // Key genetic markers
+  diseaseRisks    Json     // Genetic disease risks
+  drugResponses   Json     // Pharmacogenomics
+  nutritionGenes  Json     // Nutrigenomics
+  fitnessGenes    Json     // Exercise response
+  traits          Json     // Other genetic traits
+  uploadedAt      DateTime @default(now())
+  
+  @@index([userId])
+}
+
+model PersonalizedRecommendation {
+  id              String   @id @default(cuid())
+  userId          String
+  category        String   // DIET, EXERCISE, SUPPLEMENTS, LIFESTYLE
+  recommendation  String
+  geneticBasis    Json     // Which genes support this
+  expectedBenefit String
+  priority        String   // HIGH, MEDIUM, LOW
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([category])
+  @@index([priority])
+}
+
+// ============================================
+// LONGEVITY CALCULATOR
+// ============================================
+
+model LongevityPrediction {
+  id              String   @id @default(cuid())
+  userId          String
+  predictedAge    Float    // Years
+  confidence      Float    // 0-1
+  factors         Json     // All factors considered
+  topRisks        Json     // Main mortality risks
+  interventions   Json     // How to add years
+  potentialGain   Float    // Max years that can be added
+  calculatedAt    DateTime @default(now())
+  
+  @@index([userId])
+  @@index([predictedAge])
+}
+
+model MortalityRisk {
+  id              String   @id @default(cuid())
+  userId          String
+  causeOfDeath    String
+  probability     Float    // 0-100 percentage
+  yearsUntil      Float?   // Estimated years
+  preventable     Boolean
+  preventionPlan  Json?
+  
+  @@index([userId])
+  @@index([probability])
+}
+
+// ============================================
+// HEALTH CONCIERGE
+// ============================================
+
+model ConciergeRequest {
+  id              String   @id @default(cuid())
+  userId          String
+  requestType     String   // APPOINTMENT, TEST, PRESCRIPTION, etc.
+  description     String
+  priority        String   // URGENT, HIGH, NORMAL, LOW
+  status          String   // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  assignedTo      String?  // Concierge staff ID
+  result          Json?
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+  
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+}
+
+model ConciergeInteraction {
+  id              String   @id @default(cuid())
+  requestId       String
+  type            String   // MESSAGE, CALL, ACTION
+  content         String
+  timestamp       DateTime @default(now())
+  
+  @@index([requestId])
+}
+
+// ============================================
+// MICROBIOME OPTIMIZER
+// ============================================
+
+model MicrobiomeProfile {
+  id              String   @id @default(cuid())
+  userId          String
+  testDate        DateTime
+  bacteriaComposition Json // All bacteria and percentages
+  diversityScore  Float    // 0-100
+  healthScore     Float    // 0-100
+  issues          Json?    // Identified problems
+  recommendations Json     // Personalized recommendations
+  
+  @@index([userId])
+  @@index([testDate])
+}
+
+model MicrobiomeTracking {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime
+  diversityScore  Float
+  symptoms        Json?    // GI symptoms
+  diet            Json?    // What they ate
+  supplements     Json?    // Probiotics, etc.
+  
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+// ============================================
+// BIOHACKING DASHBOARD
+// ============================================
+
+model BiohackingMetrics {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime
+  biomarkers      Json     // 100+ tracked biomarkers
+  supplements     Json     // What they're taking
+  biohacks        Json     // Techniques used
+  performance     Json     // Energy, focus, etc.
+  
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model BiohackExperiment {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String
+  hypothesis      String
+  intervention    Json     // What they're trying
+  metrics         Json     // What they're measuring
+  startDate       DateTime
+  endDate         DateTime?
+  results         Json?
+  conclusion      String?
+  
+  @@index([userId])
+}
+
+// ============================================
+// NEURAL HEALTH INTERFACE
+// ============================================
+
+model BrainwaveData {
+  id              String   @id @default(cuid())
+  userId          String
+  timestamp       DateTime
+  rawData         Json     // EEG data
+  frequencies     Json     // Alpha, beta, theta, delta
+  mentalState     String   // FOCUSED, RELAXED, STRESSED, etc.
+  anomalies       Json?    // Detected abnormalities
+  
+  @@index([userId])
+  @@index([timestamp])
+}
+
+model NeurologicalAssessment {
+  id              String   @id @default(cuid())
+  userId          String
+  assessmentType  String   // COGNITIVE, MOOD, SLEEP, etc.
+  score           Float
+  baseline        Float?
+  trend           String   // IMPROVING, STABLE, DECLINING
+  concerns        Json?
+  recommendations Json
+  createdAt       DateTime @default(now())
+  
+  @@index([userId])
+  @@index([assessmentType])
+}
+
+// ============================================
+// GLOBAL HEALTH PASSPORT
+// ============================================
+
+model HealthPassport {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  passportId      String   @unique // QR code ID
+  medicalRecords  Json     // Encrypted records
+  allergies       Json
+  medications     Json
+  emergencyContacts Json
+  bloodType       String?
+  organDonor      Boolean  @default(false)
+  lastUpdated     DateTime @updatedAt
+  
+  @@index([passportId])
+}
+
+model PassportAccess {
+  id              String   @id @default(cuid())
+  passportId      String
+  accessedBy      String   // Doctor/Hospital ID
+  accessType      String   // VIEW, EDIT, EMERGENCY
+  location        String?
+  timestamp       DateTime @default(now())
+  
+  @@index([passportId])
+  @@index([timestamp])
+}
+
+// ============================================
+// VIRTUAL HOSPITAL
+// ============================================
+
+model VirtualHospitalization {
+  id              String   @id @default(cuid())
+  userId          String
+  condition       String
+  admittedAt      DateTime @default(now())
+  dischargedAt    DateTime?
+  status          String   // ACTIVE, MONITORING, DISCHARGED
+  assignedTeam    Json     // Doctors, nurses, etc.
+  vitalSigns      Json     // Real-time monitoring
+  medications     Json
+  treatmentPlan   Json
+  devices         Json?    // Home medical devices
+  
+  @@index([userId])
+  @@index([status])
+}
+
+model RemoteMonitoring {
+  id              String   @id @default(cuid())
+  hospitalizationId String
+  timestamp       DateTime @default(now())
+  vitalSigns      Json     // BP, HR, O2, temp, etc.
+  alerts          Json?    // Any concerning values
+  
+  @@index([hospitalizationId])
+  @@index([timestamp])
+}

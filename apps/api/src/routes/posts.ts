@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate as auth } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { postService } from '../services/post.service';
+import { emergencyDetectionService } from '../services/emergency-detection.service';
 
 const router = Router();
 
@@ -13,6 +14,10 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
     if (!title || !communityId) {
       return res.status(400).json({ error: 'Title and community are required' });
     }
+
+    // Check for emergency keywords in title and content
+    const combinedContent = `${title} ${content || ''}`;
+    const emergencyResult = emergencyDetectionService.detectEmergency(combinedContent);
 
     const post = await postService.createPost({
       title,
@@ -28,7 +33,26 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
       isDraft,
     });
 
-    res.status(201).json(post);
+    // Log emergency detection if found
+    if (emergencyResult.isEmergency) {
+      await emergencyDetectionService.logEmergencyDetection({
+        userId: req.userId!,
+        contentType: 'POST',
+        contentId: post.id,
+        level: emergencyResult.level,
+        keywords: emergencyResult.matchedKeywords,
+        confidence: emergencyResult.confidence
+      });
+    }
+
+    // Return post with emergency detection result
+    res.status(201).json({
+      ...post,
+      emergencyDetection: emergencyResult.isEmergency ? {
+        level: emergencyResult.level,
+        shouldShowAlert: emergencyDetectionService.shouldShowEmergencyAlert(emergencyResult)
+      } : null
+    });
   } catch (error) {
     next(error);
   }

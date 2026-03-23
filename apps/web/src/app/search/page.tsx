@@ -1,316 +1,177 @@
-'use client'
+'use client';
 
-import { NavbarEnhanced } from '@/components/NavbarEnhanced'
-import { Sidebar } from '@/components/Sidebar'
-import { PostCard } from '@/components/PostCard'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Suspense, useEffect, useState } from 'react'
-import axios from 'axios'
-import { FileText, Users, Hash, User, CheckCircle2, Loader2 } from 'lucide-react'
-import Link from 'next/link'
-import { useSearchHistory } from '@/hooks/useSearchHistory'
-import { highlightText, highlightAndTruncate } from '@/utils/highlightText'
-import IridescenceLayout from '@/components/IridescenceLayout'
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Navbar } from '@/components/Navbar';
+import { Search, User, FileText, Activity, Filter } from 'lucide-react';
+import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-interface SearchResults {
-  posts: any[]
-  users: any[]
-  communities: any[]
-  total: number
-}
+export default function SearchPage() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q') || '';
+  const type = searchParams.get('type') || 'all';
 
-function SearchResults() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const query = searchParams.get('q') || ''
-  const type = searchParams.get('type') || 'all'
-  const { addToHistory } = useSearchHistory()
-  
-  const [results, setResults] = useState<SearchResults>({
-    posts: [],
-    users: [],
-    communities: [],
-    total: 0
-  })
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'all' | 'posts' | 'users' | 'communities'>(type as any)
+  const [results, setResults] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'all' | 'doctors' | 'posts' | 'symptoms'>(type as any || 'all');
 
   useEffect(() => {
     if (query) {
-      // Add to search history
-      addToHistory(query, activeTab)
-      searchAll()
+      performSearch();
     }
-  }, [query, activeTab])
+  }, [query, activeTab]);
 
-  const searchAll = async () => {
-    setLoading(true)
+  const performSearch = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/api/v1/search`, {
-        params: {
-          q: query,
-          type: activeTab,
-          limit: 20
-        }
-      })
-      
-      if (response.data.success) {
-        setResults(response.data.data)
-      }
+      const endpoint = activeTab === 'all' 
+        ? `/api/v1/search?q=${encodeURIComponent(query)}`
+        : `/api/v1/search/${activeTab}?q=${encodeURIComponent(query)}`;
+
+      const response = await fetch(`${API_URL}${endpoint}`);
+      const data = await response.json();
+      setResults(data);
     } catch (error) {
-      console.error('Search failed:', error)
+      console.error('Search error:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
-  const handleTabChange = (tab: 'all' | 'posts' | 'users' | 'communities') => {
-    setActiveTab(tab)
-    router.push(`/search?q=${encodeURIComponent(query)}&type=${tab}`)
-  }
-
-  if (!query) {
-    return (
-      <main className="flex-1 max-w-[640px]">
-        <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center shadow-soft">
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-700 mb-2">Start Searching</h2>
-          <p className="text-gray-600">Enter a search term to find posts, users, and communities</p>
-        </div>
-      </main>
-    )
-  }
+  };
 
   return (
-    <main className="flex-1 max-w-[640px]">
-      {/* Search Header */}
-      <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-4 mb-4 shadow-soft">
-        <h1 className="text-xl font-bold text-gray-800">Search results for "{query}"</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          {loading ? 'Searching...' : `Found ${results.total} results`}
-        </p>
-      </div>
-
-      {/* Tabs */}
-      <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-3 mb-4 flex items-center gap-2 shadow-soft">
-        <button
-          onClick={() => handleTabChange('all')}
-          className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
-            activeTab === 'all' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          All
-        </button>
-        <button
-          onClick={() => handleTabChange('posts')}
-          className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
-            activeTab === 'posts' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          Posts {results.posts.length > 0 && `(${results.posts.length})`}
-        </button>
-        <button
-          onClick={() => handleTabChange('users')}
-          className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
-            activeTab === 'users' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          Users {results.users.length > 0 && `(${results.users.length})`}
-        </button>
-        <button
-          onClick={() => handleTabChange('communities')}
-          className={`px-4 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 ${
-            activeTab === 'communities' ? 'bg-yellow-100 text-charcoal' : 'hover:bg-cream-50/50 text-charcoal'
-          }`}
-        >
-          <Hash className="w-4 h-4" />
-          Communities {results.communities.length > 0 && `(${results.communities.length})`}
-        </button>
-      </div>
-
-      {/* Loading State */}
-      {loading && (
-        <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center shadow-soft">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-500">Searching...</p>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Search Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Search Results
+          </h1>
+          <p className="text-gray-600">
+            Showing results for: <span className="font-semibold">"{query}"</span>
+          </p>
         </div>
-      )}
 
-      {/* Results */}
-      {!loading && (
-        <div className="space-y-3">
-          {/* Posts */}
-          {(activeTab === 'all' || activeTab === 'posts') && results.posts.length > 0 && (
-            <div className="space-y-3">
-              {activeTab === 'all' && (
-                <h2 className="text-lg font-bold text-gray-800 px-2">Posts</h2>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 border-b border-gray-200">
+          {['all', 'doctors', 'posts', 'symptoms'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-6 py-3 font-medium capitalize transition-colors ${
+                activeTab === tab
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {tab}
+              {results && activeTab === 'all' && results.totals && (
+                <span className="ml-2 text-sm text-gray-500">
+                  ({results.totals[tab] || 0})
+                </span>
               )}
-              {results.posts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  id={post.id}
-                  type={post.type}
-                  title={post.title}
-                  content={post.content}
-                  url={post.url}
-                  mediaUrls={post.mediaUrls}
-                  author={post.author?.username || 'Unknown'}
-                  authorType={
-                    post.author?.role === 'VERIFIED_DOCTOR' || post.author?.role === 'DOCTOR'
-                      ? 'doctor'
-                      : 'patient'
-                  }
-                  verified={
-                    post.author?.role === 'VERIFIED_DOCTOR' ||
-                    (post.author?.role === 'DOCTOR' && post.author?.doctorVerificationStatus === 'APPROVED')
-                  }
-                  specialty={post.author?.specialty}
-                  community={post.community?.name || 'general'}
-                  timeAgo={new Date(post.createdAt).toLocaleDateString()}
-                  upvotes={post.upvotes || 0}
-                  downvotes={post.downvotes || 0}
-                  score={post.score || 0}
-                  comments={post.commentCount || 0}
-                  doctorReplies={0}
-                  tags={[]}
-                  isPinned={post.isPinned}
-                  editedAt={post.editedAt}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Users */}
-          {(activeTab === 'all' || activeTab === 'users') && results.users.length > 0 && (
-            <div className="space-y-3">
-              {activeTab === 'all' && (
-                <h2 className="text-lg font-bold text-gray-800 px-2 mt-6">Users</h2>
-              )}
-              {results.users.map((user) => (
-                <Link
-                  key={user.id}
-                  href={`/u/${user.username}`}
-                  className="block bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-4 hover:shadow-elevated transition-all shadow-soft"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-lg font-bold">
-                      {user.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-gray-800">
-                          u/{highlightText(user.username, query)}
-                        </h3>
-                        {(user.role === 'VERIFIED_DOCTOR' || 
-                          (user.role === 'DOCTOR' && user.doctorVerificationStatus === 'APPROVED')) && (
-                          <CheckCircle2 className="w-4 h-4 text-blue-500 fill-blue-500/10" />
-                        )}
-                      </div>
-                      {user.specialty && (
-                        <p className="text-sm text-gray-600">
-                          {highlightText(user.specialty, query)}
-                        </p>
-                      )}
-                      {user.bio && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                          {highlightAndTruncate(user.bio, query, 150)}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                        <span>{user.totalKarma || 0} karma</span>
-                        <span>{user._count?.posts || 0} posts</span>
-                        <span>{user._count?.comments || 0} comments</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* Communities */}
-          {(activeTab === 'all' || activeTab === 'communities') && results.communities.length > 0 && (
-            <div className="space-y-3">
-              {activeTab === 'all' && (
-                <h2 className="text-lg font-bold text-gray-800 px-2 mt-6">Communities</h2>
-              )}
-              {results.communities.map((community) => (
-                <Link
-                  key={community.id}
-                  href={`/m/${community.name}`}
-                  className="block bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-4 hover:shadow-elevated transition-all shadow-soft"
-                >
-                  <div className="flex items-center gap-4">
-                    {community.icon ? (
-                      <img
-                        src={community.icon}
-                        alt={community.displayName}
-                        className="w-12 h-12 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white text-lg font-bold">
-                        {community.displayName.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-800">
-                        {highlightText(community.displayName, query)}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        m/{highlightText(community.name, query)}
-                      </p>
-                      {community.description && (
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                          {highlightAndTruncate(community.description, query, 150)}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                        <span>{community._count?.members || 0} members</span>
-                        <span>{community._count?.posts || 0} posts</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {/* No Results */}
-          {!loading && results.total === 0 && (
-            <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 text-center shadow-soft">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-700 mb-2">No results found</h2>
-              <p className="text-gray-600">Try different keywords or check your spelling</p>
-            </div>
-          )}
+            </button>
+          ))}
         </div>
-      )}
-    </main>
-  )
-}
 
-export default function SearchPage() {
-  return (
-    <IridescenceLayout>
-      <div className="min-h-screen">
-        <NavbarEnhanced />
-        <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
-          <Sidebar />
-          <Suspense fallback={
-            <div className="flex-1 max-w-[640px] p-4 text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-              <p className="text-gray-500">Loading search results...</p>
-            </div>
-          }>
-            <SearchResults />
-          </Suspense>
-        </div>
+        {/* Results */}
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+          </div>
+        ) : results ? (
+          <div className="space-y-6">
+            {/* Doctors Results */}
+            {(activeTab === 'all' || activeTab === 'doctors') && results.doctors && (
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Doctors
+                </h2>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {results.doctors.map((doctor: any) => (
+                    <Link
+                      key={doctor.id}
+                      href={`/u/${doctor.username}`}
+                      className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                          <User className="h-8 w-8 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-gray-900 mb-1">
+                            Dr. {doctor.username}
+                          </h3>
+                          {doctor.specialty && (
+                            <p className="text-sm text-blue-600 mb-2">{doctor.specialty}</p>
+                          )}
+                          {doctor.bio && (
+                            <p className="text-sm text-gray-600 line-clamp-2">{doctor.bio}</p>
+                          )}
+                          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                            {doctor.yearsOfExperience && (
+                              <span>{doctor.yearsOfExperience} years exp.</span>
+                            )}
+                            {doctor._count && (
+                              <span>{doctor._count.posts + doctor._count.comments} contributions</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Posts Results */}
+            {(activeTab === 'all' || activeTab === 'posts') && results.posts && (
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Posts
+                </h2>
+                <div className="space-y-4">
+                  {results.posts.map((post: any) => (
+                    <Link
+                      key={post.id}
+                      href={`/posts/${post.id}`}
+                      className="block bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                    >
+                      <h3 className="font-bold text-gray-900 mb-2">{post.title}</h3>
+                      {post.content && (
+                        <p className="text-gray-600 line-clamp-2 mb-3">{post.content}</p>
+                      )}
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span>by {post.author.username}</span>
+                        <span>•</span>
+                        <span>{post._count.comments} comments</span>
+                        <span>•</span>
+                        <span>{post._count.votes} votes</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* No Results */}
+            {activeTab !== 'all' && 
+             ((activeTab === 'doctors' && (!results.doctors || results.doctors.length === 0)) ||
+              (activeTab === 'posts' && (!results.posts || results.posts.length === 0))) && (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No results found</h3>
+                <p className="text-gray-600">Try adjusting your search terms</p>
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
-    </IridescenceLayout>
-  )
+    </div>
+  );
 }

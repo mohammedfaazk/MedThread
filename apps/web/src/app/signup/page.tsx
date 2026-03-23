@@ -64,6 +64,10 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  
+  // Consent checkboxes
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [acknowledgedEmergency, setAcknowledgedEmergency] = useState(false)
 
   // Common fields
   const [email, setEmail] = useState('')
@@ -782,9 +786,44 @@ export default function SignupPage() {
             </div>
           )}
 
+          {/* Consent Checkboxes */}
+          <div className="space-y-4 mt-6 bg-gray-50 border border-gray-200 rounded-xl p-6">
+            <h3 className="font-semibold text-gray-900 mb-3">Required Acknowledgments</h3>
+            
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                required
+              />
+              <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                I agree to the{' '}
+                <Link href="/terms" target="_blank" className="text-blue-600 hover:text-blue-700 font-semibold underline">
+                  Terms of Service
+                </Link>{' '}
+                and understand that MedThread does not provide medical advice, diagnosis, or treatment.
+              </span>
+            </label>
+
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={acknowledgedEmergency}
+                onChange={(e) => setAcknowledgedEmergency(e.target.checked)}
+                className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                required
+              />
+              <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                I understand that this platform <strong>cannot provide emergency medical services</strong> and I should call emergency services (112 in India) for urgent medical situations.
+              </span>
+            </label>
+          </div>
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !agreedToTerms || !acknowledgedEmergency}
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] shadow-lg mt-8"
           >
             {loading ? (

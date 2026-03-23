@@ -1,0 +1,530 @@
+// 🚀 UNIQUE FEATURES SCHEMA - Game-Changing Models
+// Add these to your main schema.prisma file
+
+// ============================================
+// 1. DISEASE OUTBREAK PREDICTION & ALERTS
+// ============================================
+
+model SymptomCluster {
+  id              String   @id @default(cuid())
+  symptoms        Json     // Array of clustered symptoms
+  location        String   // Geographic area (city/district)
+  pincode         String?
+  city            String?
+  district        String?
+  state           String?
+  patientCount    Int      @default(1)
+  timeWindow      String   // "7_DAYS", "30_DAYS"
+  severity        String   // "OUTBREAK", "WARNING", "NORMAL"
+  predictedDisease String?
+  confidence      Float    // 0-1 confidence score
+  growthRate      Float?   // Percentage increase
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([location])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([pincode])
+  @@index([city])
+}
+
+model OutbreakAlert {
+  id            String   @id @default(cuid())
+  disease       String
+  location      String
+  pincode       String?
+  city          String?
+  district      String?
+  state         String?
+  severity      String   // "CRITICAL", "HIGH", "MEDIUM", "LOW"
+  affectedCount Int
+  growthRate    Float    // Percentage increase
+  alertMessage  String
+  actionItems   Json     // Array of recommended actions
+  isActive      Boolean  @default(true)
+  dismissedBy   Json?    // Array of user IDs who dismissed
+  createdAt     DateTime @default(now())
+  expiresAt     DateTime?
+
+  @@index([location])
+  @@index([severity])
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([pincode])
+  @@index([city])
+}
+
+// ============================================
+// 2. SMART DOCTOR MATCHING
+// ============================================
+
+model DoctorSpecialization {
+  id              String   @id @default(cuid())
+  doctorId        String
+  condition       String   // Specific condition (e.g., "Type 2 Diabetes", "Migraine")
+  patientCount    Int      @default(0)
+  successRate     Float    @default(0) // 0-100 percentage
+  avgRecoveryDays Int?
+  totalTreatments Int      @default(0)
+  curedCount      Int      @default(0)
+  improvedCount   Int      @default(0)
+  patientReviews  Json?    // Condition-specific reviews
+  lastUpdated     DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@unique([doctorId, condition])
+  @@index([doctorId])
+  @@index([condition])
+  @@index([successRate])
+}
+
+model SmartMatch {
+  id              String   @id @default(cuid())
+  patientId       String
+  symptoms        Json     // Patient's symptoms
+  medicalHistory  Json?    // Relevant medical history
+  preferences     Json?    // Language, location, etc.
+  matchedDoctors  Json     // Array of {doctorId, matchScore, reasons}
+  matchCriteria   Json     // Criteria used for matching
+  topMatchId      String?  // ID of best match
+  createdAt       DateTime @default(now())
+
+  @@index([patientId])
+  @@index([createdAt])
+}
+
+// ============================================
+// 3. HEALTH TIMELINE & PREDICTIONS
+// ============================================
+
+model HealthTimeline {
+  id          String   @id @default(cuid())
+  userId      String
+  eventType   String   // "SYMPTOM", "TREATMENT", "OUTCOME", "PREDICTION", "MEDICATION", "APPOINTMENT"
+  title       String
+  description String?
+  data        Json     // Event-specific data
+  severity    Int?     // 1-10 scale
+  timestamp   DateTime
+  linkedEvents Json?   // Array of related event IDs
+  aiInsights  Json?    // AI-generated insights
+  tags        String[] // For filtering
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([timestamp])
+  @@index([severity])
+}
+
+model HealthPrediction {
+  id              String   @id @default(cuid())
+  userId          String
+  predictionType  String   // "SYMPTOM", "CONDITION", "RISK"
+  prediction      String   // What is predicted
+  confidence      Float    // 0-1 confidence score
+  basedOn         Json     // Data points used for prediction
+  preventionTips  Json     // Array of prevention suggestions
+  riskLevel       String   // "LOW", "MEDIUM", "HIGH"
+  createdAt       DateTime @default(now())
+  validUntil      DateTime
+  wasAccurate     Boolean? // User feedback on accuracy
+  userFeedback    String?
+
+  @@index([userId])
+  @@index([predictionType])
+  @@index([createdAt])
+  @@index([validUntil])
+}
+
+// ============================================
+// 4. COMMUNITY HEALTH & GAMIFICATION
+// ============================================
+
+model CommunityHealthScore {
+  id              String   @id @default(cuid())
+  location        String   // City or district
+  pincode         String?
+  city            String?
+  district        String?
+  state           String?
+  healthScore     Float    // 0-100
+  activeUsers     Int      @default(0)
+  doctorDensity   Float    // Doctors per 1000 users
+  avgResponseTime Int?     // In minutes
+  commonIssues    Json     // Top health issues in area
+  rank            Int?     // Ranking among areas
+  trendDirection  String?  // "IMPROVING", "STABLE", "DECLINING"
+  calculatedAt    DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([location])
+  @@index([healthScore])
+  @@index([rank])
+  @@index([pincode])
+  @@index([city])
+}
+
+model HealthChallenge {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  type          String   // "STEPS", "WATER", "SLEEP", "MEDITATION", "MEDICATION_ADHERENCE"
+  goal          Int      // Target value
+  unit          String   // "steps", "glasses", "hours"
+  participants  Json     // Array of {userId, progress, joinedAt}
+  startDate     DateTime
+  endDate       DateTime
+  rewards       Json     // Array of rewards
+  leaderboard   Json     // Top performers
+  isActive      Boolean  @default(true)
+  createdBy     String?  // User or system
+  location      String?  // Optional location-based challenge
+  createdAt     DateTime @default(now())
+
+  @@index([type])
+  @@index([isActive])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model UserHealthScore {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  overallScore    Float    @default(50) // 0-100
+  activityScore   Float    @default(50)
+  adherenceScore  Float    @default(50)
+  engagementScore Float    @default(50)
+  improvementRate Float    @default(0)  // Percentage change
+  streak          Int      @default(0)  // Days of consistent activity
+  achievements    Json     // Array of earned achievements
+  level           Int      @default(1)
+  experiencePoints Int     @default(0)
+  rank            Int?     // Global ranking
+  lastUpdated     DateTime @updatedAt
+  createdAt       DateTime @default(now())
+
+  @@index([overallScore])
+  @@index([rank])
+  @@index([level])
+}
+
+// ============================================
+// 5. SYMPTOM DIARY & PHOTO ANALYSIS
+// ============================================
+
+model SymptomDiary {
+  id          String   @id @default(cuid())
+  userId      String
+  symptomType String   // "RASH", "WOUND", "SWELLING", "DISCOLORATION", etc.
+  bodyPart    String?  // "ARM", "LEG", "FACE", etc.
+  photos      Json     // Array of {url, timestamp, aiAnalysis}
+  userNotes   String?
+  severity    Int      // 1-10
+  painLevel   Int?     // 1-10
+  tags        String[]
+  isResolved  Boolean  @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([symptomType])
+  @@index([createdAt])
+  @@index([isResolved])
+}
+
+model PhotoAnalysis {
+  id              String   @id @default(cuid())
+  diaryId         String
+  photoUrl        String
+  analysis        Json     // AI-detected features (color, size, texture)
+  comparison      Json?    // Comparison with previous photos
+  healingRate     Float?   // Percentage improvement
+  recommendations Json?    // AI recommendations
+  confidence      Float    // 0-1 confidence in analysis
+  createdAt       DateTime @default(now())
+
+  @@index([diaryId])
+  @@index([createdAt])
+}
+
+// ============================================
+// 6. MEDICATION MANAGEMENT
+// ============================================
+
+model MedicationProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  medications     Json     // Array of current medications
+  schedule        Json     // Reminder schedule
+  interactions    Json     // Known drug interactions
+  adherenceRate   Float    @default(100) // Percentage
+  sideEffects     Json     // Reported side effects
+  effectiveness   Json     // User-reported effectiveness per medication
+  lastReviewDate  DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model MedicationReminder {
+  id          String   @id @default(cuid())
+  userId      String
+  medication  String
+  dosage      String
+  frequency   String   // "DAILY", "TWICE_DAILY", "WEEKLY", etc.
+  time        DateTime
+  taken       Boolean  @default(false)
+  takenAt     DateTime?
+  skipped     Boolean  @default(false)
+  skipReason  String?
+  snoozedUntil DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([time])
+  @@index([taken])
+}
+
+model MedicationInteraction {
+  id          String   @id @default(cuid())
+  medication1 String
+  medication2 String
+  severity    String   // "SEVERE", "MODERATE", "MILD"
+  description String
+  symptoms    Json     // Possible interaction symptoms
+  action      String   // What to do
+  sources     Json?    // Medical sources
+
+  @@unique([medication1, medication2])
+  @@index([severity])
+}
+
+// ============================================
+// 7. SECOND OPINION MARKETPLACE
+// ============================================
+
+model SecondOpinionRequest {
+  id              String   @id @default(cuid())
+  patientId       String
+  originalDoctorId String?
+  condition       String
+  diagnosis       String
+  treatmentPlan   Json
+  medicalRecords  Json     // Array of document URLs
+  symptoms        Json
+  urgency         String   // "URGENT", "NORMAL", "LOW"
+  budget          Float?
+  status          String   @default("OPEN") // "OPEN", "IN_REVIEW", "COMPLETED", "CANCELLED"
+  responses       Json     // Array of doctor responses
+  consensusView   Json?    // Aggregated consensus
+  selectedDoctorId String?
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  @@index([patientId])
+  @@index([status])
+  @@index([urgency])
+  @@index([createdAt])
+}
+
+model SecondOpinionResponse {
+  id          String   @id @default(cuid())
+  requestId   String
+  doctorId    String
+  opinion     String
+  agreement   String   // "AGREE", "PARTIALLY_AGREE", "DISAGREE"
+  alternative Json?    // Alternative diagnosis/treatment
+  reasoning   String
+  confidence  Float    // 0-1
+  price       Float?
+  createdAt   DateTime @default(now())
+
+  @@index([requestId])
+  @@index([doctorId])
+  @@index([createdAt])
+}
+
+// ============================================
+// 8. FAMILY HEALTH DASHBOARD
+// ============================================
+
+model FamilyGroup {
+  id          String   @id @default(cuid())
+  name        String
+  adminUserId String
+  members     Json     // Array of {userId, relation, permissions}
+  sharedData  Json?    // What data is shared
+  emergencyContacts Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([adminUserId])
+}
+
+model FamilyMemberAccess {
+  id          String   @id @default(cuid())
+  familyGroupId String
+  userId      String
+  memberId    String   // The family member they can access
+  permissions Json     // What they can view/edit
+  relation    String   // "PARENT", "CHILD", "SPOUSE", "SIBLING"
+  grantedAt   DateTime @default(now())
+  expiresAt   DateTime?
+
+  @@unique([familyGroupId, userId, memberId])
+  @@index([userId])
+  @@index([memberId])
+}
+
+// ============================================
+// 9. EMERGENCY SOS
+// ============================================
+
+model EmergencySOS {
+  id              String   @id @default(cuid())
+  userId          String
+  location        Json     // {lat, lng, address}
+  medicalHistory  Json     // Critical medical info
+  emergencyType   String   // "HEART_ATTACK", "ACCIDENT", "SEVERE_PAIN", etc.
+  status          String   @default("ACTIVE") // "ACTIVE", "RESPONDED", "RESOLVED", "CANCELLED"
+  responders      Json?    // Who responded
+  notifiedContacts Json    // Emergency contacts notified
+  resolvedAt      DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// 10. PATIENT SUPPORT GROUPS
+// ============================================
+
+model SupportGroup {
+  id          String   @id @default(cuid())
+  name        String
+  condition   String   // Specific condition
+  description String
+  isPrivate   Boolean  @default(false)
+  moderators  Json     // Array of user IDs (doctors/patients)
+  members     Json     // Array of {userId, joinedAt, isAnonymous}
+  memberCount Int      @default(0)
+  rules       Json?
+  meetups     Json?    // Scheduled meetups
+  resources   Json?    // Helpful resources
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([condition])
+  @@index([isPrivate])
+  @@index([memberCount])
+}
+
+model SupportGroupPost {
+  id          String   @id @default(cuid())
+  groupId     String
+  authorId    String
+  isAnonymous Boolean  @default(false)
+  title       String
+  content     String
+  type        String   // "QUESTION", "SUCCESS_STORY", "TIP", "SUPPORT"
+  upvotes     Int      @default(0)
+  commentCount Int     @default(0)
+  isPinned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([groupId])
+  @@index([authorId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============================================
+// 11. PERSONALIZED HEALTH EDUCATION
+// ============================================
+
+model HealthEducationContent {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  contentType String   // "ARTICLE", "VIDEO", "INFOGRAPHIC", "QUIZ"
+  conditions  String[] // Related conditions
+  difficulty  String   // "BEGINNER", "INTERMEDIATE", "ADVANCED"
+  language    String   @default("en")
+  duration    Int?     // In minutes
+  mediaUrl    String?
+  quiz        Json?    // Quiz questions if applicable
+  views       Int      @default(0)
+  rating      Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([conditions])
+  @@index([language])
+  @@index([contentType])
+}
+
+model UserEducationProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  contentId   String
+  progress    Float    @default(0) // 0-100 percentage
+  completed   Boolean  @default(false)
+  quizScore   Float?   // If quiz taken
+  timeSpent   Int      @default(0) // In seconds
+  lastAccessed DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, contentId])
+  @@index([userId])
+  @@index([completed])
+}
+
+// ============================================
+// 12. AI HEALTH ASSISTANT CONVERSATIONS
+// ============================================
+
+model AIConversation {
+  id          String   @id @default(cuid())
+  userId      String
+  sessionId   String
+  messages    Json     // Array of {role, content, timestamp}
+  context     Json?    // User's medical context
+  intent      String?  // Detected intent
+  urgency     String?  // Detected urgency level
+  escalated   Boolean  @default(false)
+  escalatedTo String?  // Doctor ID if escalated
+  satisfaction Float?  // User rating
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([escalated])
+  @@index([createdAt])
+}
+
+model AIInsight {
+  id          String   @id @default(cuid())
+  userId      String
+  insightType String   // "PATTERN", "RISK", "RECOMMENDATION", "CORRELATION"
+  title       String
+  description String
+  data        Json     // Supporting data
+  confidence  Float    // 0-1
+  priority    String   // "HIGH", "MEDIUM", "LOW"
+  actionable  Boolean  @default(true)
+  dismissed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([insightType])
+  @@index([priority])
+  @@index([dismissed])
+}

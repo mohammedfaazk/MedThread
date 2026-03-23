@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authenticate as auth } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { commentService } from '../services/comment.service';
+import { emergencyDetectionService } from '../services/emergency-detection.service';
 
 const router = Router();
 
@@ -14,6 +15,9 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
       return res.status(400).json({ error: 'Content and postId are required' });
     }
 
+    // Check for emergency keywords
+    const emergencyResult = emergencyDetectionService.detectEmergency(content);
+
     const comment = await commentService.createComment({
       content,
       authorId: req.userId!,
@@ -21,7 +25,25 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
       parentId,
     });
 
-    res.status(201).json(comment);
+    // Log emergency detection if found
+    if (emergencyResult.isEmergency) {
+      await emergencyDetectionService.logEmergencyDetection({
+        userId: req.userId!,
+        contentType: 'COMMENT',
+        contentId: comment.id,
+        level: emergencyResult.level,
+        keywords: emergencyResult.matchedKeywords,
+        confidence: emergencyResult.confidence
+      });
+    }
+
+    res.status(201).json({
+      ...comment,
+      emergencyDetection: emergencyResult.isEmergency ? {
+        level: emergencyResult.level,
+        shouldShowAlert: emergencyDetectionService.shouldShowEmergencyAlert(emergencyResult)
+      } : null
+    });
   } catch (error) {
     next(error);
   }

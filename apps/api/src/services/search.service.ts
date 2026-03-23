@@ -1,98 +1,152 @@
 import { prisma } from '@medthread/database';
 
-// In-memory store for popular searches (in production, use Redis or database)
-const searchCountMap = new Map<string, number>();
-const POPULAR_SEARCHES_LIMIT = 10;
-
-interface SearchOptions {
-  query: string;
-  type?: 'all' | 'posts' | 'users' | 'communities';
-  limit?: number;
-  offset?: number;
-}
-
-interface SearchPostsOptions {
-  query: string;
-  community?: string;
-  limit?: number;
-  offset?: number;
-}
-
-interface SearchUsersOptions {
-  query: string;
-  role?: string;
-  limit?: number;
-  offset?: number;
-}
-
-interface SearchCommunitiesOptions {
-  query: string;
-  limit?: number;
-  offset?: number;
-}
-
 export class SearchService {
   /**
-   * Universal search across posts, users, and communities
+   * Search doctors by specialty, location, availability
    */
-  async search(options: SearchOptions) {
-    const { query, type = 'all', limit = 20, offset = 0 } = options;
+  async searchDoctors(params: {
+    query?: string;
+    specialty?: string;
+    subSpecialty?: string;
+    location?: string;
+    pincode?: string;
+    availability?: 'available' | 'all';
+    sortBy?: 'relevance' | 'rating' | 'experience' | 'responseTime';
+    limit?: number;
+    offset?: number;
+  }) {
+    const {
+      query,
+      specialty,
+      subSpecialty,
+      location,
+      pincode,
+      availability = 'all',
+      sortBy = 'relevance',
+      limit = 20,
+      offset = 0
+    } = params;
 
-    if (!query || query.trim().length === 0) {
-      return {
-        posts: [],
-        users: [],
-        communities: [],
-        total: 0
-      };
+    const where: any = {
+      role: { in: ['DOCTOR', 'VERIFIED_DOCTOR'] },
+      doctorVerificationStatus: 'APPROVED',
+      isSuspended: false
+    };
+
+    // Text search in username, bio, specialty
+    if (query) {
+      where.OR = [
+        { username: { contains: query, mode: 'insensitive' } },
+        { bio: { contains: query, mode: 'insensitive' } },
+        { specialty: { contains: query, mode: 'insensitive' } },
+        { subSpecialty: { contains: query, mode: 'insensitive' } },
+        { hospitalAffiliation: { contains: query, mode: 'insensitive' } }
+      ];
     }
 
-    const searchTerm = query.trim();
-
-    // Track search for popular searches
-    this.trackSearch(searchTerm);
-
-    if (type === 'posts' || type === 'all') {
-      const posts = await this.searchPosts({ query: searchTerm, limit, offset });
-      if (type === 'posts') {
-        return { posts, users: [], communities: [], total: posts.length };
-      }
+    // Filter by specialty
+    if (specialty) {
+      where.specialty = specialty;
     }
 
-    if (type === 'users' || type === 'all') {
-      const users = await this.searchUsers({ query: searchTerm, limit, offset });
-      if (type === 'users') {
-        return { posts: [], users, communities: [], total: users.length };
-      }
+    if (subSpecialty) {
+      where.subSpecialty = { contains: subSpecialty, mode: 'insensitive' };
     }
 
-    if (type === 'communities' || type === 'all') {
-      const communities = await this.searchCommunities({ query: searchTerm, limit, offset });
-      if (type === 'communities') {
-        return { posts: [], users: [], communities, total: communities.length };
-      }
+    // Filter by location
+    if (pincode) {
+      where.pincode = pincode;
+    } else if (location) {
+      where.OR = [
+        { clinicAddress: { contains: location, mode: 'insensitive' } },
+        { hospitalAffiliation: { contains: location, mode: 'insensitive' } }
+      ];
     }
 
-    // Search all types
-    const [posts, users, communities] = await Promise.all([
-      this.searchPosts({ query: searchTerm, limit: 10, offset: 0 }),
-      this.searchUsers({ query: searchTerm, limit: 10, offset: 0 }),
-      this.searchCommunities({ query: searchTerm, limit: 10, offset: 0 })
-    ]);
+    // Build orderBy
+    let orderBy: any = {};
+    switch (sortBy) {
+      case 'experience':
+        orderBy = { yearsOfExperience: 'desc' };
+        break;
+      case 'rating':
+        orderBy = { totalKarma: 'desc' };
+        break;
+      case 'responseTime':
+        orderBy = { createdAt: 'desc' }; // Placeholder
+        break;
+      default:
+        orderBy = { totalKarma: 'desc' };
+    }
+
+    const doctors = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        username: true,
+        avatar: true,
+        bio: true,
+        specialty: true,
+        subSpecialty: true,
+        yearsOfExperience: true,
+        hospitalAffiliation: true,
+        clinicAddress: true,
+        pincode: true,
+        totalKarma: true,
+        verified: true,
+        doctorVerificationStatus: true,
+        doctorActivityMetrics: {
+          select: {
+            avgReplyTimeHours: true,
+            totalPatientsAcquired: true,
+            lastActiveAt: true
+          }
+        },
+        _count: {
+          select: {
+            posts: true,
+            comments: true
+          }
+        }
+      },
+      orderBy,
+      take: limit,
+      skip: offset
+    });
+
+    // Get total count
+    const total = await prisma.user.count({ where });
 
     return {
-      posts,
-      users,
-      communities,
-      total: posts.length + users.length + communities.length
+      doctors,
+      total,
+      hasMore: offset + doctors.length < total
     };
   }
 
   /**
-   * Search posts by title, content, or tags
+   * Search posts and medical content
    */
-  async searchPosts(options: SearchPostsOptions) {
-    const { query, community, limit = 20, offset = 0 } = options;
+  async searchPosts(params: {
+    query: string;
+    communityId?: string;
+    authorRole?: 'DOCTOR' | 'PATIENT' | 'all';
+    priority?: 'HIGH' | 'MEDIUM' | 'LOW';
+    dateFrom?: Date;
+    dateTo?: Date;
+    limit?: number;
+    offset?: number;
+  }) {
+    const {
+      query,
+      communityId,
+      authorRole,
+      priority,
+      dateFrom,
+      dateTo,
+      limit = 20,
+      offset = 0
+    } = params;
 
     const where: any = {
       isDraft: false,
@@ -103,10 +157,26 @@ export class SearchService {
       ]
     };
 
-    if (community) {
-      where.community = {
-        name: community
+    if (communityId) {
+      where.communityId = communityId;
+    }
+
+    if (authorRole && authorRole !== 'all') {
+      where.author = {
+        role: authorRole
       };
+    }
+
+    if (priority) {
+      where.priority = {
+        priorityLevel: priority
+      };
+    }
+
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) where.createdAt.gte = dateFrom;
+      if (dateTo) where.createdAt.lte = dateTo;
     }
 
     const posts = await prisma.post.findMany({
@@ -116,11 +186,9 @@ export class SearchService {
           select: {
             id: true,
             username: true,
+            avatar: true,
             role: true,
-            verified: true,
-            doctorVerificationStatus: true,
-            specialty: true,
-            avatar: true
+            verified: true
           }
         },
         community: {
@@ -131,256 +199,120 @@ export class SearchService {
             icon: true
           }
         },
+        priority: true,
         _count: {
           select: {
-            votes: true,
-            comments: true
+            comments: true,
+            votes: true
           }
         }
       },
       orderBy: [
-        { isPinned: 'desc' },
+        { score: 'desc' },
         { createdAt: 'desc' }
       ],
       take: limit,
       skip: offset
     });
 
-    // Calculate scores
-    return posts.map(post => {
-      const upvotes = post._count.votes; // Simplified, should calculate actual upvotes
-      const score = post.upvotes - post.downvotes;
-      
-      return {
-        ...post,
-        score,
-        commentCount: post._count.comments
-      };
-    });
-  }
+    const total = await prisma.post.count({ where });
 
-  /**
-   * Search users by username, specialty, or role
-   */
-  async searchUsers(options: SearchUsersOptions) {
-    const { query, role, limit = 20, offset = 0 } = options;
-
-    const where: any = {
-      OR: [
-        { username: { contains: query, mode: 'insensitive' } },
-        { specialty: { contains: query, mode: 'insensitive' } },
-        { bio: { contains: query, mode: 'insensitive' } }
-      ]
+    return {
+      posts,
+      total,
+      hasMore: offset + posts.length < total
     };
-
-    if (role) {
-      where.role = role;
-    }
-
-    const users = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        verified: true,
-        doctorVerificationStatus: true,
-        specialty: true,
-        subSpecialty: true,
-        bio: true,
-        avatar: true,
-        totalKarma: true,
-        createdAt: true,
-        _count: {
-          select: {
-            posts: true,
-            comments: true
-          }
-        }
-      },
-      orderBy: [
-        { verified: 'desc' },
-        { totalKarma: 'desc' }
-      ],
-      take: limit,
-      skip: offset
-    });
-
-    return users;
   }
 
   /**
-   * Search communities by name or description
+   * Search symptoms and conditions
    */
-  async searchCommunities(options: SearchCommunitiesOptions) {
-    const { query, limit = 20, offset = 0 } = options;
+  async searchSymptoms(query: string) {
+    // Common symptoms database
+    const commonSymptoms = [
+      'fever', 'headache', 'cough', 'cold', 'sore throat', 'body ache',
+      'fatigue', 'nausea', 'vomiting', 'diarrhea', 'constipation',
+      'chest pain', 'shortness of breath', 'dizziness', 'rash',
+      'abdominal pain', 'back pain', 'joint pain', 'muscle pain',
+      'anxiety', 'depression', 'insomnia', 'weight loss', 'weight gain'
+    ];
 
-    const communities = await prisma.community.findMany({
+    const matches = commonSymptoms.filter(symptom =>
+      symptom.toLowerCase().includes(query.toLowerCase())
+    );
+
+    // Also search in actual symptom reports
+    const recentSymptoms = await prisma.symptomReport.findMany({
       where: {
-        isPrivate: false, // Only show public communities in search
-        OR: [
-          { name: { contains: query, mode: 'insensitive' } },
-          { displayName: { contains: query, mode: 'insensitive' } },
-          { description: { contains: query, mode: 'insensitive' } }
-        ]
-      },
-      include: {
-        _count: {
-          select: {
-            members: true,
-            posts: true
-          }
+        symptoms: {
+          path: '$[*].symptom',
+          string_contains: query
         }
       },
-      orderBy: {
-        memberCount: 'desc'
+      select: {
+        symptoms: true
       },
-      take: limit,
-      skip: offset
+      take: 10,
+      distinct: ['symptoms']
     });
 
-    return communities;
+    return {
+      suggestions: matches,
+      recentReports: recentSymptoms
+    };
   }
 
   /**
-   * Get autocomplete suggestions
+   * Autocomplete search
    */
-  async getAutocompleteSuggestions(query: string, limit = 5) {
-    if (!query || query.trim().length < 2) {
-      return [];
-    }
+  async autocomplete(params: {
+    query: string;
+    type: 'doctors' | 'posts' | 'symptoms' | 'all';
+    limit?: number;
+  }) {
+    const { query, type, limit = 5 } = params;
 
-    const searchTerm = query.trim();
+    const results: any = {};
 
-    // Get top results from each category
-    const [posts, users, communities] = await Promise.all([
-      prisma.post.findMany({
+    if (type === 'doctors' || type === 'all') {
+      results.doctors = await prisma.user.findMany({
         where: {
-          isDraft: false,
-          isRemoved: false,
-          title: { contains: searchTerm, mode: 'insensitive' }
-        },
-        select: {
-          id: true,
-          title: true,
-          type: true
-        },
-        take: limit,
-        orderBy: { createdAt: 'desc' }
-      }),
-      prisma.user.findMany({
-        where: {
-          username: { contains: searchTerm, mode: 'insensitive' }
+          role: { in: ['DOCTOR', 'VERIFIED_DOCTOR'] },
+          doctorVerificationStatus: 'APPROVED',
+          OR: [
+            { username: { contains: query, mode: 'insensitive' } },
+            { specialty: { contains: query, mode: 'insensitive' } }
+          ]
         },
         select: {
           id: true,
           username: true,
-          role: true,
-          verified: true
+          avatar: true,
+          specialty: true
         },
-        take: limit,
-        orderBy: { totalKarma: 'desc' }
-      }),
-      prisma.community.findMany({
+        take: limit
+      });
+    }
+
+    if (type === 'posts' || type === 'all') {
+      results.posts = await prisma.post.findMany({
         where: {
-          isPrivate: false,
-          OR: [
-            { name: { contains: searchTerm, mode: 'insensitive' } },
-            { displayName: { contains: searchTerm, mode: 'insensitive' } }
-          ]
+          isDraft: false,
+          title: { contains: query, mode: 'insensitive' }
         },
         select: {
           id: true,
-          name: true,
-          displayName: true,
-          icon: true
+          title: true
         },
-        take: limit,
-        orderBy: { memberCount: 'desc' }
-      })
-    ]);
-
-    return {
-      posts: posts.map(p => ({ ...p, type: 'post' })),
-      users: users.map(u => ({ ...u, type: 'user' })),
-      communities: communities.map(c => ({ ...c, type: 'community' }))
-    };
-  }
-
-  /**
-   * Search doctors by specialty
-   */
-  async searchDoctors(specialty?: string, limit = 20, offset = 0) {
-    const where: any = {
-      OR: [
-        { role: 'VERIFIED_DOCTOR' },
-        {
-          AND: [
-            { role: 'DOCTOR' },
-            { doctorVerificationStatus: 'APPROVED' }
-          ]
-        }
-      ]
-    };
-
-    if (specialty) {
-      where.specialty = { contains: specialty, mode: 'insensitive' };
+        take: limit
+      });
     }
 
-    const doctors = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        role: true,
-        verified: true,
-        doctorVerificationStatus: true,
-        specialty: true,
-        subSpecialty: true,
-        yearsOfExperience: true,
-        hospitalAffiliation: true,
-        bio: true,
-        avatar: true,
-        totalKarma: true,
-        _count: {
-          select: {
-            posts: true,
-            comments: true
-          }
-        }
-      },
-      orderBy: [
-        { verified: 'desc' },
-        { totalKarma: 'desc' }
-      ],
-      take: limit,
-      skip: offset
-    });
+    if (type === 'symptoms' || type === 'all') {
+      results.symptoms = await this.searchSymptoms(query);
+    }
 
-    return doctors;
-  }
-
-  /**
-   * Track search query for popular searches
-   */
-  private trackSearch(query: string) {
-    const lowerQuery = query.toLowerCase();
-    const currentCount = searchCountMap.get(lowerQuery) || 0;
-    searchCountMap.set(lowerQuery, currentCount + 1);
-  }
-
-  /**
-   * Get popular searches
-   */
-  getPopularSearches(limit = 10): Array<{ query: string; count: number }> {
-    const searches = Array.from(searchCountMap.entries())
-      .map(([query, count]) => ({ query, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, limit);
-
-    return searches;
+    return results;
   }
 }
 
