@@ -55,6 +55,17 @@ import { blockRouter } from './routes/block.routes';
 import healthProfileRouter from './routes/health-profile';
 import dietPlanRouter from './routes/diet-plan';
 import { usersRouter } from './routes/users.routes';
+import medicationRouter from './routes/medication';
+import symptomDiaryRouter from './routes/symptom-diary';
+import healthTimelineRouter from './routes/health-timeline';
+import healthChallengesRouter from './routes/health-challenges';
+import supportGroupsRouter from './routes/support-groups';
+import healthRiskRouter from './routes/health-risk';
+import uniqueFeaturesRouter from './routes/unique-features';
+import voiceMessagesRouter from './routes/voice-messages';
+import aiDetectiveRouter from './routes/ai-detective';
+import secondOpinionRouter from './routes/second-opinion';
+import familyRouter from './routes/family';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
 import { sanitizeInput } from './middleware/sanitize';
@@ -179,6 +190,29 @@ app.use('/api/block', blockRouter);
 // Health Profile & Diet Planner
 app.use('/api/v1/health-profile', healthProfileRouter);
 app.use('/api/v1/diet-plan', dietPlanRouter);
+
+// Medical Features
+app.use('/api/v1/medications', medicationRouter);
+app.use('/api/v1/symptom-diary', symptomDiaryRouter);
+app.use('/api/v1/health-timeline', healthTimelineRouter);
+app.use('/api/v1/health-challenges', healthChallengesRouter);
+app.use('/api/v1/support-groups', supportGroupsRouter);
+app.use('/api/v1/health-risk', healthRiskRouter);
+
+// Unique Features
+app.use('/api/v1/unique-features', uniqueFeaturesRouter);
+
+// Voice Messages
+app.use('/api/v1/voice-messages', voiceMessagesRouter);
+
+// AI Disease Detective
+app.use('/api/v1/ai-detective', aiDetectiveRouter);
+
+// Second Opinion Marketplace
+app.use('/api/v1/second-opinion', secondOpinionRouter);
+
+// Family Health Dashboard
+app.use('/api/v1/family', familyRouter);
 
 // Users System (v2)
 app.use('/api/v2/users', usersRouter);
