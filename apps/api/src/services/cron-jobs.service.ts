@@ -373,6 +373,11 @@ export class CronJobsService {
       await this.calculateDailyAnalytics();
     });
 
+    // Run symptom heatmap aggregation daily at 2 AM
+    cron.schedule('0 2 * * *', async () => {
+      await this.runSymptomHeatmapAggregation();
+    });
+
     // Calculate health trends every 6 hours
     cron.schedule('0 */6 * * *', async () => {
       await this.calculateHealthTrends();
@@ -448,6 +453,21 @@ export class CronJobsService {
       console.log(`[CRON] Analyzed ${result.length} communities`);
     } catch (error) {
       console.error('[CRON] Error calculating community activity:', error);
+    }
+  }
+
+  /**
+   * Run symptom heatmap aggregation
+   */
+  async runSymptomHeatmapAggregation() {
+    console.log('[CRON] Running symptom heatmap aggregation...');
+    
+    try {
+      const { runHeatmapAggregation } = require('./heatmapAggregator.service');
+      await runHeatmapAggregation();
+      console.log('[CRON] Symptom heatmap aggregation completed successfully');
+    } catch (error) {
+      console.error('[CRON] Error running symptom heatmap aggregation:', error);
     }
   }
 }

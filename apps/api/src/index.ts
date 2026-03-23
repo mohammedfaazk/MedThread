@@ -114,6 +114,8 @@ app.use(cors({
   origin: [
     'http://localhost:3000',
     'http://localhost:3003',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3003',
     process.env.CORS_ORIGIN || 'http://localhost:3000'
   ],
   credentials: true, // Allow cookies
@@ -238,4 +240,11 @@ httpServer.listen(PORT, () => {
   // Initialize cron jobs
   console.log('⏰ Initializing cron jobs...');
   cronJobsService.initializeCronJobs();
+
+  // Run heatmap aggregation once on startup in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔄 Running initial heatmap aggregation for development...');
+    const { runHeatmapAggregation } = require('./services/heatmapAggregator.service');
+    runHeatmapAggregation().catch(console.error);
+  }
 });

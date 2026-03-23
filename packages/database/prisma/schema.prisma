@@ -27,6 +27,9 @@ model User {
   clinicAddress                                   String?
   phone                                           String?
   pincode                                         String?
+  city                                            String?
+  district                                        String?
+  state                                           String?
   kycDocuments                                    Json?
   verificationDocuments                           Json?
   verificationNotes                               String?
@@ -414,19 +417,22 @@ model Availability {
 }
 
 model Appointment {
-  id           String            @id @default(cuid())
-  patientId    String
-  doctorId     String
-  startTime    DateTime
-  endTime      DateTime
-  status       AppointmentStatus @default(PENDING)
-  reason       String?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-  doctor       User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
-  patient      User              @relation("PatientAppointments", fields: [patientId], references: [id])
-  conversation Conversation?
-  feedback     PatientFeedback[]
+  id            String            @id @default(cuid())
+  patientId     String
+  doctorId      String
+  startTime     DateTime
+  endTime       DateTime
+  status        AppointmentStatus @default(PENDING)
+  reason        String?
+  chiefComplaint String?
+  notes         String?
+  diagnosisTag  String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  doctor        User              @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  patient       User              @relation("PatientAppointments", fields: [patientId], references: [id])
+  conversation  Conversation?
+  feedback      PatientFeedback[]
 
   @@index([patientId])
   @@index([doctorId])
@@ -1320,4 +1326,22 @@ model DoctorEndorsement {
   @@unique([postId, doctorId])
   @@index([postId])
   @@index([doctorId])
+}
+
+model SymptomHeatmapStat {
+  id           String   @id @default(uuid())
+  regionType   String
+  regionName   String
+  symptomTag   String
+  caseCount    Int      @default(0)
+  severityAvg  Float    @default(0)
+  spikeRatio   Float    @default(1)
+  alertLevel   String   @default("none")
+  source       String
+  reportDate   DateTime @db.Date
+  createdAt    DateTime @default(now())
+
+  @@unique([regionType, regionName, symptomTag, reportDate])
+  @@index([regionType, regionName, reportDate])
+  @@index([symptomTag, reportDate])
 }

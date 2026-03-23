@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import 'leaflet/dist/leaflet.css'
 import { SocketProvider } from '@/context/SocketContext'
 import { JWTAuthProvider } from '@/context/JWTAuthContext'
 import { UserProvider } from '@/context/UserContext'
@@ -7,6 +8,7 @@ import { DEFAULT_SEO } from '@/lib/seo'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import QueryProvider from '@/components/QueryProvider'
 import dynamic from 'next/dynamic'
 
 const MobileNavigation = dynamic(() => import('@/components/MobileNavigation').then(m => ({ default: m.MobileNavigation })), { ssr: false })
@@ -76,6 +78,10 @@ export const metadata: Metadata = {
     statusBarStyle: 'default',
   },
 
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
+
   formatDetection: {
     telephone: false,
     email: false,
@@ -99,7 +105,7 @@ export default function RootLayout({
       <head>
         <link rel="canonical" href={DEFAULT_SEO.url} />
         <meta name="theme-color" content="#3B82F6" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className="antialiased">
@@ -113,16 +119,18 @@ export default function RootLayout({
           easing="ease-out"
         />
         <ErrorBoundary>
-          <JWTAuthProvider>
-            <UserProvider>
-              <SocketProvider>
-                <AnalyticsProvider>
-                  {children}
-                  <MobileNavigation />
-                </AnalyticsProvider>
-              </SocketProvider>
-            </UserProvider>
-          </JWTAuthProvider>
+          <QueryProvider>
+            <JWTAuthProvider>
+              <UserProvider>
+                <SocketProvider>
+                  <AnalyticsProvider>
+                    {children}
+                    <MobileNavigation />
+                  </AnalyticsProvider>
+                </SocketProvider>
+              </UserProvider>
+            </JWTAuthProvider>
+          </QueryProvider>
         </ErrorBoundary>
       </body>
     </html>

@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.analyticsRouter = void 0;
+const express_1 = require("express");
+const analytics_controller_1 = require("../controllers/analytics.controller");
+const auth_1 = require("../middleware/auth");
+const router = (0, express_1.Router)();
+exports.analyticsRouter = router;
+router.get('/symptom-heatmap', auth_1.authenticate, analytics_controller_1.getSymptomHeatmap);
+router.get('/trends-series', auth_1.authenticate, analytics_controller_1.getTrendsSeries);
