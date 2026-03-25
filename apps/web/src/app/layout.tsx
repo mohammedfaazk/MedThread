@@ -1,138 +1,91 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import 'leaflet/dist/leaflet.css'
-import { SocketProvider } from '@/context/SocketContext'
-import { JWTAuthProvider } from '@/context/JWTAuthContext'
-import { UserProvider } from '@/context/UserContext'
-import { DEFAULT_SEO } from '@/lib/seo'
-import GoogleAnalytics from '@/components/GoogleAnalytics'
-import AnalyticsProvider from '@/components/AnalyticsProvider'
-import ErrorBoundary from '@/components/ErrorBoundary'
-import QueryProvider from '@/components/QueryProvider'
-import dynamic from 'next/dynamic'
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import '@/styles/accessibility.css';
+import { JWTAuthProvider } from '@/context/JWTAuthContext';
+import { AccessibilityProvider } from '@/contexts/AccessibilityContext';
+import { AccessibilityPanel } from '@/components/accessibility/AccessibilityPanel';
+import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { EmergencyBroadcastBanner } from '@/components/EmergencyBroadcastBanner';
 
-const MobileNavigation = dynamic(() => import('@/components/MobileNavigation').then(m => ({ default: m.MobileNavigation })), { ssr: false })
-const GlobalClickSpark = dynamic(() => import('@/components/GlobalClickSpark'), { ssr: false })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: {
-    default: DEFAULT_SEO.title,
-    template: `%s | ${DEFAULT_SEO.siteName}`,
-  },
-  description: DEFAULT_SEO.description,
-  keywords: DEFAULT_SEO.keywords.join(', '),
-  authors: [{ name: DEFAULT_SEO.siteName }],
-  creator: DEFAULT_SEO.siteName,
-  publisher: DEFAULT_SEO.siteName,
-  metadataBase: new URL(DEFAULT_SEO.url),
-  
-  openGraph: {
-    type: 'website',
-    locale: DEFAULT_SEO.locale,
-    url: DEFAULT_SEO.url,
-    siteName: DEFAULT_SEO.siteName,
-    title: DEFAULT_SEO.title,
-    description: DEFAULT_SEO.description,
-    images: [
-      {
-        url: DEFAULT_SEO.image,
-        width: 1200,
-        height: 630,
-        alt: DEFAULT_SEO.siteName,
-      },
-    ],
-  },
-
-  twitter: {
-    card: 'summary_large_image',
-    site: DEFAULT_SEO.twitterHandle,
-    creator: DEFAULT_SEO.twitterHandle,
-    title: DEFAULT_SEO.title,
-    description: DEFAULT_SEO.description,
-    images: [DEFAULT_SEO.image],
-  },
-
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-
-  icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
-  },
-
-  manifest: '/site.webmanifest',
-
+  title: 'MedThread - Healthcare Platform',
+  description: 'Connect with doctors, manage your health, and access medical resources',
+  manifest: '/manifest.json',
+  themeColor: '#2563eb',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
   appleWebApp: {
     capable: true,
-    title: DEFAULT_SEO.siteName,
     statusBarStyle: 'default',
-  },
-
-  other: {
-    'mobile-web-app-capable': 'yes',
-  },
-
-  formatDetection: {
-    telephone: false,
-    email: false,
-    address: false,
-  },
-
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
+    title: 'MedThread'
+  }
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
       <head>
-        <link rel="canonical" href={DEFAULT_SEO.url} />
-        <meta name="theme-color" content="#3B82F6" />
-        <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className="antialiased">
-        <GoogleAnalytics />
-        <GlobalClickSpark 
-          sparkColor="#00E5FF"
-          sparkCount={8}
-          sparkRadius={15}
-          sparkSize={13}
-          duration={400}
-          easing="ease-out"
-        />
+      <body className={inter.className}>
         <ErrorBoundary>
-          <QueryProvider>
-            <JWTAuthProvider>
-              <UserProvider>
-                <SocketProvider>
-                  <AnalyticsProvider>
-                    {children}
-                    <MobileNavigation />
-                  </AnalyticsProvider>
-                </SocketProvider>
-              </UserProvider>
-            </JWTAuthProvider>
-          </QueryProvider>
+          <JWTAuthProvider>
+            <AccessibilityProvider>
+              {/* Skip to main content link for screen readers */}
+              <a href="#main-content" className="skip-to-main">
+                Skip to main content
+              </a>
+
+              {/* Emergency Broadcasts */}
+              <EmergencyBroadcastBanner />
+
+              {/* Offline Indicator */}
+              <OfflineIndicator />
+
+              {/* Main Content */}
+              <main id="main-content">
+                {children}
+              </main>
+
+              {/* Accessibility Panel */}
+              <AccessibilityPanel />
+            </AccessibilityProvider>
+          </JWTAuthProvider>
         </ErrorBoundary>
+
+        {/* Keyboard navigation detection */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function handleFirstTab(e) {
+                  if (e.keyCode === 9) {
+                    document.body.classList.add('user-is-tabbing');
+                    window.removeEventListener('keydown', handleFirstTab);
+                    window.addEventListener('mousedown', handleMouseDownOnce);
+                  }
+                }
+                function handleMouseDownOnce() {
+                  document.body.classList.remove('user-is-tabbing');
+                  window.removeEventListener('mousedown', handleMouseDownOnce);
+                  window.addEventListener('keydown', handleFirstTab);
+                }
+                window.addEventListener('keydown', handleFirstTab);
+              })();
+            `
+          }}
+        />
       </body>
     </html>
-  )
+  );
 }

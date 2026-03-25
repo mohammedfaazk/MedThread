@@ -13,10 +13,11 @@ import { getImageUrl } from '@/lib/imageUrl'
 import { DoctorPublicStats } from '@/components/analytics/DoctorPublicStats'
 import { DoctorProfileGraphs } from '@/components/doctor/DoctorProfileGraphs'
 import { AnalyticsTracker } from '@/lib/analytics'
+import { ReviewsList } from '@/components/doctor/ReviewsList'
 
 export default function UserProfilePage({ params }: { params: { username: string } }) {
   const [showBooking, setShowBooking] = useState(false)
-  const [activeTab, setActiveTab] = useState<'posts' | 'comments' | 'about'>('posts')
+  const [activeTab, setActiveTab] = useState<'posts' | 'comments' | 'about' | 'reviews'>('posts')
   const [userPosts, setUserPosts] = useState<any[]>([])
   const [userComments, setUserComments] = useState<any[]>([])
   const [loadingContent, setLoadingContent] = useState(false)
@@ -28,6 +29,16 @@ export default function UserProfilePage({ params }: { params: { username: string
 
   useEffect(() => {
     fetchProfile()
+    
+    // Add timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.warn('[Profile] Loading timeout - forcing completion');
+        setLoading(false);
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(timeout);
   }, [params.username])
 
   useEffect(() => {
@@ -197,7 +208,7 @@ export default function UserProfilePage({ params }: { params: { username: string
     }
   }
 
-  if (loading || contextLoading) {
+  if (loading) {
     return (
       <IridescenceLayout>
         <div className="min-h-screen">
@@ -422,6 +433,18 @@ export default function UserProfilePage({ params }: { params: { username: string
                 >
                   About
                 </button>
+                {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') && (
+                  <button 
+                    onClick={() => setActiveTab('reviews')}
+                    className={`px-4 py-2 font-semibold border-b-2 transition-colors ${
+                      activeTab === 'reviews' 
+                        ? 'border-[#00BCD4] text-[#00BCD4]' 
+                        : 'border-transparent text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Reviews
+                  </button>
+                )}
               </div>
 
               <div className="mt-6">
@@ -607,6 +630,13 @@ export default function UserProfilePage({ params }: { params: { username: string
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Reviews Tab Content */}
+                {activeTab === 'reviews' && (
+                  <div>
+                    <ReviewsList doctorId={profileUser.id} />
                   </div>
                 )}
               </div>

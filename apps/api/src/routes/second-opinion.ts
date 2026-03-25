@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
+import { authenticate } from '../middleware/auth';
+import { prisma } from '@medthread/database';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all second opinion requests for current user
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
   try {
     const userId = req.user!.userId;
     const { status } = req.query;
@@ -47,7 +46,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Create new second opinion request
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
     const userId = req.user!.userId;
     const {
@@ -90,7 +89,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Get single second opinion request
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
@@ -131,7 +130,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Submit doctor response
-router.post('/:id/respond', authenticateToken, async (req, res) => {
+router.post('/:id/respond', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const doctorId = req.user!.userId;
@@ -181,7 +180,7 @@ router.post('/:id/respond', authenticateToken, async (req, res) => {
 });
 
 // Mark request as completed
-router.patch('/:id/complete', authenticateToken, async (req, res) => {
+router.patch('/:id/complete', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;

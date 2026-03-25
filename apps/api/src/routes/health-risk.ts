@@ -1,11 +1,11 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { healthRiskPredictorService } from '../services/health-risk-predictor.service';
 
 const router = express.Router();
 
 // Get risk predictions for a user
-router.get('/predictions/:userId', authenticateToken, async (req, res) => {
+router.get('/predictions/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -27,7 +27,7 @@ router.get('/predictions/:userId', authenticateToken, async (req, res) => {
 });
 
 // Generate new risk assessment
-router.post('/assess/:userId', authenticateToken, async (req, res) => {
+router.post('/assess/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -49,7 +49,7 @@ router.post('/assess/:userId', authenticateToken, async (req, res) => {
 });
 
 // Get risk timeline
-router.get('/timeline/:userId', authenticateToken, async (req, res) => {
+router.get('/timeline/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     const { timeframe = '5_YEARS' } = req.query;
@@ -72,7 +72,7 @@ router.get('/timeline/:userId', authenticateToken, async (req, res) => {
 });
 
 // Get prevention recommendations
-router.get('/prevention/:userId/:disease', authenticateToken, async (req, res) => {
+router.get('/prevention/:userId/:disease', authenticate, async (req, res) => {
   try {
     const { userId, disease } = req.params;
     

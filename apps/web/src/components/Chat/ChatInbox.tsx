@@ -42,6 +42,8 @@ export default function ChatInbox({
   const [conversations, setConversations] = useState<ConversationPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
   const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set())
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map())
   const [socket, setSocket] = useState<Socket | null>(null)
@@ -200,6 +202,85 @@ export default function ChatInbox({
     fetchConversations()
   }, [fetchConversations])
 
+  // Search through messages
+  const searchMessages = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      // Search through all conversations and their messages
+      const results: any[] = []
+      
+      for (const conv of conversations) {
+        const otherParticipant = conv.participants.find(p => p.id !== currentUserId)
+        const username = otherParticipant?.username?.toLowerCase() || ''
+        const queryLower = query.toLowerCase()
+        
+        // Check if username matches
+        if (username.includes(queryLower)) {
+          results.push({
+            type: 'participant',
+            conversationId: conv.id,
+            participant: otherParticipant,
+            matchText: `Conversation with ${otherParticipant?.username}`,
+            conversation: conv
+          })
+        }
+        
+        // Search through messages in this conversation
+        try {
+          const response = await axios.get(
+            `${API_URL}/api/v2/chat/conversations/${conv.id}/messages?limit=100`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+          
+          const messages = response.data.data || []
+          const matchingMessages = messages.filter((msg: any) => 
+            msg.content.toLowerCase().includes(queryLower)
+          )
+          
+          matchingMessages.forEach((msg: any) => {
+            results.push({
+              type: 'message',
+              conversationId: conv.id,
+              participant: otherParticipant,
+              message: msg,
+              matchText: msg.content,
+              conversation: conv
+            })
+          })
+        } catch (error) {
+          console.error('Error searching messages in conversation:', conv.id, error)
+        }
+      }
+      
+      setSearchResults(results)
+    } catch (error) {
+      console.error('Error searching messages:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }, [conversations, currentUserId, token, API_URL])
+
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery) {
+        searchMessages(searchQuery)
+      } else {
+        setSearchResults([])
+        setIsSearching(false)
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timer)
+  }, [searchQuery, searchMessages])
+
   // Filter conversations by search query
   const filteredConversations = conversations.filter(conv => {
     if (!searchQuery) return true
@@ -236,6 +317,24 @@ export default function ChatInbox({
     return conv.participants.find(p => p.id !== currentUserId)
   }
 
+  // Highlight matching text
+  const highlightMatch = (text: string, query: string) => {
+    if (!query) return text
+    
+    const parts = text.split(new RegExp(`(${query})`, 'gi'))
+    return (
+      <span>
+        {parts.map((part, i) => 
+          part.toLowerCase() === query.toLowerCase() ? (
+            <mark key={i} className="bg-yellow-200 font-semibold">{part}</mark>
+          ) : (
+            <span key={i}>{part}</span>
+          )
+        )}
+      </span>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -252,23 +351,100 @@ export default function ChatInbox({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
-            placeholder="Search conversations..."
+            placeholder="Search conversations or messages..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          {isSearching && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            </div>
+          )}
         </div>
+        
+        {/* Search results count */}
+        {searchQuery && !isSearching && searchResults.length > 0 && (
+          <p className="text-xs text-gray-500 mt-2">
+            Found {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
+          </p>
+        )}
       </div>
 
-      {/* Conversations List */}
+      {/* Search Results or Conversations List */}
       <div className="flex-1 overflow-y-auto">
-        {filteredConversations.length === 0 ? (
+        {searchQuery && searchResults.length > 0 ? (
+          /* Search Results */
+          <div>
+            {searchResults.map((result, index) => {
+              const isSelected = result.conversationId === selectedConversationId
+              
+              return (
+                <button
+                  key={`${result.conversationId}-${result.type}-${index}`}
+                  onClick={() => onSelectConversation(result.conversationId)}
+                  className={`w-full p-4 border-b transition-colors text-left hover:bg-gray-50 ${
+                    isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Avatar */}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                        {result.participant?.username?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-sm text-gray-900">
+                          {result.participant?.role === 'DOCTOR' ? 'Dr. ' : ''}
+                          {result.participant?.username || 'Unknown User'}
+                        </h3>
+                        {result.type === 'participant' && (
+                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                            Participant
+                          </span>
+                        )}
+                        {result.type === 'message' && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                            Message
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Match preview */}
+                      <p className="text-sm text-gray-600 line-clamp-2">
+                        {result.type === 'message' && result.message && (
+                          <span className="text-xs text-gray-400 mr-2">
+                            {new Date(result.message.createdAt).toLocaleDateString()}
+                          </span>
+                        )}
+                        {highlightMatch(result.matchText, searchQuery)}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        ) : searchQuery && !isSearching && searchResults.length === 0 ? (
+          /* No results */
+          <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
+            <Search className="w-12 h-12 mb-3 text-gray-300" />
+            <p className="text-center font-medium">No results found</p>
+            <p className="text-center text-sm mt-1">Try searching for a different keyword</p>
+          </div>
+        ) : filteredConversations.length === 0 ? (
+          /* No conversations */
           <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
             <p className="text-center">
               {searchQuery ? 'No conversations found' : 'No conversations yet'}
             </p>
           </div>
         ) : (
+          /* Regular conversations list */
           filteredConversations.map(conv => {
             const otherParticipant = getOtherParticipant(conv)
             const isOnline = otherParticipant ? onlineUsers.has(otherParticipant.id) : false

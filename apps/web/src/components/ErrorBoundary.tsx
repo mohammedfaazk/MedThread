@@ -1,95 +1,166 @@
 'use client';
 
-import React from 'react';
+import React, { Component, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
-interface ErrorBoundaryState {
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
   hasError: boolean;
-  error?: Error;
+  error: Error | null;
+  errorInfo: React.ErrorInfo | null;
 }
 
-interface ErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ComponentType<{ error?: Error; retry: () => void }>;
-}
-
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null
+    };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error): State {
+    return {
+      hasError: true,
+      error,
+      errorInfo: null
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
-    // Handle chunk loading errors specifically
-    if (error.name === 'ChunkLoadError' || error.message.includes('Loading chunk')) {
-      console.log('Chunk loading error detected, attempting to reload...');
-      // Reload the page after a short delay to allow for recovery
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+    console.error('Error caught by boundary:', error, errorInfo);
+    this.setState({
+      error,
+      errorInfo
+    });
+
+    // Log to error reporting service
+    if (typeof window !== 'undefined') {
+      // Send to analytics/error tracking
+      console.error('Error details:', {
+        error: error.toString(),
+        componentStack: errorInfo.componentStack
+      });
     }
   }
 
-  retry = () => {
-    this.setState({ hasError: false, error: undefined });
+  handleReset = () => {
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null
+    });
+  };
+
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  handleGoHome = () => {
+    window.location.href = '/';
   };
 
   render() {
     if (this.state.hasError) {
-      const FallbackComponent = this.props.fallback || DefaultErrorFallback;
-      return <FallbackComponent error={this.state.error} retry={this.retry} />;
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8">
+            {/* Error Icon */}
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-10 h-10 text-red-600" />
+              </div>
+            </div>
+
+            {/* Error Message */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Oops! Something went wrong
+              </h1>
+              <p className="text-gray-600">
+                We're sorry for the inconvenience. The application encountered an unexpected error.
+              </p>
+            </div>
+
+            {/* Error Details (Development) */}
+            {process.env.NODE_ENV === 'development' && this.state.error && (
+              <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                <h3 className="font-semibold text-red-900 mb-2">Error Details:</h3>
+                <pre className="text-sm text-red-800 overflow-x-auto whitespace-pre-wrap">
+                  {this.state.error.toString()}
+                </pre>
+                {this.state.errorInfo && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-sm font-medium text-red-900">
+                      Component Stack
+                    </summary>
+                    <pre className="text-xs text-red-700 mt-2 overflow-x-auto whitespace-pre-wrap">
+                      {this.state.errorInfo.componentStack}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={this.handleReset}
+                className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Try Again
+              </button>
+              <button
+                onClick={this.handleReload}
+                className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition font-semibold flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Reload Page
+              </button>
+              <button
+                onClick={this.handleGoHome}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition font-semibold flex items-center justify-center gap-2"
+              >
+                <Home className="w-5 h-5" />
+                Go Home
+              </button>
+            </div>
+
+            {/* Help Text */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+              <p className="text-sm text-blue-900">
+                <strong>Need help?</strong> If this problem persists, please contact support with the error details above.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
     }
 
     return this.props.children;
   }
 }
 
-const DefaultErrorFallback: React.FC<{ error?: Error; retry: () => void }> = ({ error, retry }) => {
-  const isChunkError = error?.name === 'ChunkLoadError' || error?.message.includes('Loading chunk');
-
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-        <div className="mb-4">
-          <svg className="w-16 h-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-        </div>
-        
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          {isChunkError ? 'Loading Error' : 'Something went wrong'}
-        </h2>
-        
-        <p className="text-gray-600 mb-6">
-          {isChunkError 
-            ? 'The page is reloading to fix a loading issue...' 
-            : 'An unexpected error occurred. Please try again.'
-          }
-        </p>
-        
-        {!isChunkError && (
-          <button
-            onClick={retry}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Try Again
-          </button>
-        )}
-        
-        {isChunkError && (
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-sm text-gray-500">Reloading...</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default ErrorBoundary;
+// Functional wrapper for easier use
+export function withErrorBoundary<P extends object>(
+  Component: React.ComponentType<P>,
+  fallback?: ReactNode
+) {
+  return function WithErrorBoundaryWrapper(props: P) {
+    return (
+      <ErrorBoundary fallback={fallback}>
+        <Component {...props} />
+      </ErrorBoundary>
+    );
+  };
+}

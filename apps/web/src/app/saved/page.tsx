@@ -92,57 +92,58 @@ export default function SavedPage() {
   return (
     <IridescenceLayout>
       <div className="min-h-screen">
-      <NavbarEnhanced />
-      <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
-        <Sidebar />
-        <main className="flex-1 max-w-[640px]">
-          <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-4 mb-4 shadow-soft">
-            <h1 className="text-2xl font-bold text-charcoal">Saved Posts</h1>
-            <p className="text-sm text-gray-600 mt-1">{posts.length} saved posts</p>
-          </div>
-          
-          {loading ? (
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 text-center shadow-soft">
-              <p className="text-gray-600">Loading...</p>
+        <NavbarEnhanced />
+        <div className="max-w-[1400px] mx-auto flex gap-6 pt-5 px-6">
+          <Sidebar />
+          <main className="flex-1 max-w-[640px]">
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-4 mb-4 shadow-soft">
+              <h1 className="text-2xl font-bold text-charcoal">Saved Posts</h1>
+              <p className="text-sm text-gray-600 mt-1">{posts.length} saved posts</p>
             </div>
-          ) : (
-            <div className="space-y-2.5">
-              {posts.length > 0 ? (
-                posts.map(post => (
-                  <PostCard
-                    key={post.id}
-                    id={post.id}
-                    type={post.type}
-                    title={post.title}
-                    content={post.content}
-                    url={post.url}
-                    mediaUrls={post.mediaUrls}
-                    author={post.author.username}
-                    authorType={(post.author.role === 'VERIFIED_DOCTOR' || post.author.role === 'DOCTOR') ? 'doctor' : 'patient'}
-                    verified={post.author.role === 'VERIFIED_DOCTOR' || (post.author.role === 'DOCTOR' && post.author.doctorVerificationStatus === 'APPROVED')}
-                    specialty={post.author.specialty}
-                    community={post.community.name}
-                    timeAgo={getTimeAgo(post.createdAt)}
-                    upvotes={post.upvotes}
-                    downvotes={post.downvotes}
-                    score={post.score}
-                    comments={post.commentCount}
-                    doctorReplies={0}
-                    tags={[]}
-                    isPinned={post.isPinned}
-                    userVote={post.userVote === 1 ? 1 : post.userVote === -1 ? -1 : null}
-                    isSaved={true}
-                    editedAt={post.editedAt}
-                  />
-                ))
-              ) : (
-                <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 text-center shadow-soft">
-                  <p className="text-gray-600">No saved posts yet</p>
-                </div>
-              )}
-            </div>
-          )}
-        </main>
+            
+            {loading ? (
+              <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 text-center shadow-soft">
+                <p className="text-gray-600">Loading...</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {posts.length > 0 ? (
+                  posts.map(post => (
+                    <PostCard
+                      key={post.id}
+                      id={post.id}
+                      type={post.type}
+                      title={post.title}
+                      content={post.content}
+                      url={post.url}
+                      mediaUrls={post.mediaUrls}
+                      author={post.author.username}
+                      authorType={(post.author.role === 'VERIFIED_DOCTOR' || post.author.role === 'DOCTOR') ? 'doctor' : 'patient'}
+                      verified={post.author.role === 'VERIFIED_DOCTOR' || (post.author.role === 'DOCTOR' && post.author.doctorVerificationStatus === 'APPROVED')}
+                      specialty={post.author.specialty}
+                      community={post.community.name}
+                      timeAgo={getTimeAgo(post.createdAt)}
+                      upvotes={post.upvotes}
+                      downvotes={post.downvotes}
+                      score={post.score}
+                      comments={post.commentCount}
+                      doctorReplies={0}
+                      tags={[]}
+                      isPinned={post.isPinned}
+                      userVote={post.userVote === 1 ? 1 : post.userVote === -1 ? -1 : null}
+                      isSaved={true}
+                      editedAt={post.editedAt}
+                    />
+                  ))
+                ) : (
+                  <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 p-8 text-center shadow-soft">
+                    <p className="text-gray-600">No saved posts yet</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </main>
+        </div>
       </div>
     </IridescenceLayout>
   )

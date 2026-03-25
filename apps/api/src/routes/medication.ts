@@ -1,11 +1,11 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { medicationService } from '../services/medication.service';
 
 const router = express.Router();
 
 // Get medication profile
-router.get('/profile/:userId', authenticateToken, async (req, res) => {
+router.get('/profile/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -22,7 +22,7 @@ router.get('/profile/:userId', authenticateToken, async (req, res) => {
 });
 
 // Add medication
-router.post('/add', authenticateToken, async (req, res) => {
+router.post('/add', authenticate, async (req, res) => {
   try {
     const { userId, medication } = req.body;
     
@@ -39,7 +39,7 @@ router.post('/add', authenticateToken, async (req, res) => {
 });
 
 // Remove medication
-router.delete('/remove', authenticateToken, async (req, res) => {
+router.delete('/remove', authenticate, async (req, res) => {
   try {
     const { userId, medicationId } = req.body;
     
@@ -56,7 +56,7 @@ router.delete('/remove', authenticateToken, async (req, res) => {
 });
 
 // Get reminders
-router.get('/reminders/:userId', authenticateToken, async (req, res) => {
+router.get('/reminders/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     const { date } = req.query;
@@ -77,7 +77,7 @@ router.get('/reminders/:userId', authenticateToken, async (req, res) => {
 });
 
 // Create reminder
-router.post('/reminders', authenticateToken, async (req, res) => {
+router.post('/reminders', authenticate, async (req, res) => {
   try {
     const { userId, reminder } = req.body;
     
@@ -94,7 +94,7 @@ router.post('/reminders', authenticateToken, async (req, res) => {
 });
 
 // Mark reminder as taken
-router.post('/reminders/:id/taken', authenticateToken, async (req, res) => {
+router.post('/reminders/:id/taken', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const updated = await medicationService.markReminderTaken(id);
@@ -106,7 +106,7 @@ router.post('/reminders/:id/taken', authenticateToken, async (req, res) => {
 });
 
 // Skip reminder
-router.post('/reminders/:id/skip', authenticateToken, async (req, res) => {
+router.post('/reminders/:id/skip', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
@@ -119,7 +119,7 @@ router.post('/reminders/:id/skip', authenticateToken, async (req, res) => {
 });
 
 // Check interactions
-router.get('/interactions/:userId', authenticateToken, async (req, res) => {
+router.get('/interactions/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -136,7 +136,7 @@ router.get('/interactions/:userId', authenticateToken, async (req, res) => {
 });
 
 // Get adherence rate
-router.get('/adherence/:userId', authenticateToken, async (req, res) => {
+router.get('/adherence/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     const { days } = req.query;
@@ -157,7 +157,7 @@ router.get('/adherence/:userId', authenticateToken, async (req, res) => {
 });
 
 // Report side effect
-router.post('/side-effects', authenticateToken, async (req, res) => {
+router.post('/side-effects', authenticate, async (req, res) => {
   try {
     const { userId, medicationName, sideEffect, severity } = req.body;
     
@@ -179,7 +179,7 @@ router.post('/side-effects', authenticateToken, async (req, res) => {
 });
 
 // Rate effectiveness
-router.post('/effectiveness', authenticateToken, async (req, res) => {
+router.post('/effectiveness', authenticate, async (req, res) => {
   try {
     const { userId, medicationName, rating, notes } = req.body;
     

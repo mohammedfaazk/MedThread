@@ -3,6 +3,9 @@ import { authenticate as auth } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { postService } from '../services/post.service';
 import { emergencyDetectionService } from '../services/emergency-detection.service';
+import { medicalVerificationService } from '../services/medical-verification.service';
+import { contentModerationService } from '../services/content-moderation.service';
+import { spamDetectionService } from '../services/spam-detection.service';
 
 const router = Router();
 
@@ -18,6 +21,40 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
     // Check for emergency keywords in title and content
     const combinedContent = `${title} ${content || ''}`;
     const emergencyResult = emergencyDetectionService.detectEmergency(combinedContent);
+
+    // NEW: Medical verification for medical content
+    let verificationResult = null;
+    if (content && content.length > 50) {
+      verificationResult = await medicalVerificationService.verifyMedicalContent(
+        combinedContent,
+        req.userRole || 'PATIENT'
+      );
+    }
+
+    // NEW: Content moderation
+    const moderationResult = await contentModerationService.moderateContent(
+      combinedContent,
+      req.userId!,
+      'post'
+    );
+
+    // Block if content should be removed
+    if (moderationResult.action === 'REMOVE') {
+      return res.status(400).json({ 
+        error: 'Content violates community guidelines',
+        details: moderationResult.categories
+      });
+    }
+
+    // NEW: Spam detection
+    const spamResult = await spamDetectionService.checkSpam(combinedContent, req.userId!, 'post');
+    if (spamResult.isSpam && spamResult.score > 70) {
+      return res.status(400).json({ 
+        error: 'Content detected as spam',
+        score: spamResult.score,
+        reasons: spamResult.reasons
+      });
+    }
 
     const post = await postService.createPost({
       title,
@@ -45,13 +82,23 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
       });
     }
 
-    // Return post with emergency detection result
+    // Auto-flag if needed
+    if (moderationResult.action === 'FLAG') {
+      await contentModerationService.autoFlagContent(post.id, 'Auto-flagged by moderation system');
+    }
+
+    // Return post with verification and emergency detection
     res.status(201).json({
       ...post,
+      medicalVerification: verificationResult,
       emergencyDetection: emergencyResult.isEmergency ? {
         level: emergencyResult.level,
         shouldShowAlert: emergencyDetectionService.shouldShowEmergencyAlert(emergencyResult)
-      } : null
+      } : null,
+      moderation: {
+        action: moderationResult.action,
+        toxicityScore: moderationResult.toxicityScore
+      }
     });
   } catch (error) {
     next(error);
@@ -87,6 +134,46 @@ router.get('/', async (req, res, next) => {
       postType: postType as 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'POLL',
     });
 
+    res.json(posts);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get user's drafts - MUST be before /:id route
+router.get('/drafts', auth, async (req, res, next) => {
+  try {
+    const drafts = await postService.getDrafts(req.userId!);
+    res.json(drafts);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get saved posts - MUST be before /:id route
+router.get('/saved', auth, async (req, res, next) => {
+  try {
+    const { limit, offset } = req.query;
+    const posts = await postService.getSavedPosts(
+      req.userId!,
+      limit ? Number(limit) : 20,
+      offset ? Number(offset) : 0
+    );
+    res.json(posts);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Get hidden posts - MUST be before /:id route
+router.get('/hidden', auth, async (req, res, next) => {
+  try {
+    const { limit, offset } = req.query;
+    const posts = await postService.getHiddenPosts(
+      req.userId!,
+      limit ? Number(limit) : 20,
+      offset ? Number(offset) : 0
+    );
     res.json(posts);
   } catch (error) {
     next(error);
@@ -248,19 +335,6 @@ router.post('/:id/endorse', auth, async (req, res, next) => {
   }
 });
 
-export default router;
-
-
-// Get user's drafts
-router.get('/drafts', auth, async (req, res, next) => {
-  try {
-    const drafts = await postService.getDrafts(req.userId!);
-    res.json(drafts);
-  } catch (error) {
-    next(error);
-  }
-});
-
 // Publish a draft - requires verified doctor
 router.post('/:id/publish', auth, requireVerifiedDoctor, async (req, res, next) => {
   try {
@@ -271,32 +345,4 @@ router.post('/:id/publish', auth, requireVerifiedDoctor, async (req, res, next) 
   }
 });
 
-// Get saved posts
-router.get('/saved', auth, async (req, res, next) => {
-  try {
-    const { limit, offset } = req.query;
-    const posts = await postService.getSavedPosts(
-      req.userId!,
-      limit ? Number(limit) : 20,
-      offset ? Number(offset) : 0
-    );
-    res.json(posts);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Get hidden posts
-router.get('/hidden', auth, async (req, res, next) => {
-  try {
-    const { limit, offset } = req.query;
-    const posts = await postService.getHiddenPosts(
-      req.userId!,
-      limit ? Number(limit) : 20,
-      offset ? Number(offset) : 0
-    );
-    res.json(posts);
-  } catch (error) {
-    next(error);
-  }
-});
+export default router;

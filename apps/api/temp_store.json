@@ -120,6 +120,36 @@
       },
       "createdAt": "2026-03-11T04:21:19.529Z",
       "updatedAt": "2026-03-11T04:21:19.529Z"
+    },
+    {
+      "id": "conv-cmn4mf7ft004l1n1dgl7we6yc",
+      "appointmentId": "cmn4mf7ft004l1n1dgl7we6yc",
+      "participants": [
+        {
+          "id": "cmmt5kn0e0002ztoyh2g3afz6",
+          "username": "navin",
+          "avatar": null,
+          "role": "PATIENT"
+        },
+        {
+          "id": "cmmt5kmlf0001ztoyimqiyzrf",
+          "username": "dr.rifa.hassan",
+          "avatar": null,
+          "role": "VERIFIED_DOCTOR"
+        }
+      ],
+      "participantIds": [
+        "cmmt5kn0e0002ztoyh2g3afz6",
+        "cmmt5kmlf0001ztoyimqiyzrf"
+      ],
+      "messages": [],
+      "appointment": {
+        "status": "APPROVED",
+        "startTime": "2026-03-26T10:30:00.000Z",
+        "endTime": "2026-03-26T11:30:00.000Z"
+      },
+      "createdAt": "2026-03-24T12:59:59.141Z",
+      "updatedAt": "2026-03-24T12:59:59.141Z"
     }
   ],
   "messages": [

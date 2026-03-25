@@ -147,6 +147,35 @@ export default function DoctorAppointmentsPage() {
         }
     }
 
+    const handleMarkComplete = async (appointmentId: string) => {
+        if (!confirm('Mark this appointment as completed?')) {
+            return
+        }
+
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const token = localStorage.getItem('auth_token')
+            
+            if (!token) {
+                alert('Authentication required. Please log in again.')
+                router.push('/login')
+                return
+            }
+            
+            await axios.post(`${API_URL}/api/appointments/appointments/${appointmentId}/complete`, {
+                userId: effectiveUserId
+            }, {
+                headers: getAuthHeaders()
+            })
+            
+            alert('Appointment marked as completed!')
+            loadAppointments()
+        } catch (error: any) {
+            console.error('Failed to complete appointment:', error)
+            alert(`Failed to complete appointment: ${error.response?.data?.error || error.message}`)
+        }
+    }
+
     const handleChatClick = (appointment: Appointment) => {
         if (appointment.status !== 'APPROVED') {
             alert('Chat is only available for approved appointments.')
@@ -336,14 +365,25 @@ export default function DoctorAppointmentsPage() {
                                                     </>
                                                 )}
                                                 
-                                                {appointment.status === 'APPROVED' && appointment.conversation && (
-                                                    <button
-                                                        onClick={() => handleChatClick(appointment)}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium"
-                                                    >
-                                                        <MessageSquare className="w-4 h-4" />
-                                                        Open Chat
-                                                    </button>
+                                                {appointment.status === 'APPROVED' && (
+                                                    <>
+                                                        {appointment.conversation && (
+                                                            <button
+                                                                onClick={() => handleChatClick(appointment)}
+                                                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium"
+                                                            >
+                                                                <MessageSquare className="w-4 h-4" />
+                                                                Open Chat
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleMarkComplete(appointment.id)}
+                                                            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transition-all font-medium"
+                                                        >
+                                                            <CheckCircle2 className="w-4 h-4" />
+                                                            Mark Complete
+                                                        </button>
+                                                    </>
                                                 )}
                                             </div>
                                         </div>

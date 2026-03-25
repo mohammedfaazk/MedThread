@@ -313,6 +313,7 @@ export function Navbar() {
                     ) : (
                       <>
                         <Link href="/dashboard/patient" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Patient Dashboard</Link>
+                        <Link href="/health-profile" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-green-600 transition-all">💚 Health Profile</Link>
                         <Link href="/find-hospitals" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-emerald-600 transition-all">🏥 Find Hospitals</Link>
                       </>
                     )}

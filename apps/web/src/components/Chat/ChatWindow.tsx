@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Send, Paperclip, Edit2, Trash2, Check, CheckCheck, Loader2 } from 'lucide-react';
+import { Send, Paperclip, Edit2, Trash2, Check, CheckCheck, Loader2, Mic, Edit3, MessageSquare } from 'lucide-react';
+import VoiceRecorder from '@/components/features/VoiceRecorder';
+import VoiceMessagePlayer from '@/components/features/VoiceMessagePlayer';
+import ImageAnnotation from '@/components/features/ImageAnnotation';
+import MessageTranslator from '@/components/features/MessageTranslator';
+import UrgentMessageFlag, { UrgentBadge } from '@/components/features/UrgentMessageFlag';
+import { EnhancedMessageInput } from '@/components/chat/EnhancedMessageInput';
+import { VoiceInput } from '@/components/VoiceInput';
 
 interface Message {
   id: string;
@@ -14,6 +21,8 @@ interface Message {
   readAt?: string;
   attachment?: string;
   type?: 'TEXT' | 'IMAGE' | 'FILE';
+  isUrgent?: boolean;
+  urgencyLevel?: 'low' | 'medium' | 'high' | 'critical';
   sender: {
     id: string;
     username: string;
@@ -26,6 +35,7 @@ interface ChatWindowProps {
   conversationId: string;
   currentUserId: string;
   token: string;
+  username: string;
   onAccessDenied?: (reason: string) => void;
 }
 
@@ -33,6 +43,7 @@ export default function ChatWindow({
   conversationId,
   currentUserId,
   token,
+  username,
   onAccessDenied
 }: ChatWindowProps) {
   console.log('🔍 ChatWindow initialized with:', {
@@ -58,6 +69,12 @@ export default function ChatWindow({
   const [uploadingFile, setUploadingFile] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null); // For full-screen image view
   const [imageObjectUrl, setImageObjectUrl] = useState<string | null>(null); // Object URL for preview
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [showVoiceInput, setShowVoiceInput] = useState(false);
+  const [showImageAnnotation, setShowImageAnnotation] = useState(false);
+  const [imageToAnnotate, setImageToAnnotate] = useState<string | null>(null);
+  const [isUrgent, setIsUrgent] = useState(false);
+  const [urgencyLevel, setUrgencyLevel] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -456,7 +473,12 @@ export default function ChatWindow({
       return;
     }
 
-    const messageContent = newMessage.trim();
+    let messageContent = newMessage.trim();
+    
+    // If sending image without text, add default message
+    if (!messageContent && attachment && attachment.startsWith('data:image')) {
+      messageContent = '📷 Image';
+    }
     
     // Either content or attachment must be provided
     if (!messageContent && !attachment) {
@@ -470,6 +492,8 @@ export default function ChatWindow({
     // Clear input immediately
     setNewMessage('');
     setAttachment(null);
+    setIsUrgent(false);
+    setUrgencyLevel('medium');
 
     // Stop typing indicator immediately
     if (socket && isTyping) {
@@ -487,6 +511,8 @@ export default function ChatWindow({
       isDeleted: false,
       type: messageAttachment ? (messageAttachment.startsWith('data:image') ? 'IMAGE' : 'FILE') : 'TEXT',
       attachment: messageAttachment || undefined,
+      isUrgent,
+      urgencyLevel: isUrgent ? urgencyLevel : undefined,
       sender: {
         id: currentUserId,
         username: 'You',
@@ -521,7 +547,9 @@ export default function ChatWindow({
           conversationId,
           content: messageContent || '', // Allow empty content for attachment-only messages
           type: messageAttachment ? (messageAttachment.startsWith('data:image') ? 'IMAGE' : 'FILE') : 'TEXT',
-          attachment: messageAttachment
+          attachment: messageAttachment,
+          isUrgent,
+          urgencyLevel: isUrgent ? urgencyLevel : undefined
         })
       });
 
@@ -699,9 +727,10 @@ export default function ChatWindow({
         }`}
       >
         <div className={`max-w-[70%]`}>
-          {!isOwn && (
-            <div className="text-xs text-gray-500 mb-1">
-              {message.sender.username}
+          {/* Urgent Badge - Show above message bubble */}
+          {message.isUrgent && message.urgencyLevel && (
+            <div className="mb-1">
+              <UrgentBadge level={message.urgencyLevel} />
             </div>
           )}
           
@@ -750,7 +779,8 @@ export default function ChatWindow({
               </p>
             ) : (
               <>
-                {message.attachment && (
+                {/* Only show attachment UI if NOT a voice message */}
+                {message.attachment && !message.content.includes('🎤 Voice message') && (
                   <>
                     {/* Determine if it's an image based on type field OR mime type in data URL */}
                     {(message.type === 'IMAGE' || (message.attachment.startsWith('data:image') && message.type !== 'FILE')) && (
@@ -828,9 +858,21 @@ export default function ChatWindow({
                     )}
                   </>
                 )}
-                <p className="whitespace-pre-wrap break-words">
-                  {message.content}
-                </p>
+                
+                {/* Voice Message Player */}
+                {message.content.includes('🎤 Voice message') && message.attachment ? (
+                  <VoiceMessagePlayer
+                    audioUrl={message.attachment}
+                    duration={parseInt(message.content.match(/\((\d+)s\)/)?.[1] || '0')}
+                    senderName={message.sender.username}
+                    timestamp={new Date(message.createdAt)}
+                  />
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">
+                    {message.content}
+                  </p>
+                )}
+                
                 {message.isEdited && (
                   <span className="text-xs opacity-70 ml-2">(edited)</span>
                 )}
@@ -838,7 +880,7 @@ export default function ChatWindow({
             )}
           </div>
 
-          {/* Timestamp and Read Receipts - Outside bubble on white background */}
+          {/* Timestamp, Read Receipts, and Translate - Outside bubble on white background */}
           <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
             <span>
               {new Date(message.createdAt).toLocaleTimeString([], {
@@ -857,6 +899,13 @@ export default function ChatWindow({
                   <Check size={14} className="text-gray-400" />
                 )}
               </>
+            )}
+            
+            {/* Translate button - inline at the end */}
+            {!message.isDeleted && !message.content.includes('🎤 Voice message') && message.content.trim() && (
+              <div className="ml-auto">
+                <MessageTranslator text={message.content} token={token} />
+              </div>
             )}
           </div>
           
@@ -897,6 +946,31 @@ export default function ChatWindow({
 
   return (
     <div className="flex flex-col h-full bg-white">
+      {/* Chat Header with other user's name */}
+      {messages.length > 0 && (
+        <div className="border-b px-6 py-4 bg-white">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold text-xl">
+              {messages[0].sender.id === currentUserId 
+                ? messages.find(m => m.sender.id !== currentUserId)?.sender.username.charAt(0).toUpperCase() || '?'
+                : messages[0].sender.username.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-900 text-lg">
+                {messages[0].sender.id === currentUserId 
+                  ? messages.find(m => m.sender.id !== currentUserId)?.sender.username || 'User'
+                  : messages[0].sender.username}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {messages[0].sender.id === currentUserId 
+                  ? messages.find(m => m.sender.id !== currentUserId)?.sender.role === 'DOCTOR' ? 'Doctor' : 'Patient'
+                  : messages[0].sender.role === 'DOCTOR' ? 'Doctor' : 'Patient'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Messages */}
       <div
         ref={messagesContainerRef}
@@ -927,6 +1001,18 @@ export default function ChatWindow({
 
       {/* Input */}
       <div className="border-t p-4">
+        {/* Urgent Flag - Above attachment preview */}
+        <div className="mb-2">
+          <UrgentMessageFlag
+            onToggle={(urgent, level) => {
+              setIsUrgent(urgent);
+              setUrgencyLevel(level);
+            }}
+            initialUrgent={isUrgent}
+            initialLevel={urgencyLevel}
+          />
+        </div>
+        
         {attachment && (
           <div className="mb-2 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg border border-blue-200 dark:border-blue-700">
             <div className="flex items-center gap-3">
@@ -953,9 +1039,25 @@ export default function ChatWindow({
                   {Math.round((attachment.length * 0.75) / 1024)} KB
                 </p>
               </div>
+              
+              {/* Annotate button for images */}
+              {attachment.startsWith('data:image') && (
+                <button
+                  onClick={() => {
+                    setImageToAnnotate(attachment);
+                    setShowImageAnnotation(true);
+                  }}
+                  className="text-blue-600 hover:text-blue-700 p-2 rounded-full hover:bg-blue-50"
+                  title="Annotate image"
+                >
+                  <Edit3 className="w-5 h-5" />
+                </button>
+              )}
+              
               <button
                 onClick={() => setAttachment(null)}
                 className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50 dark:hover:bg-red-900"
+                title="Remove attachment"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -978,12 +1080,33 @@ export default function ChatWindow({
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingFile}
             className="p-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
+            title="Attach file"
           >
             {uploadingFile ? (
               <Loader2 className="animate-spin" size={20} />
             ) : (
               <Paperclip size={20} />
             )}
+          </button>
+
+          <button
+            onClick={() => setShowVoiceRecorder(true)}
+            className="p-2 text-gray-600 hover:text-gray-900"
+            title="Record voice message"
+          >
+            <Mic size={20} />
+          </button>
+
+          <button
+            onClick={() => setShowVoiceInput(!showVoiceInput)}
+            className={`p-2 transition ${
+              showVoiceInput
+                ? 'bg-blue-600 text-white rounded-lg'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+            title="Voice to text"
+          >
+            <MessageSquare size={20} />
           </button>
           
           <input
@@ -1016,7 +1139,82 @@ export default function ChatWindow({
             )}
           </button>
         </div>
+
+        {/* Voice to Text Input */}
+        {showVoiceInput && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <VoiceInput
+              onTranscript={(text) => {
+                setNewMessage(prev => prev + (prev ? ' ' : '') + text);
+                setShowVoiceInput(false);
+              }}
+              language="en"
+            />
+          </div>
+        )}
       </div>
+
+      {/* Voice Recorder Modal */}
+      {showVoiceRecorder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <VoiceRecorder
+            onSend={async (audioBlob, duration) => {
+              try {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'voice-message.webm');
+                formData.append('chatId', conversationId);
+                formData.append('duration', duration.toString());
+
+                const response = await fetch(`${API_URL}/api/v1/voice-messages/upload`, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: formData
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  // Send voice message URL as a regular message
+                  setAttachment(`${API_URL}${data.url}`);
+                  setNewMessage(`🎤 Voice message (${duration}s)`);
+                  setShowVoiceRecorder(false);
+                  // Auto-send after setting attachment
+                  setTimeout(() => sendMessage(), 100);
+                } else {
+                  alert('Failed to upload voice message');
+                }
+              } catch (error) {
+                console.error('Error uploading voice message:', error);
+                alert('Failed to upload voice message');
+              }
+            }}
+            onCancel={() => setShowVoiceRecorder(false)}
+          />
+        </div>
+      )}
+
+      {/* Voice to Text Modal */}
+      {showVoiceInput && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Voice to Text</h3>
+            <VoiceInput
+              onTranscript={(text) => {
+                setNewMessage(prev => prev + (prev ? ' ' : '') + text);
+                setShowVoiceInput(false);
+              }}
+              language="en"
+            />
+            <button
+              onClick={() => setShowVoiceInput(false)}
+              className="mt-4 w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Full-screen Image Preview Modal */}
       {imagePreview && (
@@ -1068,6 +1266,27 @@ export default function ChatWindow({
             onClick={(e) => e.stopPropagation()}
           />
         </div>
+      )}
+
+      {/* Image Annotation Modal */}
+      {showImageAnnotation && imageToAnnotate && (
+        <ImageAnnotation
+          imageUrl={imageToAnnotate}
+          onSave={(annotatedBlob) => {
+            // Convert blob to data URL
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setAttachment(reader.result as string);
+              setShowImageAnnotation(false);
+              setImageToAnnotate(null);
+            };
+            reader.readAsDataURL(annotatedBlob);
+          }}
+          onCancel={() => {
+            setShowImageAnnotation(false);
+            setImageToAnnotate(null);
+          }}
+        />
       )}
     </div>
   );

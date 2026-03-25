@@ -1,11 +1,11 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { symptomDiaryService } from '../services/symptom-diary.service';
 
 const router = express.Router();
 
 // Create entry
-router.post('/entries', authenticateToken, async (req, res) => {
+router.post('/entries', authenticate, async (req, res) => {
   try {
     const { userId, entry } = req.body;
     
@@ -22,7 +22,7 @@ router.post('/entries', authenticateToken, async (req, res) => {
 });
 
 // Get entries
-router.get('/entries/:userId', authenticateToken, async (req, res) => {
+router.get('/entries/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     const filters = req.query;
@@ -40,7 +40,7 @@ router.get('/entries/:userId', authenticateToken, async (req, res) => {
 });
 
 // Get single entry
-router.get('/entries/detail/:entryId', authenticateToken, async (req, res) => {
+router.get('/entries/detail/:entryId', authenticate, async (req, res) => {
   try {
     const { entryId } = req.params;
     const entry = await symptomDiaryService.getEntry(entryId);
@@ -57,7 +57,7 @@ router.get('/entries/detail/:entryId', authenticateToken, async (req, res) => {
 });
 
 // Update entry
-router.put('/entries/:entryId', authenticateToken, async (req, res) => {
+router.put('/entries/:entryId', authenticate, async (req, res) => {
   try {
     const { entryId } = req.params;
     const { updates } = req.body;
@@ -71,7 +71,7 @@ router.put('/entries/:entryId', authenticateToken, async (req, res) => {
 });
 
 // Add photo
-router.post('/entries/:entryId/photos', authenticateToken, async (req, res) => {
+router.post('/entries/:entryId/photos', authenticate, async (req, res) => {
   try {
     const { entryId } = req.params;
     const { photoUrl } = req.body;
@@ -90,7 +90,7 @@ router.post('/entries/:entryId/photos', authenticateToken, async (req, res) => {
 });
 
 // Get healing progress
-router.get('/entries/:entryId/progress', authenticateToken, async (req, res) => {
+router.get('/entries/:entryId/progress', authenticate, async (req, res) => {
   try {
     const { entryId } = req.params;
     const progress = await symptomDiaryService.calculateHealingProgress(entryId);
@@ -102,7 +102,7 @@ router.get('/entries/:entryId/progress', authenticateToken, async (req, res) => 
 });
 
 // Mark resolved
-router.post('/entries/:entryId/resolve', authenticateToken, async (req, res) => {
+router.post('/entries/:entryId/resolve', authenticate, async (req, res) => {
   try {
     const { entryId } = req.params;
     const updated = await symptomDiaryService.markResolved(entryId);
@@ -114,7 +114,7 @@ router.post('/entries/:entryId/resolve', authenticateToken, async (req, res) => 
 });
 
 // Get statistics
-router.get('/statistics/:userId', authenticateToken, async (req, res) => {
+router.get('/statistics/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     

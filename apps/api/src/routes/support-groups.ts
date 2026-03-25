@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { supportGroupsService } from '../services/support-groups.service';
 
 const router = express.Router();
@@ -9,17 +9,17 @@ router.get('/', async (req, res) => {
   try {
     const filters = req.query;
     const groups = await supportGroupsService.getGroups(filters);
-    res.json({ groups });
+    res.json({ success: true, data: groups });
   } catch (error) {
     console.error('Error fetching groups:', error);
-    res.status(500).json({ error: 'Failed to fetch groups' });
+    res.status(500).json({ success: false, error: 'Failed to fetch groups' });
   }
 });
 
 // Create group
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
-    const data = { ...req.body, createdBy: req.user.id };
+    const data = { ...req.body, createdBy: (req as any).userId };
     const group = await supportGroupsService.createGroup(data);
     res.json({ success: true, group });
   } catch (error) {
@@ -46,12 +46,12 @@ router.get('/:groupId', async (req, res) => {
 });
 
 // Join group
-router.post('/:groupId/join', authenticateToken, async (req, res) => {
+router.post('/:groupId/join', authenticate, async (req, res) => {
   try {
     const { groupId } = req.params;
     const { isAnonymous } = req.body;
     
-    const group = await supportGroupsService.joinGroup(groupId, req.user.id, isAnonymous);
+    const group = await supportGroupsService.joinGroup(groupId, (req as any).userId, isAnonymous);
     res.json({ success: true, group });
   } catch (error: any) {
     console.error('Error joining group:', error);
@@ -60,10 +60,10 @@ router.post('/:groupId/join', authenticateToken, async (req, res) => {
 });
 
 // Leave group
-router.post('/:groupId/leave', authenticateToken, async (req, res) => {
+router.post('/:groupId/leave', authenticate, async (req, res) => {
   try {
     const { groupId } = req.params;
-    const group = await supportGroupsService.leaveGroup(groupId, req.user.id);
+    const group = await supportGroupsService.leaveGroup(groupId, (req as any).userId);
     res.json({ success: true, group });
   } catch (error) {
     console.error('Error leaving group:', error);
@@ -85,10 +85,10 @@ router.get('/:groupId/posts', async (req, res) => {
 });
 
 // Create post
-router.post('/:groupId/posts', authenticateToken, async (req, res) => {
+router.post('/:groupId/posts', authenticate, async (req, res) => {
   try {
     const { groupId } = req.params;
-    const data = { ...req.body, authorId: req.user.id };
+    const data = { ...req.body, authorId: (req as any).userId };
     const post = await supportGroupsService.createPost(groupId, data);
     res.json({ success: true, post });
   } catch (error) {
@@ -98,7 +98,7 @@ router.post('/:groupId/posts', authenticateToken, async (req, res) => {
 });
 
 // Upvote post
-router.post('/posts/:postId/upvote', authenticateToken, async (req, res) => {
+router.post('/posts/:postId/upvote', authenticate, async (req, res) => {
   try {
     const { postId } = req.params;
     const post = await supportGroupsService.upvotePost(postId);
@@ -110,11 +110,11 @@ router.post('/posts/:postId/upvote', authenticateToken, async (req, res) => {
 });
 
 // Get user's groups
-router.get('/user/:userId/groups', authenticateToken, async (req, res) => {
+router.get('/user/:userId/groups', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     
-    if (req.user.id !== userId && req.user.role !== 'ADMIN') {
+    if ((req as any).userId !== userId && (req as any).userRole !== 'ADMIN') {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 

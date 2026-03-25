@@ -3,6 +3,10 @@ import { authenticate as auth } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { commentService } from '../services/comment.service';
 import { emergencyDetectionService } from '../services/emergency-detection.service';
+import { medicalVerificationService } from '../services/medical-verification.service';
+import { contentModerationService } from '../services/content-moderation.service';
+import { liabilityProtectionService } from '../services/liability-protection.service';
+import { spamDetectionService } from '../services/spam-detection.service';
 
 const router = Router();
 
@@ -18,8 +22,47 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
     // Check for emergency keywords
     const emergencyResult = emergencyDetectionService.detectEmergency(content);
 
-    const comment = await commentService.createComment({
+    // NEW: Medical verification
+    const verificationResult = await medicalVerificationService.verifyMedicalContent(
       content,
+      req.userRole || 'DOCTOR'
+    );
+
+    // NEW: Content moderation
+    const moderationResult = await contentModerationService.moderateContent(
+      content,
+      req.userId!,
+      'comment'
+    );
+
+    if (moderationResult.action === 'REMOVE') {
+      return res.status(400).json({ 
+        error: 'Content violates community guidelines',
+        details: moderationResult.categories
+      });
+    }
+
+    // NEW: Spam detection
+    const spamResult = await spamDetectionService.checkSpam(content, req.userId!, 'comment');
+    if (spamResult.isSpam && spamResult.score > 70) {
+      return res.status(400).json({ 
+        error: 'Content detected as spam',
+        score: spamResult.score,
+        reasons: spamResult.reasons
+      });
+    }
+
+    // NEW: Add medical disclaimers to doctor responses
+    let finalContent = content;
+    if (req.userRole === 'DOCTOR' || req.userRole === 'VERIFIED_DOCTOR') {
+      finalContent = await liabilityProtectionService.analyzeAndAddDisclaimers(
+        content,
+        req.userId!
+      );
+    }
+
+    const comment = await commentService.createComment({
+      content: finalContent,
       authorId: req.userId!,
       postId,
       parentId,
@@ -37,12 +80,22 @@ router.post('/', auth, requireVerifiedDoctor, async (req, res, next) => {
       });
     }
 
+    // Auto-flag if needed
+    if (moderationResult.action === 'FLAG') {
+      await contentModerationService.autoFlagContent(undefined, 'Auto-flagged comment');
+    }
+
     res.status(201).json({
       ...comment,
+      medicalVerification: verificationResult,
       emergencyDetection: emergencyResult.isEmergency ? {
         level: emergencyResult.level,
         shouldShowAlert: emergencyDetectionService.shouldShowEmergencyAlert(emergencyResult)
-      } : null
+      } : null,
+      moderation: {
+        action: moderationResult.action,
+        toxicityScore: moderationResult.toxicityScore
+      }
     });
   } catch (error) {
     next(error);

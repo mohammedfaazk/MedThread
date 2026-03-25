@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import { voiceMessageService } from '../services/voice-message.service';
 
 const router = express.Router();
@@ -31,7 +31,7 @@ const upload = multer({
 });
 
 // Upload voice message
-router.post('/upload', authenticateToken, upload.single('audio'), async (req, res) => {
+router.post('/upload', authenticate, upload.single('audio'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No audio file provided' });
@@ -61,7 +61,7 @@ router.post('/upload', authenticateToken, upload.single('audio'), async (req, re
 });
 
 // Get voice message
-router.get('/:messageId', authenticateToken, async (req, res) => {
+router.get('/:messageId', authenticate, async (req, res) => {
   try {
     const { messageId } = req.params;
     const voiceMessage = await voiceMessageService.getVoiceMessage(messageId);
@@ -78,7 +78,7 @@ router.get('/:messageId', authenticateToken, async (req, res) => {
 });
 
 // Get chat voice messages
-router.get('/chat/:chatId', authenticateToken, async (req, res) => {
+router.get('/chat/:chatId', authenticate, async (req, res) => {
   try {
     const { chatId } = req.params;
     const voiceMessages = await voiceMessageService.getChatVoiceMessages(chatId);
@@ -91,7 +91,7 @@ router.get('/chat/:chatId', authenticateToken, async (req, res) => {
 });
 
 // Delete voice message
-router.delete('/:messageId', authenticateToken, async (req, res) => {
+router.delete('/:messageId', authenticate, async (req, res) => {
   try {
     const { messageId } = req.params;
     const userId = (req as any).userId;

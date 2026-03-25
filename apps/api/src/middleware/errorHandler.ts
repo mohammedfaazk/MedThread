@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/errors';
 import { ZodError } from 'zod';
+import { StandardError, formatErrorResponse } from '../utils/standardErrors';
 
 export const errorHandler = (
   err: Error,
@@ -16,15 +17,25 @@ export const errorHandler = (
     method: req.method,
   });
 
+  // Handle StandardError (new standardized errors)
+  if (err instanceof StandardError) {
+    return res.status(err.statusCode).json(formatErrorResponse(err));
+  }
+
   // Handle Zod validation errors
   if (err instanceof ZodError) {
     return res.status(400).json({
       success: false,
-      error: 'Validation failed',
-      details: err.errors.map(e => ({
-        field: e.path.join('.'),
-        message: e.message,
-      })),
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        statusCode: 400,
+        details: err.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message,
+        })),
+        timestamp: new Date().toISOString()
+      }
     });
   }
 
@@ -32,15 +43,31 @@ export const errorHandler = (
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
       success: false,
-      error: err.message,
+      error: {
+        code: 'APP_ERROR',
+        message: err.message,
+        statusCode: err.statusCode,
+        timestamp: new Date().toISOString()
+      }
     });
+  }
+
+  // Handle Prisma errors
+  if ((err as any).code?.startsWith('P')) {
+    return res.status(500).json(formatErrorResponse(err));
   }
 
   // Handle unknown errors
   return res.status(500).json({
     success: false,
-    error: process.env.NODE_ENV === 'production'
-      ? 'Internal server error'
-      : err.message,
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: process.env.NODE_ENV === 'production'
+        ? 'Internal server error'
+        : err.message,
+      statusCode: 500,
+      timestamp: new Date().toISOString()
+    }
   });
 };
+

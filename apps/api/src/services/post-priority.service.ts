@@ -1,9 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import Groq from 'groq-sdk';
-
-const prisma = new PrismaClient();
-
-// ---------------------------------------------------------------------------
+import { prisma } from '@medthread/database';
+import Groq from 'groq-sdk';// ---------------------------------------------------------------------------
 // Symptom chip weights — used when structured chip data is available
 // ---------------------------------------------------------------------------
 const CHIP_WEIGHTS: Record<string, number> = {
@@ -285,9 +281,13 @@ Respond with ONLY valid JSON, no markdown:
 
     const where: any = { author: { role: 'PATIENT' } };
     if (communityId) where.communityId = communityId;
-
-    const priorityWhere: any = {};
-    if (priorityFilter !== 'ALL') priorityWhere.priorityLevel = priorityFilter;
+    
+    // Add priority filter to where clause
+    if (priorityFilter !== 'ALL') {
+      where.priority = {
+        priorityLevel: priorityFilter
+      };
+    }
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
@@ -295,14 +295,14 @@ Respond with ONLY valid JSON, no markdown:
         include: {
           author: { select: { id: true, username: true, avatar: true, role: true, verified: true } },
           community: { select: { id: true, name: true, icon: true } },
-          priority: priorityWhere.priorityLevel ? { where: priorityWhere } : true,
+          priority: true,
           _count: { select: { comments: true, votes: true } },
         },
         orderBy: [{ priority: { urgencyScore: 'desc' } }, { createdAt: 'desc' }],
         skip,
         take: limit,
       }),
-      prisma.post.count({ where: { ...where, ...(priorityFilter !== 'ALL' ? { priority: { priorityLevel: priorityFilter } } : {}) } }),
+      prisma.post.count({ where }),
     ]);
 
     const postsWithoutPriority = posts.filter(p => !p.priority);

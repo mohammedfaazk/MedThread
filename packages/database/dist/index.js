@@ -19,21 +19,12 @@ const client_1 = require("@prisma/client");
 // Use connection pooling URL for Supabase
 const getDatabaseUrl = () => {
     const url = process.env.DATABASE_URL;
-    if (!url)
+    if (!url) {
+        console.log('[Database] No DATABASE_URL found');
         return undefined;
-    // If using Supabase, use the pooling URL
-    // Supabase pooling URL format: postgresql://[user]:[password]@[host]:6543/[db]?pgbouncer=true
-    if (url.includes('supabase.co') && !url.includes('pgbouncer=true')) {
-        // Replace port 5432 with 6543 for connection pooling
-        const poolingUrl = url.replace(':5432/', ':6543/');
-        // Add pgbouncer parameter
-        const finalUrl = poolingUrl.includes('?')
-            ? `${poolingUrl}&pgbouncer=true`
-            : `${poolingUrl}?pgbouncer=true`;
-        console.log('[Database] Using Supabase connection pooling (port 6543)');
-        return finalUrl;
     }
-    console.log('[Database] Using direct database connection');
+    // Temporarily disable connection pooling due to connectivity issues
+    console.log('[Database] Using direct database connection (pooling disabled)');
     return url;
 };
 exports.prisma = new client_1.PrismaClient({

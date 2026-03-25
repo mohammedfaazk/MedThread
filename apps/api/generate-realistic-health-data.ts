@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@medthread/database';
 
 // Realistic health data for different regions
 const HEALTH_SCENARIOS = [

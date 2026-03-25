@@ -5,9 +5,7 @@
  * Analyzes symptom patterns to detect and predict disease outbreaks in real-time.
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@medthread/database';
 
 interface SymptomData {
   symptoms: string[];

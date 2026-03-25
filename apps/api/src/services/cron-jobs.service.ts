@@ -378,6 +378,16 @@ export class CronJobsService {
       await this.runSymptomHeatmapAggregation();
     });
 
+    // Run automated backups daily at 3 AM
+    cron.schedule('0 3 * * *', async () => {
+      await this.runAutomatedBackup();
+    });
+
+    // Cleanup old backups weekly on Sunday at 4 AM
+    cron.schedule('0 4 * * 0', async () => {
+      await this.cleanupOldBackups();
+    });
+
     // Calculate health trends every 6 hours
     cron.schedule('0 */6 * * *', async () => {
       await this.calculateHealthTrends();
@@ -468,6 +478,36 @@ export class CronJobsService {
       console.log('[CRON] Symptom heatmap aggregation completed successfully');
     } catch (error) {
       console.error('[CRON] Error running symptom heatmap aggregation:', error);
+    }
+  }
+
+  /**
+   * Run automated backup
+   */
+  async runAutomatedBackup() {
+    console.log('[CRON] Running automated backup...');
+    
+    try {
+      const { backupService } = require('./backup.service');
+      const result = await backupService.createFullBackup();
+      console.log(`[CRON] Backup created: ${result.backupId}`);
+    } catch (error) {
+      console.error('[CRON] Error creating backup:', error);
+    }
+  }
+
+  /**
+   * Cleanup old backups
+   */
+  async cleanupOldBackups() {
+    console.log('[CRON] Cleaning up old backups...');
+    
+    try {
+      const { backupService } = require('./backup.service');
+      const result = await backupService.cleanupOldBackups();
+      console.log(`[CRON] Cleaned up ${result.deletedCount} old backups`);
+    } catch (error) {
+      console.error('[CRON] Error cleaning up backups:', error);
     }
   }
 }

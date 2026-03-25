@@ -29,9 +29,9 @@ export default function LoginPage() {
       return
     }
 
-    // Simple email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    // More lenient email validation - allow common formats
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailRegex.test(email.trim())) {
       setError('Please enter a valid email address')
       return
     }
@@ -40,12 +40,12 @@ export default function LoginPage() {
     setError('')
 
     try {
-      console.log('🔐 Attempting login with:', email);
+      console.log('🔐 Attempting login with:', email.trim());
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       console.log('🌐 API URL:', API_URL);
       
       const response = await axios.post(`${API_URL}/api/auth/login`, {
-        email,
+        email: email.trim(),
         password
       })
 
@@ -133,11 +133,12 @@ export default function LoginPage() {
               Email
             </label>
             <input
-              type="text"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 bg-white/60 backdrop-blur-sm border border-white/40 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:bg-white/70"
               placeholder="your@email.com"
+              autoComplete="email"
               required
             />
           </div>

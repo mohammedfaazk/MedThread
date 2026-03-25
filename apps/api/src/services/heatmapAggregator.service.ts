@@ -1,10 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@medthread/database';
 import { extractSymptoms, extractSeverity } from './symptomExtractor.service';
-import { startOfDay, subDays, subWeeks } from 'date-fns';
-
-const prisma = new PrismaClient();
-
-// Comprehensive pincode to location mapping for major Indian cities and regions
+import { startOfDay, subDays, subWeeks } from 'date-fns';// Comprehensive pincode to location mapping for major Indian cities and regions
 const PINCODE_TO_STATE: Record<string, { state: string; city: string; district: string }> = {
   // Tamil Nadu
   '600026': { state: 'Tamil Nadu', city: 'Chennai', district: 'Chennai' },

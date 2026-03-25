@@ -5,9 +5,7 @@
  * This is REVOLUTIONARY - shifts from reactive to PREVENTIVE healthcare
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@medthread/database';
 
 interface UserHealthData {
   age: number;

@@ -19,6 +19,7 @@ export default function InteractiveMap({ data, regionType }: Props) {
   const mapInstance = useRef<any>(null);
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState('');
+  const geoJsonLayerRef = useRef<any>(null);
 
   // Process data into regions with totals
   const regionData = React.useMemo(() => {
@@ -70,12 +71,296 @@ export default function InteractiveMap({ data, regionType }: Props) {
     'Mizoram': [23.1645, 92.9376]
   };
 
+  // Get coordinates based on region type
+  const getRegionCoordinates = (regionName: string): [number, number] | null => {
+    // First check state coordinates
+    if (stateCoordinates[regionName]) {
+      return stateCoordinates[regionName];
+    }
+
+    // District and city coordinates
+    const locationCoordinates: Record<string, [number, number]> = {
+      // Tamil Nadu Districts
+      'Chennai': [13.0827, 80.2707],
+      'Coimbatore': [11.0168, 76.9558],
+      'Madurai': [9.9252, 78.1198],
+      'Tiruchirappalli': [10.7905, 78.7047],
+      'Salem': [11.6643, 78.1460],
+      'Tirunelveli': [8.7139, 77.7567],
+      'Erode': [11.3410, 77.7172],
+      'Vellore': [12.9165, 79.1325],
+      'Thoothukudi': [8.7642, 78.1348],
+      'Thanjavur': [10.7870, 79.1378],
+      'Dindigul': [10.3673, 77.9803],
+      'Kanchipuram': [12.8342, 79.7036],
+      
+      // Delhi Districts
+      'Central Delhi': [28.6519, 77.2315],
+      'North Delhi': [28.7041, 77.1025],
+      'South Delhi': [28.5355, 77.2490],
+      'East Delhi': [28.6692, 77.2265],
+      'West Delhi': [28.6517, 77.1048],
+      'New Delhi': [28.6139, 77.2090],
+      
+      // Maharashtra Districts
+      'Mumbai City': [18.9388, 72.8354],
+      'Mumbai Suburban': [19.0760, 72.8777],
+      'Pune': [18.5204, 73.8567],
+      'Nagpur': [21.1458, 79.0882],
+      'Thane': [19.2183, 72.9781],
+      'Nashik': [19.9975, 73.7898],
+      'Aurangabad': [19.8762, 75.3433],
+      'Solapur': [17.6599, 75.9064],
+      
+      // Karnataka Districts
+      'Bangalore Urban': [12.9716, 77.5946],
+      'Mysore': [12.2958, 76.6394],
+      'Hubli-Dharwad': [15.3647, 75.1240],
+      'Mangalore': [12.9141, 74.8560],
+      'Belgaum': [15.8497, 74.4977],
+      
+      // West Bengal Districts
+      'Kolkata': [22.5726, 88.3639],
+      'North 24 Parganas': [22.6708, 88.3832],
+      'South 24 Parganas': [22.1667, 88.4333],
+      'Howrah': [22.5958, 88.2636],
+      
+      // Telangana Districts
+      'Hyderabad': [17.3850, 78.4867],
+      'Rangareddy': [17.3850, 78.4867],
+      'Warangal Urban': [17.9689, 79.5941],
+      
+      // Gujarat Districts
+      'Ahmedabad': [23.0225, 72.5714],
+      'Surat': [21.1702, 72.8311],
+      'Vadodara': [22.3072, 73.1812],
+      'Rajkot': [22.3039, 70.8022],
+      
+      // Rajasthan Districts
+      'Jaipur': [26.9124, 75.7873],
+      'Jodhpur': [26.2389, 73.0243],
+      'Kota': [25.2138, 75.8648],
+      'Bikaner': [28.0229, 73.3119],
+      'Ajmer': [26.4499, 74.6399],
+      'Udaipur': [24.5854, 73.7125],
+      
+      // Uttar Pradesh Districts
+      'Lucknow': [26.8467, 80.9462],
+      'Kanpur': [26.4499, 80.3319],
+      'Ghaziabad': [28.6692, 77.4538],
+      'Agra': [27.1767, 78.0081],
+      'Meerut': [28.9845, 77.7064],
+      'Varanasi': [25.3176, 82.9739],
+      'Allahabad': [25.4358, 81.8463],
+      'Bareilly': [28.3670, 79.4304],
+      'Aligarh': [27.8974, 78.0880],
+      'Moradabad': [28.8389, 78.7378],
+      'Noida': [28.5355, 77.3910],
+      
+      // Punjab Districts
+      'Ludhiana': [30.9010, 75.8573],
+      'Amritsar': [31.6340, 74.8723],
+      'Jalandhar': [31.3260, 75.5762],
+      'Patiala': [30.3398, 76.3869],
+      
+      // Haryana Districts
+      'Faridabad': [28.4089, 77.3178],
+      'Gurgaon': [28.4595, 77.0266],
+      'Hisar': [29.1492, 75.7217],
+      'Rohtak': [28.8955, 76.6066],
+      'Panipat': [29.3909, 76.9635],
+      
+      // Kerala Districts
+      'Thiruvananthapuram': [8.5241, 76.9366],
+      'Kochi': [9.9312, 76.2673],
+      'Kozhikode': [11.2588, 75.7804],
+      'Kollam': [8.8932, 76.6141],
+      'Thrissur': [10.5276, 76.2144],
+      
+      // Andhra Pradesh Districts
+      'Visakhapatnam': [17.6868, 83.2185],
+      'Vijayawada': [16.5062, 80.6480],
+      'Guntur': [16.3067, 80.4365],
+      'Nellore': [14.4426, 79.9865],
+      'Tirupati': [13.6288, 79.4192],
+      
+      // Madhya Pradesh Districts
+      'Indore': [22.7196, 75.8577],
+      'Bhopal': [23.2599, 77.4126],
+      'Jabalpur': [23.1815, 79.9864],
+      'Gwalior': [26.2183, 78.1828],
+      'Ujjain': [23.1765, 75.7885],
+      
+      // Chhattisgarh Districts
+      'Raipur': [21.2514, 81.6296],
+      'Bhilai': [21.2167, 81.4333],
+      'Bilaspur': [22.0797, 82.1409],
+      
+      // Jharkhand Districts
+      'Ranchi': [23.3441, 85.3096],
+      'Jamshedpur': [22.8046, 86.2029],
+      'Dhanbad': [23.7957, 86.4304],
+      
+      // Bihar Districts
+      'Patna': [25.5941, 85.1376],
+      'Gaya': [24.7955, 85.0002],
+      'Bhagalpur': [25.2425, 86.9842],
+      'Muzaffarpur': [26.1225, 85.3906],
+      
+      // Odisha Districts
+      'Bhubaneswar': [20.2961, 85.8245],
+      'Cuttack': [20.4625, 85.8828],
+      'Rourkela': [22.2604, 84.8536],
+      
+      // Assam Districts
+      'Guwahati': [26.1445, 91.7362],
+      'Silchar': [24.8333, 92.7789],
+      'Dibrugarh': [27.4728, 94.9120],
+      
+      // Pincodes - Tamil Nadu
+      '600001': [13.0827, 80.2707], // Chennai
+      '600002': [13.0827, 80.2707],
+      '600003': [13.0827, 80.2707],
+      '600006': [13.0827, 80.2707],
+      '600007': [13.0827, 80.2707],
+      '600010': [13.0827, 80.2707],
+      '600017': [13.0827, 80.2707],
+      '600020': [13.0827, 80.2707],
+      '600026': [13.0827, 80.2707],
+      '600028': [13.0827, 80.2707],
+      '600040': [13.0827, 80.2707],
+      '600042': [13.0827, 80.2707],
+      '600094': [13.0827, 80.2707],
+      '600095': [13.0827, 80.2707],
+      '600096': [13.0827, 80.2707],
+      '600097': [13.0827, 80.2707],
+      '600099': [13.0827, 80.2707],
+      '600100': [13.0827, 80.2707],
+      '600119': [13.0827, 80.2707],
+      '600130': [12.8342, 79.7036], // Kanchipuram
+      '641001': [11.0168, 76.9558], // Coimbatore
+      '620001': [10.7905, 78.7047], // Tiruchirappalli
+      '625001': [9.9252, 78.1198],  // Madurai
+      
+      // Pincodes - Delhi
+      '110001': [28.6139, 77.2090], // New Delhi
+      '110002': [28.6139, 77.2090],
+      '110005': [28.6139, 77.2090],
+      '110016': [28.5355, 77.2490], // South Delhi
+      '110019': [28.5355, 77.2490],
+      '110025': [28.6692, 77.2265], // East Delhi
+      '110034': [28.7041, 77.1025], // North Delhi
+      
+      // Pincodes - Maharashtra
+      '400001': [18.9220, 72.8347], // Mumbai
+      '400002': [18.9220, 72.8347],
+      '400050': [19.0330, 72.8397], // Mumbai Suburban
+      '400069': [19.0330, 72.8397],
+      '411001': [18.5204, 73.8567], // Pune
+      '411004': [18.5204, 73.8567],
+      '411014': [18.5204, 73.8567],
+      '440001': [21.1458, 79.0882], // Nagpur
+      
+      // Pincodes - Karnataka
+      '560001': [12.9716, 77.5946], // Bangalore
+      '560002': [12.9716, 77.5946],
+      '560025': [12.9716, 77.5946],
+      '560034': [12.9716, 77.5946],
+      '560037': [12.9716, 77.5946],
+      '575001': [12.9141, 74.8560], // Mangalore
+      '580001': [15.3647, 75.1240], // Hubli
+      
+      // Pincodes - West Bengal
+      '700001': [22.5726, 88.3639], // Kolkata
+      '700016': [22.5726, 88.3639],
+      '700019': [22.5726, 88.3639],
+      '700091': [22.6708, 88.3832], // North 24 Parganas
+      
+      // Pincodes - Telangana
+      '500001': [17.3850, 78.4867], // Hyderabad
+      '500003': [17.3850, 78.4867],
+      '500016': [17.3850, 78.4867],
+      '500034': [17.3850, 78.4867],
+      
+      // Pincodes - Gujarat
+      '380001': [23.0225, 72.5714], // Ahmedabad
+      '380015': [23.0225, 72.5714],
+      '395001': [21.1702, 72.8311], // Surat
+      
+      // Pincodes - Rajasthan
+      '302001': [26.9124, 75.7873], // Jaipur
+      '302006': [26.9124, 75.7873],
+      '342001': [26.2389, 73.0243], // Jodhpur
+      
+      // Pincodes - Uttar Pradesh
+      '226001': [26.8467, 80.9462], // Lucknow
+      '208001': [26.4499, 80.3319], // Kanpur
+      '282001': [27.1767, 78.0081], // Agra
+      '221001': [25.3176, 82.9739], // Varanasi
+      '201301': [28.5355, 77.3910], // Noida
+      
+      // Pincodes - Punjab
+      '160001': [30.7333, 76.7794], // Chandigarh
+      '141001': [30.9010, 75.8573], // Ludhiana
+      '143001': [31.6340, 74.8723], // Amritsar
+      
+      // Pincodes - Haryana
+      '122001': [28.4595, 77.0266], // Gurgaon
+      '121001': [28.4089, 77.3178], // Faridabad
+      '134001': [30.3752, 76.7821], // Ambala
+      
+      // Pincodes - Kerala
+      '682001': [9.9312, 76.2673],  // Kochi
+      '695001': [8.5241, 76.9366],  // Thiruvananthapuram
+      '673001': [11.2588, 75.7804], // Kozhikode
+      
+      // Pincodes - Andhra Pradesh
+      '530001': [17.6868, 83.2185], // Visakhapatnam
+      '520001': [16.5062, 80.6480], // Vijayawada
+      
+      // Pincodes - Odisha
+      '751001': [20.2961, 85.8245], // Bhubaneswar
+      
+      // Pincodes - Madhya Pradesh
+      '462001': [23.2599, 77.4126], // Bhopal
+      '452001': [22.7196, 75.8577], // Indore
+      
+      // Pincodes - Chhattisgarh
+      '492001': [21.2514, 81.6296], // Raipur
+      
+      // Pincodes - Jharkhand
+      '834001': [23.3441, 85.3096], // Ranchi
+      
+      // Pincodes - Bihar
+      '800001': [25.5941, 85.1376], // Patna
+      
+      // Pincodes - Assam
+      '781001': [26.1445, 91.7362], // Guwahati
+    };
+
+    return locationCoordinates[regionName] || null;
+  };
+
   const getColor = (caseCount: number): string => {
     if (caseCount === 0) return '#e5e7eb';
     if (caseCount <= 5) return '#10b981';
     if (caseCount <= 10) return '#f59e0b';
     if (caseCount <= 20) return '#ef4444';
     return '#dc2626';
+  };
+
+  // Style function for GeoJSON regions
+  const getRegionStyle = (regionName: string) => {
+    const info = regionData[regionName];
+    const caseCount = info?.total || 0;
+    
+    return {
+      fillColor: getColor(caseCount),
+      weight: 2,
+      opacity: 1,
+      color: 'white',
+      fillOpacity: 0.7
+    };
   };
 
   useEffect(() => {
@@ -135,50 +420,128 @@ export default function InteractiveMap({ data, regionType }: Props) {
           maxZoom: 18,
         }).addTo(mapInstance.current);
 
-        console.log('Map created, adding markers...');
+        console.log('Map created, adding layers...');
 
-        // Add markers for regions with data
-        Object.entries(regionData).forEach(([regionName, info]) => {
-          const coords = stateCoordinates[regionName];
-          if (coords && info.total > 0) {
-            const color = getColor(info.total);
-            const radius = Math.max(10, Math.min(50, info.total * 2));
+        // Try to load state-level GeoJSON
+        let stateGeoJsonLoaded = false;
+        try {
+          const response = await fetch('/maps/india-states.geojson');
+          if (response.ok) {
+            const geojsonData = await response.json();
+            
+            console.log('State GeoJSON loaded, creating choropleth layer...');
+            
+            // Create GeoJSON layer with styling
+            geoJsonLayerRef.current = L.geoJSON(geojsonData, {
+              style: (feature: any) => {
+                const stateName = feature.properties.NAME_1;
+                return getRegionStyle(stateName);
+              },
+              onEachFeature: (feature: any, layer: any) => {
+                const stateName = feature.properties.NAME_1;
+                const info = regionData[stateName];
+                
+                const popupContent = info ? `
+                  <div style="padding: 8px;">
+                    <h3 style="margin: 0 0 8px 0; font-weight: bold; font-size: 16px;">${stateName}</h3>
+                    <p style="margin: 4px 0; font-size: 14px;"><strong>Total Cases:</strong> ${info.total}</p>
+                    <p style="margin: 4px 0; font-size: 14px;"><strong>Symptoms:</strong></p>
+                    <div style="font-size: 12px;">
+                      ${info.symptoms.slice(0, 5).map(s => `<span style="background: rgba(0,0,0,0.1); padding: 2px 6px; margin: 2px; border-radius: 4px; display: inline-block;">${s}</span>`).join('')}
+                      ${info.symptoms.length > 5 ? `<br><small>+${info.symptoms.length - 5} more symptoms</small>` : ''}
+                    </div>
+                  </div>
+                ` : `
+                  <div style="padding: 8px;">
+                    <h3 style="margin: 0 0 8px 0; font-weight: bold; font-size: 16px;">${stateName}</h3>
+                    <p style="margin: 4px 0; font-size: 14px; color: #666;">No symptom data available</p>
+                  </div>
+                `;
+                
+                layer.bindPopup(popupContent);
 
-            // Create circle marker
-            const circle = L.circleMarker(coords, {
-              radius: radius,
-              fillColor: color,
-              color: '#ffffff',
-              weight: 3,
-              opacity: 1,
-              fillOpacity: 0.8
-            });
+                layer.on({
+                  mouseover: (e: any) => {
+                    const layer = e.target;
+                    layer.setStyle({
+                      weight: 3,
+                      color: '#000',
+                      fillOpacity: 0.9
+                    });
+                  },
+                  mouseout: (e: any) => {
+                    geoJsonLayerRef.current.resetStyle(e.target);
+                  }
+                });
+              }
+            }).addTo(mapInstance.current);
 
-            // Add popup
-            circle.bindPopup(`
-              <div style="padding: 8px;">
-                <h3 style="margin: 0 0 8px 0; font-weight: bold; font-size: 16px;">${regionName}</h3>
-                <p style="margin: 4px 0; font-size: 14px;"><strong>Total Cases:</strong> ${info.total}</p>
-                <p style="margin: 4px 0; font-size: 14px;"><strong>Symptoms:</strong></p>
-                <div style="font-size: 12px;">
-                  ${info.symptoms.slice(0, 5).map(s => `<span style="background: rgba(0,0,0,0.1); padding: 2px 6px; margin: 2px; border-radius: 4px; display: inline-block;">${s}</span>`).join('')}
-                  ${info.symptoms.length > 5 ? `<br><small>+${info.symptoms.length - 5} more symptoms</small>` : ''}
-                </div>
-              </div>
-            `);
-
-            // Add hover effects
-            circle.on('mouseover', function() {
-              this.setStyle({ weight: 5, color: '#000000' });
-            });
-
-            circle.on('mouseout', function() {
-              this.setStyle({ weight: 3, color: '#ffffff' });
-            });
-
-            circle.addTo(mapInstance.current);
+            stateGeoJsonLoaded = true;
+            console.log('State choropleth layer added');
           }
-        });
+        } catch (err) {
+          console.log('Could not load state GeoJSON:', err);
+        }
+
+        // Try to load district-level GeoJSON
+        try {
+          const response = await fetch('/maps/india-districts.geojson');
+          if (response.ok) {
+            const geojsonData = await response.json();
+            
+            console.log('District GeoJSON loaded, adding district layer...');
+            
+            // Create district GeoJSON layer
+            const districtLayer = L.geoJSON(geojsonData, {
+              style: (feature: any) => {
+                const districtName = feature.properties.name;
+                return getRegionStyle(districtName);
+              },
+              onEachFeature: (feature: any, layer: any) => {
+                const districtName = feature.properties.name;
+                const info = regionData[districtName];
+                
+                if (info) {
+                  const popupContent = `
+                    <div style="padding: 8px;">
+                      <h3 style="margin: 0 0 8px 0; font-weight: bold; font-size: 16px;">${districtName}</h3>
+                      <p style="margin: 4px 0; font-size: 14px;"><strong>Total Cases:</strong> ${info.total}</p>
+                      <p style="margin: 4px 0; font-size: 14px;"><strong>Symptoms:</strong></p>
+                      <div style="font-size: 12px;">
+                        ${info.symptoms.slice(0, 5).map(s => `<span style="background: rgba(0,0,0,0.1); padding: 2px 6px; margin: 2px; border-radius: 4px; display: inline-block;">${s}</span>`).join('')}
+                        ${info.symptoms.length > 5 ? `<br><small>+${info.symptoms.length - 5} more symptoms</small>` : ''}
+                      </div>
+                    </div>
+                  `;
+                  
+                  layer.bindPopup(popupContent);
+
+                  layer.on({
+                    mouseover: (e: any) => {
+                      const layer = e.target;
+                      layer.setStyle({
+                        weight: 3,
+                        color: '#000',
+                        fillOpacity: 0.9
+                      });
+                    },
+                    mouseout: (e: any) => {
+                      layer.setStyle({
+                        weight: 2,
+                        color: '#ffffff',
+                        fillOpacity: 0.7
+                      });
+                    }
+                  });
+                }
+              }
+            }).addTo(mapInstance.current);
+
+            console.log('District layer added');
+          }
+        } catch (err) {
+          console.log('Could not load district GeoJSON:', err);
+        }
 
         console.log('Map initialization complete');
         setMapReady(true);

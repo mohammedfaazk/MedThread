@@ -1,0 +1,185 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "Chennai", "state": "Tamil Nadu", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [80.1707, 13.1827], [80.3707, 13.1827], [80.3707, 12.9827], [80.1707, 12.9827], [80.1707, 13.1827]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Mumbai City", "state": "Maharashtra", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [72.7354, 19.0388], [73.0354, 19.0388], [73.0354, 18.8388], [72.7354, 18.8388], [72.7354, 19.0388]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Mumbai Suburban", "state": "Maharashtra", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [72.7777, 19.1760], [72.9777, 19.1760], [72.9777, 18.9760], [72.7777, 18.9760], [72.7777, 19.1760]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Bangalore Urban", "state": "Karnataka", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.4946, 13.0716], [77.6946, 13.0716], [77.6946, 12.8716], [77.4946, 12.8716], [77.4946, 13.0716]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Kolkata", "state": "West Bengal", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [88.2639, 22.6726], [88.4639, 22.6726], [88.4639, 22.4726], [88.2639, 22.4726], [88.2639, 22.6726]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Hyderabad", "state": "Telangana", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [78.2867, 17.4850], [78.5867, 17.4850], [78.5867, 17.2850], [78.2867, 17.2850], [78.2867, 17.4850]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Pune", "state": "Maharashtra", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [73.7567, 18.6204], [73.9567, 18.6204], [73.9567, 18.4204], [73.7567, 18.4204], [73.7567, 18.6204]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Ahmedabad", "state": "Gujarat", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [72.4714, 23.1225], [72.6714, 23.1225], [72.6714, 22.9225], [72.4714, 22.9225], [72.4714, 23.1225]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Jaipur", "state": "Rajasthan", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [75.6873, 27.0124], [75.8873, 27.0124], [75.8873, 26.8124], [75.6873, 26.8124], [75.6873, 27.0124]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Lucknow", "state": "Uttar Pradesh", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [80.8462, 26.9467], [81.0462, 26.9467], [81.0462, 26.7467], [80.8462, 26.7467], [80.8462, 26.9467]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Central Delhi", "state": "Delhi", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.1315, 28.7519], [77.3315, 28.7519], [77.3315, 28.5519], [77.1315, 28.5519], [77.1315, 28.7519]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "North Delhi", "state": "Delhi", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.0025, 28.8041], [77.2025, 28.8041], [77.2025, 28.6041], [77.0025, 28.6041], [77.0025, 28.8041]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "South Delhi", "state": "Delhi", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.1490, 28.6355], [77.3490, 28.6355], [77.3490, 28.4355], [77.1490, 28.4355], [77.1490, 28.6355]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "East Delhi", "state": "Delhi", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.1265, 28.7692], [77.3265, 28.7692], [77.3265, 28.5692], [77.1265, 28.5692], [77.1265, 28.7692]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "West Delhi", "state": "Delhi", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.0048, 28.7517], [77.2048, 28.7517], [77.2048, 28.5517], [77.0048, 28.5517], [77.0048, 28.7517]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "New Delhi", "state": "Delhi", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [77.1090, 28.7139], [77.3090, 28.7139], [77.3090, 28.5139], [77.1090, 28.5139], [77.1090, 28.7139]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Coimbatore", "state": "Tamil Nadu", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [76.8558, 11.1168], [77.0558, 11.1168], [77.0558, 10.9168], [76.8558, 10.9168], [76.8558, 11.1168]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "Madurai", "state": "Tamil Nadu", "type": "district" },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [78.0198, 10.0252], [78.2198, 10.0252], [78.2198, 9.8252], [78.0198, 9.8252], [78.0198, 10.0252]
+        ]]
+      }
+    }
+  ]
+}

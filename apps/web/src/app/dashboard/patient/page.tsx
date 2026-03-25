@@ -9,6 +9,7 @@ import Iridescence from '@/components/ui/Iridescence'
 import { GlassIcon } from '@/components/enhancements/GlassIcon'
 import { CountUpNumber } from '@/components/enhancements/CountUpNumber'
 import SpotlightCard from '@/components/enhancements/SpotlightCard'
+import { HealthTipsWidget } from '@/components/health/HealthTipsWidget'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -26,7 +27,8 @@ import {
     TrendingUp,
     CheckCircle2,
     UserRound,
-    Pill
+    Pill,
+    Search
 } from 'lucide-react'
 
 interface Appointment {
@@ -252,17 +254,17 @@ export default function PatientDashboard() {
                                 </SpotlightCard>
                                 </AnimatedCard>
 
-                                {/* Symptom Checker Card */}
+                                {/* AI Detective Card */}
                                 <AnimatedCard delay={0.2}>
                                 <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col"
                                 >
                                     <div className="flex items-start justify-between mb-4">
-                                        <GlassIcon icon={Activity} color="orange" label="Symptoms" size={24} />
+                                        <GlassIcon icon={Search} color="orange" label="AI Detective" size={24} />
                                         <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-[10px] font-semibold uppercase">
                                             AI
                                         </span>
                                     </div>
-                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Symptom Checker</h3>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">AI Detective</h3>
                                     <p className="text-gray-500 text-sm mb-4 flex-1">
                                         Describe symptoms and get AI insights.
                                     </p>
@@ -274,7 +276,7 @@ export default function PatientDashboard() {
                                         ))}
                                     </div>
                                     <button
-                                        onClick={() => router.push('/symptom-checker')}
+                                        onClick={() => router.push('/ai-detective')}
                                         className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition"
                                     >
                                         Analyze Symptoms
@@ -393,6 +395,9 @@ export default function PatientDashboard() {
 
                         {/* Right Column: Medications & Secondary Tools */}
                         <div className="lg:col-span-1 space-y-6">
+
+                            {/* Health Tips Widget */}
+                            <HealthTipsWidget />
 
                             {/* Medication Reminder Card */}
                             <AnimatedCard delay={0.4}>

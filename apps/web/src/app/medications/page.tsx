@@ -24,9 +24,15 @@ export default function MedicationsPage() {
 
   const fetchMedications = async () => {
     try {
-      const response = await fetch(`/api/v1/medications/profile/${user.id}`);
-      const data = await response.json();
-      setMedications(data.medications || []);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/health-profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const result = await response.json();
+      if (result.success && result.data) {
+        setMedications(result.data.currentMedications || []);
+      }
     } catch (error) {
       console.error('Failed to fetch medications:', error);
     } finally {
@@ -56,15 +62,37 @@ export default function MedicationsPage() {
 
   const handleAddMedication = async (medicationData: any) => {
     try {
-      const response = await fetch(`/api/v1/medications/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, medication: medicationData })
+      const token = localStorage.getItem('auth_token');
+      
+      // Get current health profile
+      const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/health-profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const profileResult = await profileResponse.json();
+      const currentProfile = profileResult.data || {};
+      
+      // Add new medication to the list
+      const updatedMedications = [
+        ...(currentProfile.currentMedications || []),
+        medicationData
+      ];
+      
+      // Update health profile with new medication
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/health-profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...currentProfile,
+          currentMedications: updatedMedications
+        })
       });
 
       if (response.ok) {
         await fetchMedications();
-        await fetchInteractions();
         setShowForm(false);
       }
     } catch (error) {
@@ -75,15 +103,36 @@ export default function MedicationsPage() {
 
   const handleDeleteMedication = async (medicationId: string) => {
     try {
-      const response = await fetch(`/api/v1/medications/remove`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, medicationId })
+      const token = localStorage.getItem('auth_token');
+      
+      // Get current health profile
+      const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/health-profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const profileResult = await profileResponse.json();
+      const currentProfile = profileResult.data || {};
+      
+      // Remove medication from the list
+      const updatedMedications = (currentProfile.currentMedications || []).filter(
+        (med: any, index: number) => index.toString() !== medicationId
+      );
+      
+      // Update health profile
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/health-profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...currentProfile,
+          currentMedications: updatedMedications
+        })
       });
 
       if (response.ok) {
         await fetchMedications();
-        await fetchInteractions();
       }
     } catch (error) {
       console.error('Failed to delete medication:', error);

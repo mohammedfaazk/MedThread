@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { Calendar, Clock, User, FileText, Download, X, RefreshCw } from 'lucide-react'
+import { Calendar, Clock, User, FileText, Download, X, RefreshCw, Star } from 'lucide-react'
+import { ReviewForm } from '@/components/doctor/ReviewForm'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -11,6 +12,8 @@ export default function AppointmentHistoryPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [reviewingAppointment, setReviewingAppointment] = useState<any>(null)
 
   useEffect(() => {
     fetchAppointments()
@@ -18,14 +21,56 @@ export default function AppointmentHistoryPage() {
 
   const fetchAppointments = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const userId = localStorage.getItem('userId')
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('token')
+      const userStr = localStorage.getItem('user')
       const role = localStorage.getItem('role')
       
+      // Parse user object to get userId
+      let userId = localStorage.getItem('userId') // Try old way first
+      if (!userId && userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          userId = user.id
+        } catch (e) {
+          console.error('[History] Failed to parse user:', e)
+        }
+      }
+      
+      console.log('[History] LocalStorage values:', { 
+        userId, 
+        role,
+        hasToken: !!token,
+        userStr: userStr?.slice(0, 50)
+      })
+      
+      if (!userId) {
+        console.error('[History] No userId found - user not logged in')
+        setLoading(false)
+        return
+      }
+      
+      // Determine the correct role parameter for the API
+      // The API expects 'doctor' or 'patient', not 'PATIENT' or 'VERIFIED_DOCTOR'
+      let apiRole = 'patient'
+      if (role?.includes('DOCTOR')) {
+        apiRole = 'doctor'
+      } else if (userStr) {
+        try {
+          const user = JSON.parse(userStr)
+          apiRole = user.role?.includes('DOCTOR') ? 'doctor' : 'patient'
+        } catch (e) {
+          // ignore
+        }
+      }
+      
+      console.log('[History] Fetching from:', `${API_URL}/api/appointments/appointments?userId=${userId}&role=${apiRole}`)
+      
       const response = await axios.get(
-        `${API_URL}/api/appointments?userId=${userId}&role=${role}`,
+        `${API_URL}/api/appointments/appointments?userId=${userId}&role=${apiRole}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
+      
+      console.log('[History] Received appointments:', response.data.length, response.data)
       setAppointments(response.data)
     } catch (error) {
       console.error('Error fetching appointments:', error)
@@ -247,6 +292,19 @@ export default function AppointmentHistoryPage() {
                         </button>
                       </>
                     )}
+                    
+                    {apt.status === 'COMPLETED' && localStorage.getItem('role') !== 'doctor' && (
+                      <button
+                        onClick={() => {
+                          setReviewingAppointment(apt);
+                          setShowReviewForm(true);
+                        }}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm flex items-center gap-2"
+                      >
+                        <Star className="w-4 h-4" />
+                        Leave Review
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -320,6 +378,22 @@ export default function AppointmentHistoryPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Review Form Modal */}
+        {showReviewForm && reviewingAppointment && (
+          <ReviewForm
+            doctorId={reviewingAppointment.doctor.id}
+            doctorName={reviewingAppointment.doctor.username}
+            appointmentId={reviewingAppointment.id}
+            onClose={() => {
+              setShowReviewForm(false);
+              setReviewingAppointment(null);
+            }}
+            onSuccess={() => {
+              fetchAppointments();
+            }}
+          />
         )}
       </div>
     </div>

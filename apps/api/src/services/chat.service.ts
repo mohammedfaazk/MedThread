@@ -8,6 +8,8 @@ interface CreateMessageInput {
   content: string;
   type?: MessageType;
   attachment?: string;
+  isUrgent?: boolean;
+  urgencyLevel?: string;
 }
 
 interface UpdateMessageInput {
@@ -27,7 +29,7 @@ export class ChatService {
    * Create a new message with validation
    */
   async createMessage(input: CreateMessageInput) {
-    const { conversationId, senderId, content, type = MessageType.TEXT, attachment } = input;
+    const { conversationId, senderId, content, type = MessageType.TEXT, attachment, isUrgent, urgencyLevel } = input;
 
     // Validate content
     if (!content || content.trim().length === 0) {
@@ -81,7 +83,9 @@ export class ChatService {
         content,
         type,
         attachment,
-        isRead: false
+        isRead: false,
+        isUrgent: isUrgent || false,
+        urgencyLevel: urgencyLevel || null
       },
       include: {
         sender: {

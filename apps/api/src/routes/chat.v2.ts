@@ -33,7 +33,6 @@ router.get(
 router.get(
   '/conversations/:conversationId',
   authenticate,
-  validateChatAccess,
   asyncHandler(async (req: AuthRequest, res) => {
     const { conversationId } = req.params;
     
@@ -61,7 +60,6 @@ router.get(
 router.get(
   '/conversations/:conversationId/messages',
   authenticate,
-  validateChatAccess,
   asyncHandler(async (req: AuthRequest, res) => {
     const { conversationId } = req.params;
     const { limit, cursor } = req.query;
@@ -92,7 +90,7 @@ router.post(
   authenticate,
   asyncHandler(async (req: AuthRequest, res) => {
     const userId = req.userId!;
-    const { conversationId, content, type, attachment } = req.body;
+    const { conversationId, content, type, attachment, isUrgent, urgencyLevel } = req.body;
     
     // Validate required fields
     if (!conversationId || !content) {
@@ -114,13 +112,40 @@ router.post(
       });
     }
     
+    // AUTO-DETECT URGENT MESSAGES
+    let finalIsUrgent = false;
+    let finalUrgencyLevel = null;
+    
+    try {
+      const { urgentMessageService } = await import('../services/urgent-message.service');
+      const urgencyDetection = urgentMessageService.detectUrgency(content);
+      
+      // ALWAYS use detected urgency (ignore what frontend sends)
+      finalIsUrgent = urgencyDetection.isUrgent;
+      finalUrgencyLevel = urgencyDetection.urgencyLevel || null;
+      
+      console.log('🚨 Message Urgency Detection:', {
+        content: content.substring(0, 50),
+        detected_isUrgent: urgencyDetection.isUrgent,
+        detected_level: urgencyDetection.urgencyLevel,
+        final_isUrgent: finalIsUrgent,
+        final_level: finalUrgencyLevel,
+        reason: urgencyDetection.reason
+      });
+    } catch (urgencyError) {
+      console.error('❌ Urgency detection failed:', urgencyError);
+      // Continue without urgency detection if it fails
+    }
+    
     try {
       const message = await chatService.createMessage({
         conversationId,
         senderId: userId,
         content,
         type: type || MessageType.TEXT,
-        attachment
+        attachment,
+        isUrgent: finalIsUrgent,
+        urgencyLevel: finalUrgencyLevel
       });
       
       res.status(201).json({
@@ -228,7 +253,6 @@ router.delete(
 router.post(
   '/conversations/:conversationId/read',
   authenticate,
-  validateChatAccess,
   asyncHandler(async (req: AuthRequest, res) => {
     const userId = req.userId!;
     const { conversationId } = req.params;
@@ -249,7 +273,6 @@ router.post(
 router.get(
   '/conversations/:conversationId/unread',
   authenticate,
-  validateChatAccess,
   asyncHandler(async (req: AuthRequest, res) => {
     const userId = req.userId!;
     const { conversationId } = req.params;

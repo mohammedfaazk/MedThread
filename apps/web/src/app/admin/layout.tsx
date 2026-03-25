@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Shield, Users, FileText, MessageSquare, Flag, Activity, ScrollText, LogOut, BarChart3 } from 'lucide-react';
+import { Shield, Users, FileText, MessageSquare, Flag, Activity, ScrollText, LogOut, BarChart3, Trophy } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -64,6 +64,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/posts', label: 'Posts', icon: FileText },
     { href: '/admin/comments', label: 'Comments', icon: MessageSquare },
     { href: '/admin/reports', label: 'Reports', icon: Flag },
+    { href: '/admin/moderation', label: 'Moderation', icon: Activity },
+    { href: '/admin/health-challenges', label: 'Health Challenges', icon: Trophy },
+    { href: '/admin/backup', label: 'Backup', icon: Activity },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/audit-logs', label: 'Audit Logs', icon: ScrollText },
   ];

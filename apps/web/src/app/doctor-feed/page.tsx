@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { PriorityFeedFilter } from '@/components/feed/PriorityFeedFilter';
 import { PostPriorityBadge } from '@/components/feed/PostPriorityBadge';
-import { useUser } from '@/context/UserContext';
+import { useJWTAuth } from '@/context/JWTAuthContext';
 import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 import Link from 'next/link';
 import { MessageSquare, ThumbsUp, Clock, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -48,7 +49,8 @@ interface Post {
 }
 
 export default function DoctorFeedPage() {
-  const { user, role } = useUser();
+  const { user, role, loading: authLoading } = useJWTAuth();
+  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [priorityFilter, setPriorityFilter] = useState<'ALL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL');
@@ -57,14 +59,20 @@ export default function DoctorFeedPage() {
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    if (role !== 'DOCTOR' && role !== 'VERIFIED_DOCTOR') {
-      // Redirect non-doctors
-      window.location.href = '/';
+    if (authLoading) return;
+    
+    // Check if user is a doctor (role is 'DOCTOR' or 'VERIFIED_DOCTOR')
+    const isDoctor = role === 'DOCTOR' || role === 'VERIFIED_DOCTOR';
+    
+    if (!user || !isDoctor) {
+      console.log('[DoctorFeed] Access denied. User:', user, 'Role:', role);
+      router.push('/');
       return;
     }
     
+    console.log('[DoctorFeed] Access granted. Loading feed...');
     fetchPrioritizedFeed();
-  }, [priorityFilter, role]);
+  }, [priorityFilter, role, user, authLoading, router]);
 
   const fetchPrioritizedFeed = async (pageNum = 1) => {
     if (!user) return;
@@ -107,14 +115,28 @@ export default function DoctorFeedPage() {
     }
   };
 
-  if (role !== 'DOCTOR' && role !== 'VERIFIED_DOCTOR') {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isDoctor = role === 'DOCTOR' || role === 'VERIFIED_DOCTOR';
+  
+  if (!user || !isDoctor) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Restricted</h1>
-            <p className="text-gray-600">This page is only available to verified doctors.</p>
+            <p className="text-gray-600 mb-2">This page is only available to verified doctors.</p>
+            <p className="text-sm text-gray-500">Current role: {role || 'Not logged in'}</p>
           </div>
         </div>
       </div>

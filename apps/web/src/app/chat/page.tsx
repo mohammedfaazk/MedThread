@@ -195,9 +195,14 @@ export default function ChatPage() {
             </div>
           </div>
           <h2 className="text-2xl font-semibold text-center mb-2">Verify Your Identity</h2>
-          <p className="text-gray-600 text-center mb-6">
+          <p className="text-gray-600 text-center mb-4">
             For security purposes, please enter your password to access patient chats
           </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+            <p className="text-sm text-blue-800 text-center">
+              💡 <strong>Hint:</strong> Use the same password you used to log in
+            </p>
+          </div>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -221,7 +226,12 @@ export default function ChatPage() {
                 style={{ position: 'relative', zIndex: 10001 }}
               />
               {passwordError && (
-                <p className="text-red-600 text-sm mt-2">{passwordError}</p>
+                <div className="mt-2">
+                  <p className="text-red-600 text-sm">{passwordError}</p>
+                  <p className="text-gray-600 text-xs mt-1">
+                    Make sure you're using the exact password you used to log in to the app
+                  </p>
+                </div>
               )}
             </div>
             <button
@@ -284,6 +294,7 @@ export default function ChatPage() {
               conversationId={selectedConversationId}
               currentUserId={currentUserId}
               token={token}
+              username={username}
               onAccessDenied={handleAccessDenied}
             />
           ) : (

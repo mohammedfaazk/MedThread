@@ -1,8 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@medthread/database';
 import { subDays } from 'date-fns';
-
-const prisma = new PrismaClient();
 
 export async function getSymptomHeatmap(req: Request, res: Response) {
   try {

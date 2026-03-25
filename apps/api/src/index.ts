@@ -38,7 +38,7 @@ import adminUserActivityRouter from './routes/admin-user-activity.routes';
 import regionalSymptomAnalyticsRouter from './routes/regional-symptom-analytics.routes';
 import { paymentRouter } from './routes/payment.routes';
 import { fileUploadRouter } from './routes/file-upload.routes';
-import { notificationRouter } from './routes/notification.routes';
+import notificationRouter from './routes/notification.routes';
 import { emailQueueService } from './services/email-queue.service';
 import { cronJobsService } from './services/cron-jobs.service';
 import postsRouter from './routes/posts';
@@ -66,10 +66,41 @@ import voiceMessagesRouter from './routes/voice-messages';
 import aiDetectiveRouter from './routes/ai-detective';
 import secondOpinionRouter from './routes/second-opinion';
 import familyRouter from './routes/family';
+import medicalLibraryRouter from './routes/medical-library.routes';
+import translationRouter from './routes/translation.routes';
+import conversationSearchRouter from './routes/conversation-search.routes';
+import healthTipsRouter from './routes/health-tips.routes';
+import healthProfileRouter from './routes/health-profile.routes';
+import emergencyBroadcastRouter from './routes/emergency-broadcast.routes';
+import reviewsRouter from './routes/reviews.routes';
+import qaForumRouter from './routes/qa-forum.routes';
+import healthChallengesRouterNew from './routes/health-challenges.routes';
+import successStoriesRouter from './routes/success-stories.routes';
+import moderationRouter from './routes/moderation.routes';
+import technicalImprovementsRouter from './routes/technical-improvements.routes';
 import { errorHandler } from './middleware/errorHandler';
 import { apiLimiter } from './middleware/rateLimiter';
 import { sanitizeInput } from './middleware/sanitize';
 import { getCsrfToken } from './middleware/csrf';
+import medicalVerificationRoutes from './routes/medical-verification.routes';
+import contentModerationRoutes from './routes/content-moderation.routes';
+import liabilityProtectionRoutes from './routes/liability-protection.routes';
+import searchEnhancedRoutes from './routes/search.routes';
+import backupRoutes from './routes/backup.routes';
+import performanceMonitorRoutes from './routes/performance-monitor.routes';
+import notificationEnhancedRoutes from './routes/notification.routes';
+import spamDetectionRoutes from './routes/spam-detection.routes';
+import cacheRoutes from './routes/cache.routes';
+import { performanceMonitorService } from './services/performance-monitor.service';
+import {
+  authRateLimit,
+  postingRateLimit,
+  searchRateLimit,
+  medicalAIRateLimit,
+  uploadRateLimit,
+  passwordResetRateLimit,
+  reportingRateLimit
+} from './middleware/rateLimiter';
 
 dotenv.config();
 
@@ -127,6 +158,14 @@ app.use(sanitizeInput); // Prevent NoSQL injection
 
 // Apply rate limiting to all routes
 app.use('/api/', apiLimiter);
+
+// Apply specific rate limiters
+// TEMPORARILY DISABLED FOR DEBUGGING
+// app.use('/api/auth', authRateLimit);
+app.use('/api/v1/posts', postingRateLimit);
+app.use('/api/v1/search', searchRateLimit);
+app.use('/api/upload', uploadRateLimit);
+app.use('/api/reports', reportingRateLimit);
 
 // CSRF token endpoint
 app.get('/api/csrf-token', getCsrfToken);
@@ -197,9 +236,29 @@ app.use('/api/v1/diet-plan', dietPlanRouter);
 app.use('/api/v1/medications', medicationRouter);
 app.use('/api/v1/symptom-diary', symptomDiaryRouter);
 app.use('/api/v1/health-timeline', healthTimelineRouter);
-app.use('/api/v1/health-challenges', healthChallengesRouter);
+app.use('/api/v1/medical-library', medicalLibraryRouter);
+app.use('/api/v1/voice-messages', voiceMessagesRouter);
+app.use('/api/v1/translation', translationRouter);
+app.use('/api/v1/conversations', conversationSearchRouter);
+app.use('/api/v1/health-challenges', healthChallengesRouterNew);
 app.use('/api/v1/support-groups', supportGroupsRouter);
 app.use('/api/v1/health-risk', healthRiskRouter);
+
+// New Features
+app.use('/api/v1/health-tips', healthTipsRouter);
+app.use('/api/v1/health-profile', healthProfileRouter);
+app.use('/api/v1/emergency-broadcast', emergencyBroadcastRouter);
+app.use('/api/v1/reviews', reviewsRouter);
+
+// Community Features
+app.use('/api/v1/qa-forum', qaForumRouter);
+app.use('/api/v1/success-stories', successStoriesRouter);
+
+// Safety & Moderation
+app.use('/api/v1/moderation', moderationRouter);
+
+// Technical Improvements
+app.use('/api/v1/technical', technicalImprovementsRouter);
 
 // Unique Features
 app.use('/api/v1/unique-features', uniqueFeaturesRouter);
@@ -219,6 +278,17 @@ app.use('/api/v1/family', familyRouter);
 // Users System (v2)
 app.use('/api/v2/users', usersRouter);
 
+// NEW FEATURE ROUTES - Medical Safety & Advanced Features
+app.use('/api/v1/medical-verification', medicalAIRateLimit, medicalVerificationRoutes);
+app.use('/api/v1/content-moderation', contentModerationRoutes);
+app.use('/api/v1/liability', liabilityProtectionRoutes);
+app.use('/api/v1/search-enhanced', searchEnhancedRoutes);
+app.use('/api/v1/backup', backupRoutes);
+app.use('/api/v1/performance', performanceMonitorRoutes);
+app.use('/api/v1/notifications-enhanced', notificationEnhancedRoutes);
+app.use('/api/v1/spam-detection', spamDetectionRoutes);
+app.use('/api/v1/cache', cacheRoutes);
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -228,6 +298,10 @@ app.use(errorHandler);
 
 httpServer.listen(PORT, () => {
   console.log(`🏥 MedThread API running on port ${PORT}`);
+  
+  // Start performance monitoring
+  console.log('📊 Starting performance monitoring...');
+  performanceMonitorService.monitorSystemResources();
   
   // Start email queue processing
   try {

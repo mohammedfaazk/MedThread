@@ -114,6 +114,8 @@ export function RightSidebar() {
             <Link href="/content-policy" className="hover:underline">Content Policy</Link>
             <span>•</span>
             <Link href="/mod-policy" className="hover:underline">Mod Policy</Link>
+            <span>•</span>
+            <Link href="/content-guidelines" className="hover:underline">Medical Guidelines</Link>
           </div>
           <p>© 2026 MedThread, Inc.</p>
         </div>

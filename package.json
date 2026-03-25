@@ -22,7 +22,9 @@
   "dependencies": {
     "@stripe/stripe-js": "^8.7.0",
     "@types/nodemailer": "^7.0.10",
+    "firebase-admin": "^13.7.0",
     "nodemailer": "^8.0.1",
+    "openai": "^6.32.0",
     "pg": "^8.18.0",
     "stripe": "^20.3.1"
   }

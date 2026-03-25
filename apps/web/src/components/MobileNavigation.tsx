@@ -35,9 +35,9 @@ export function MobileNavigation() {
     },
     {
       icon: <BookOpen size={24} />,
-      label: 'Library',
-      onClick: () => router.push('/library'),
-      className: pathname === '/library' ? 'bg-cyan-100/80 border-cyan-300' : ''
+      label: 'Analytics',
+      onClick: () => router.push('/analytics'),
+      className: pathname === '/analytics' ? 'bg-cyan-100/80 border-cyan-300' : ''
     },
     {
       icon: <PenSquare size={24} />,

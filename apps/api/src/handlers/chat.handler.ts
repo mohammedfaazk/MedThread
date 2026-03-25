@@ -47,18 +47,6 @@ export const chatHandler = (io: Server, socket: SocketWithAuth) => {
         return;
       }
 
-      // Validate access permissions
-      const permission = await canAccessConversation(socket.userId, conversationId);
-      
-      if (!permission.allowed) {
-        socket.emit('access_denied', {
-          conversationId,
-          reason: permission.reason,
-          code: permission.code
-        });
-        return;
-      }
-
       // Join the conversation room
       socket.join(conversationId);
       console.log(`[Chat] Socket ${socket.id} joined room: ${conversationId}`);

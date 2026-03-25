@@ -27,7 +27,7 @@ export function BlurText({ text, className = '', delay = 0 }: BlurTextProps) {
     },
     visible: {
       opacity: 1,
-      filter: 'blur(0px)',
+      filter: 'blur(0)',
       y: 0,
       transition: {
         type: 'spring',

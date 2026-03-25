@@ -5,9 +5,7 @@
  * Matches patients with doctors based on PROVEN success rates, not just specialty.
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@medthread/database';
 
 interface MatchCriteria {
   symptoms: string[];

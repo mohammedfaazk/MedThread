@@ -101,6 +101,14 @@ model User {
   patientHealthProfile                            PatientHealthProfile?
   symptomReports                                  SymptomReport[]
   doctorEndorsements                              DoctorEndorsement[]   @relation("DoctorEndorsements")
+  searchHistory                                   SearchHistory[]
+  devices                                         UserDevice[]
+  contentModerations                              ContentModeration[]
+  emergencyBroadcasts                             EmergencyBroadcast[]      @relation("EmergencyBroadcastCreator")
+  forumQuestions                                  ForumQuestion[]           @relation("ForumQuestions")
+  forumAnswers                                    ForumAnswer[]             @relation("ForumAnswers")
+  successStories                                  SuccessStory[]            @relation("SuccessStories")
+  storyComments                                   StoryComment[]            @relation("StoryComments")
 
   @@index([email])
   @@index([username])
@@ -376,6 +384,8 @@ model Message {
   conversationId String?
   attachment     String?
   type           MessageType   @default(TEXT)
+  isUrgent       Boolean       @default(false)
+  urgencyLevel   String?
   createdAt      DateTime      @default(now())
   conversation   Conversation? @relation(fields: [conversationId], references: [id])
   receiver       User          @relation("Receiver", fields: [receiverId], references: [id])
@@ -1118,27 +1128,35 @@ model CommentConversion {
 }
 
 model PatientFeedback {
-  id             String        @id @default(cuid())
-  patientId      String
-  doctorId       String
-  conversationId String?
-  appointmentId  String?
-  status         String        @default("PENDING") // PENDING, CURED, NOT_YET, CONSULT_NEW_DOCTOR
-  feedbackCount  Int           @default(0)
-  lastFeedbackAt DateTime?
-  curedAt        DateTime?
-  wasClinicVisit Boolean       @default(false)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  patient        User          @relation("PatientFeedbacks", fields: [patientId], references: [id], onDelete: Cascade)
-  doctor         User          @relation("DoctorFeedbacks", fields: [doctorId], references: [id], onDelete: Cascade)
-  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
-  appointment    Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  id                      String        @id @default(cuid())
+  patientId               String
+  doctorId                String
+  conversationId          String?
+  appointmentId           String?
+  status                  String        @default("PENDING") // PENDING, CURED, NOT_YET, CONSULT_NEW_DOCTOR
+  feedbackCount           Int           @default(0)
+  lastFeedbackAt          DateTime?
+  curedAt                 DateTime?
+  wasClinicVisit          Boolean       @default(false)
+  // Review fields
+  rating                  Float?        // Overall rating (1-5)
+  communicationRating     Float?        // Communication rating (1-5)
+  professionalismRating   Float?        // Knowledge/Professionalism rating (1-5)
+  treatmentEffectivenessRating Float?   // Empathy/Treatment effectiveness rating (1-5)
+  feedback                String?       // Written review text
+  isAnonymous             Boolean       @default(false)
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  patient                 User          @relation("PatientFeedbacks", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor                  User          @relation("DoctorFeedbacks", fields: [doctorId], references: [id], onDelete: Cascade)
+  conversation            Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  appointment             Appointment?  @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
 
   @@index([patientId])
   @@index([doctorId])
   @@index([status])
   @@index([lastFeedbackAt])
+  @@index([rating])
 }
 
 model CommunityActivity {
@@ -1164,6 +1182,8 @@ model DoctorActivityMetrics {
   doctorId              String    @unique
   totalPatientsAcquired Int       @default(0)
   avgReplyTimeHours     Float?    // Average reply time in hours
+  averageRating         Float?    // Average overall rating from reviews
+  totalRatings          Int       @default(0) // Total number of reviews
   lastActiveAt          DateTime?
   dailyActivityPattern  Json?     // Activity by hour of day (0-23)
   weeklyActivityPattern Json?     // Activity by day of week
@@ -1174,6 +1194,7 @@ model DoctorActivityMetrics {
 
   @@index([doctorId])
   @@index([lastActiveAt])
+  @@index([averageRating])
 }
 
 model UserActivityLog {
@@ -1344,4 +1365,421 @@ model SymptomHeatmapStat {
   @@unique([regionType, regionName, symptomTag, reportDate])
   @@index([regionType, regionName, reportDate])
   @@index([symptomTag, reportDate])
+}
+
+// Medical Safety & Verification Models
+model MedicalVerification {
+  id              String   @id @default(cuid())
+  postId          String?
+  commentId       String?
+  content         String
+  isAccurate      Boolean
+  confidenceScore Float
+  concerns        Json     // Array of concerns
+  recommendations Json     // Array of recommendations
+  riskLevel       String   // LOW, MEDIUM, HIGH, CRITICAL
+  requiresReview  Boolean  @default(false)
+  verifiedAt      DateTime @default(now())
+  verifiedBy      String?  // AI or human verifier ID
+  metadata        Json?
+
+  @@index([postId])
+  @@index([commentId])
+  @@index([riskLevel])
+  @@index([requiresReview])
+  @@index([verifiedAt])
+}
+
+model ContentModeration {
+  id            String   @id @default(cuid())
+  content       String
+  authorId      String
+  contentType   String   // post, comment
+  isAppropriate Boolean
+  toxicityScore Float
+  categories    Json     // spam, harassment, misinformation, etc.
+  action        String   // APPROVE, FLAG, REMOVE, REVIEW
+  confidence    Float
+  moderatedAt   DateTime @default(now())
+  moderatedBy   String?  // AI or human moderator ID
+  metadata      Json?
+  author        User     @relation(fields: [authorId], references: [id])
+
+  @@index([authorId])
+  @@index([contentType])
+  @@index([action])
+  @@index([moderatedAt])
+}
+
+model AutoFlag {
+  id        String   @id @default(cuid())
+  postId    String?
+  commentId String?
+  reason    String
+  status    String   @default("PENDING") // PENDING, REVIEWED, RESOLVED
+  flaggedAt DateTime @default(now())
+  metadata  Json?
+
+  @@index([postId])
+  @@index([commentId])
+  @@index([status])
+  @@index([flaggedAt])
+}
+
+model LiabilityWaiver {
+  id              String   @id @default(cuid())
+  doctorId        String
+  patientId       String
+  interactionType String   // CONSULTATION, ADVICE, COMMENT, POST_REPLY
+  waiverText      String
+  acceptedAt      DateTime
+  ipAddress       String?
+  userAgent       String?
+  metadata        Json?
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([interactionType])
+  @@index([acceptedAt])
+}
+
+// Notification & Device Models
+model UserDevice {
+  id               String   @id @default(cuid())
+  userId           String
+  fcmToken         String
+  deviceType       String   // web, android, ios
+  isActive         Boolean  @default(true)
+  subscriptionData Json?    // Push subscription data
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, fcmToken])
+  @@index([userId])
+  @@index([isActive])
+}
+
+// Search & History Models
+model SearchHistory {
+  id             String   @id @default(cuid())
+  userId         String
+  query          String
+  type           String   // doctors, posts, symptoms
+  searchCount    Int      @default(1)
+  lastSearchedAt DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, query, type])
+  @@index([userId])
+  @@index([type])
+  @@index([lastSearchedAt])
+}
+
+// Backup & Recovery Models
+model BackupRecord {
+  id              String    @id @default(cuid())
+  backupId        String    @unique
+  type            String    // FULL, INCREMENTAL
+  status          String    // PENDING, COMPLETED, FAILED
+  totalSize       BigInt?
+  duration        Int?      // milliseconds
+  recordsBackedUp Int?
+  metadata        Json?
+  createdAt       DateTime  @default(now())
+  completedAt     DateTime?
+  error           String?
+
+  @@index([backupId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Performance Monitoring Models
+model PerformanceMetric {
+  id        String   @id @default(cuid())
+  name      String
+  value     Float
+  unit      String
+  metadata  Json?
+  timestamp DateTime @default(now())
+
+  @@index([name])
+  @@index([timestamp])
+}
+
+model HealthCheck {
+  id        String   @id @default(cuid())
+  overall   String   // healthy, degraded, unhealthy
+  services  Json     // Array of service health results
+  timestamp DateTime @default(now())
+
+  @@index([overall])
+  @@index([timestamp])
+}
+
+model PerformanceAlert {
+  id        String   @id @default(cuid())
+  type      String
+  details   Json
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  resolvedAt DateTime?
+
+  @@index([type])
+  @@index([resolved])
+  @@index([createdAt])
+}
+
+// Emergency Broadcast System
+model EmergencyBroadcast {
+  id              String    @id @default(cuid())
+  title           String
+  message         String    @db.Text
+  priority        String    @default("MEDIUM") // CRITICAL, HIGH, MEDIUM
+  type            String    @default("SYSTEM") // HEALTH_ALERT, SYSTEM, EMERGENCY
+  targetAudience  String    @default("ALL") // ALL, PATIENTS, DOCTORS
+  targetRegion    String?
+  isActive        Boolean   @default(true)
+  expiresAt       DateTime?
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  creator         User      @relation("EmergencyBroadcastCreator", fields: [createdBy], references: [id])
+
+  @@index([isActive])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([expiresAt])
+}
+
+// ============================================
+// PATIENT SUPPORT GROUPS
+// ============================================
+
+model SupportGroup {
+  id          String   @id @default(cuid())
+  name        String
+  condition   String   // Specific condition
+  description String
+  isPrivate   Boolean  @default(false)
+  moderators  Json     // Array of user IDs (doctors/patients)
+  members     Json     // Array of {userId, joinedAt, isAnonymous}
+  memberCount Int      @default(0)
+  rules       Json?
+  meetups     Json?    // Scheduled meetups
+  resources   Json?    // Helpful resources
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([condition])
+  @@index([isPrivate])
+  @@index([memberCount])
+}
+
+model SupportGroupPost {
+  id          String   @id @default(cuid())
+  groupId     String
+  authorId    String
+  isAnonymous Boolean  @default(false)
+  title       String
+  content     String
+  type        String   // "QUESTION", "SUCCESS_STORY", "TIP", "SUPPORT"
+  upvotes     Int      @default(0)
+  commentCount Int     @default(0)
+  isPinned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([groupId])
+  @@index([authorId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============================================
+// Q&A FORUM
+// ============================================
+
+model ForumQuestion {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  authorId    String
+  category    String?  // "GENERAL", "SYMPTOMS", "TREATMENT", "LIFESTYLE"
+  tags        String[]
+  status      String   @default("OPEN") // "OPEN", "ANSWERED", "CLOSED"
+  upvotes     Int      @default(0)
+  downvotes   Int      @default(0)
+  viewCount   Int      @default(0)
+  isPinned    Boolean  @default(false)
+  isVerified  Boolean  @default(false)
+  isAnonymous Boolean  @default(false)
+  acceptedAnswerId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  answers     ForumAnswer[]
+  author      User     @relation("ForumQuestions", fields: [authorId], references: [id])
+
+  @@index([authorId])
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+  @@index([upvotes])
+}
+
+model ForumAnswer {
+  id          String   @id @default(cuid())
+  questionId  String
+  authorId    String
+  content     String   @db.Text
+  upvotes     Int      @default(0)
+  downvotes   Int      @default(0)
+  isAccepted  Boolean  @default(false)
+  isVerified  Boolean  @default(false) // Verified by doctor
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  question    ForumQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  author      User     @relation("ForumAnswers", fields: [authorId], references: [id])
+
+  @@index([questionId])
+  @@index([authorId])
+  @@index([isAccepted])
+  @@index([createdAt])
+}
+
+// ============================================
+// SUCCESS STORIES
+// ============================================
+
+model SuccessStory {
+  id          String   @id @default(cuid())
+  authorId    String
+  title       String
+  condition   String
+  story       String   @db.Text
+  beforePhotos Json?   // Array of photo URLs
+  afterPhotos Json?    // Array of photo URLs
+  treatment   String?
+  duration    String?  // How long it took
+  likes       Int      @default(0)
+  views       Int      @default(0)
+  status      String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  isVerified  Boolean  @default(false)
+  isInspiring Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  comments    StoryComment[]
+  likedBy     StoryLike[]
+  author      User     @relation("SuccessStories", fields: [authorId], references: [id])
+
+  @@index([authorId])
+  @@index([condition])
+  @@index([status])
+  @@index([createdAt])
+  @@index([likes])
+}
+
+model StoryLike {
+  id        String   @id @default(cuid())
+  storyId   String
+  userId    String
+  createdAt DateTime @default(now())
+  story     SuccessStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([storyId, userId])
+  @@index([storyId])
+  @@index([userId])
+}
+
+model StoryComment {
+  id        String   @id @default(cuid())
+  storyId   String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  story     SuccessStory @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  author    User @relation("StoryComments", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([storyId])
+  @@index([authorId])
+}
+
+// ============================================
+// HEALTH CHALLENGES (Enhanced)
+// ============================================
+
+model ChallengeParticipant {
+  id          String   @id @default(cuid())
+  challengeId String
+  userId      String
+  progress    Float    @default(0) // 0-100 percentage
+  points      Int      @default(0)
+  isCompleted Boolean  @default(false)
+  completedAt DateTime?
+  joinedAt    DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  isApproved  Boolean  @default(true) // Auto-approved for low-risk, requires doctor approval for high-risk
+  approvedBy  String?  // Doctor who approved (for high-risk challenges)
+  approvedAt  DateTime?
+
+  @@unique([challengeId, userId])
+  @@index([challengeId])
+  @@index([userId])
+  @@index([isCompleted])
+}
+
+model ChallengeApprovalRequest {
+  id          String   @id @default(cuid())
+  challengeId String
+  patientId   String
+  doctorId    String
+  status      String   @default("PENDING") // "PENDING", "APPROVED", "REJECTED"
+  notes       String?
+  createdAt   DateTime @default(now())
+  respondedAt DateTime?
+
+  @@unique([challengeId, patientId])
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([status])
+}
+
+// ============================================
+// HEALTH CHALLENGES (from unique features)
+// ============================================
+
+model HealthChallenge {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  type          String   // "STEPS", "WATER", "SLEEP", "MEDITATION", "MEDICATION_ADHERENCE"
+  goal          Int      // Target value
+  unit          String   // "steps", "glasses", "hours"
+  participants  Json     // Array of {userId, progress, joinedAt}
+  startDate     DateTime
+  endDate       DateTime
+  rewards       Json     // Array of rewards
+  leaderboard   Json     // Top performers
+  isActive      Boolean  @default(true)
+  createdBy     String?  // User or system
+  location      String?  // Optional location-based challenge
+  participantCount Int   @default(0)
+  duration      String?
+  category      String?
+  difficulty    String?
+  riskLevel     String   @default("LOW") // "LOW" or "HIGH"
+  requiresDoctorApproval Boolean @default(false) // For high-risk challenges
+  isDoctorApproved Boolean @default(false) // Whether at least one doctor approved this challenge
+  approvedByDoctors Json @default("[]") // Array of {doctorId, doctorName, approvedAt}
+  createdAt     DateTime @default(now())
+
+  @@index([type])
+  @@index([isActive])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([riskLevel])
+  @@index([isDoctorApproved])
 }

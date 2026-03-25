@@ -1,56 +1,40 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useJWTAuth } from '@/context/JWTAuthContext';
-import { useRouter } from 'next/navigation';
+import { Users, Plus, Search, Lock, Globe, TrendingUp } from 'lucide-react';
+import Link from 'next/link';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface SupportGroup {
   id: string;
   name: string;
   condition: string;
   description: string;
-  memberCount: number;
   isPrivate: boolean;
+  memberCount: number;
   members: any[];
 }
 
 export default function SupportGroupsPage() {
-  const { user } = useJWTAuth();
-  const router = useRouter();
   const [groups, setGroups] = useState<SupportGroup[]>([]);
-  const [myGroups, setMyGroups] = useState<SupportGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'my'>('all');
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   useEffect(() => {
-    if (user) {
-      fetchGroups();
-      fetchMyGroups();
-    }
-  }, [user]);
+    fetchGroups();
+  }, []);
 
   const fetchGroups = async () => {
     try {
-      const response = await fetch('/api/v1/support-groups');
+      const response = await fetch(`${API_URL}/api/v1/support-groups`);
       const data = await response.json();
-      setGroups(data.groups || []);
+      setGroups(data.success ? data.data : []);
     } catch (error) {
       console.error('Error fetching groups:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchMyGroups = async () => {
-    if (!user) return;
-    try {
-      const response = await fetch(`/api/v1/support-groups/user/${user.id}`);
-      const data = await response.json();
-      setMyGroups(data.groups || []);
-    } catch (error) {
-      console.error('Error fetching my groups:', error);
     }
   };
 
@@ -59,284 +43,271 @@ export default function SupportGroupsPage() {
       fetchGroups();
       return;
     }
+
     try {
-      const response = await fetch(`/api/v1/support-groups/search?q=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`${API_URL}/api/v1/support-groups/search/${searchQuery}`);
       const data = await response.json();
-      setGroups(data.groups || []);
+      setGroups(data.success ? data.data : []);
     } catch (error) {
       console.error('Error searching groups:', error);
     }
   };
 
-  const handleJoinGroup = async (groupId: string) => {
-    try {
-      const response = await fetch(`/api/v1/support-groups/${groupId}/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, isAnonymous: false })
-      });
-      
-      if (response.ok) {
-        fetchGroups();
-        fetchMyGroups();
-      }
-    } catch (error) {
-      console.error('Error joining group:', error);
-    }
-  };
-
-  const isUserMember = (group: SupportGroup) => {
-    return myGroups.some(g => g.id === group.id);
-  };
-
-  if (!user) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Sign in to access Support Groups</h2>
-          <button
-            onClick={() => router.push('/login')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg"
-          >
-            Sign In
-          </button>
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading support groups...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Support Groups</h1>
-          <p className="text-gray-600">Connect with others facing similar health challenges</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Community Support Groups</h1>
+              <p className="text-blue-100">Connect with others facing similar health challenges</p>
+            </div>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-blue-50 transition flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Create Group
+            </button>
+          </div>
         </div>
+      </div>
 
-        {/* Search and Create */}
-        <div className="mb-6 flex gap-4">
-          <div className="flex-1 flex gap-2">
-            <input
-              type="text"
-              placeholder="Search groups by condition or name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 px-4 py-2 border rounded-lg"
-            />
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                placeholder="Search groups by condition, name, or description..."
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
             <button
               onClick={handleSearch}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold"
             >
               Search
             </button>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          >
-            Create Group
-          </button>
         </div>
 
-        {/* Tabs */}
-        <div className="mb-6 border-b">
-          <div className="flex gap-4">
+        {/* Groups Grid */}
+        {groups.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No groups found</h3>
+            <p className="text-gray-600 mb-6">Be the first to create a support group!</p>
             <button
-              onClick={() => setActiveTab('all')}
-              className={`px-4 py-2 border-b-2 ${
-                activeTab === 'all'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600'
-              }`}
+              onClick={() => setShowCreateForm(true)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold inline-flex items-center gap-2"
             >
-              All Groups ({groups.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('my')}
-              className={`px-4 py-2 border-b-2 ${
-                activeTab === 'my'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-600'
-              }`}
-            >
-              My Groups ({myGroups.length})
+              <Plus className="w-5 h-5" />
+              Create Group
             </button>
           </div>
-        </div>
-
-        {/* Groups List */}
-        {loading ? (
-          <div className="text-center py-12">Loading groups...</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(activeTab === 'all' ? groups : myGroups).map((group) => (
-              <div key={group.id} className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-xl font-semibold">{group.name}</h3>
-                  {group.isPrivate && (
-                    <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded">
-                      Private
-                    </span>
-                  )}
-                </div>
-                
-                <div className="mb-3">
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
-                    {group.condition}
-                  </span>
+            {groups.map((group) => (
+              <Link
+                key={group.id}
+                href={`/support-groups/${group.id}`}
+                className="bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-lg transition group"
+              >
+                {/* Group Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition">
+                      {group.name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+                        {group.condition}
+                      </span>
+                      {group.isPrivate ? (
+                        <Lock className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <Globe className="w-4 h-4 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
                 </div>
 
+                {/* Description */}
                 <p className="text-gray-600 text-sm mb-4 line-clamp-2">
                   {group.description}
                 </p>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    {group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}
-                  </span>
-                  
-                  {isUserMember(group) ? (
-                    <button
-                      onClick={() => router.push(`/support-groups/${group.id}`)}
-                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
-                    >
-                      View Group
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleJoinGroup(group.id)}
-                      className="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
-                    >
-                      Join Group
-                    </button>
-                  )}
+                {/* Stats */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Users className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      {group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-green-600">
+                    <TrendingUp className="w-4 h-4" />
+                    <span className="text-xs font-medium">Active</span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
-          </div>
-        )}
-
-        {(activeTab === 'all' ? groups : myGroups).length === 0 && !loading && (
-          <div className="text-center py-12 text-gray-500">
-            {activeTab === 'all' 
-              ? 'No groups found. Create the first one!'
-              : "You haven't joined any groups yet."}
           </div>
         )}
       </div>
 
       {/* Create Group Modal */}
-      {showCreateModal && (
+      {showCreateForm && (
         <CreateGroupModal
-          onClose={() => setShowCreateModal(false)}
+          onClose={() => setShowCreateForm(false)}
           onSuccess={() => {
-            setShowCreateModal(false);
+            setShowCreateForm(false);
             fetchGroups();
-            fetchMyGroups();
           }}
-          userId={user.id}
         />
       )}
     </div>
   );
 }
 
-function CreateGroupModal({ onClose, onSuccess, userId }: any) {
+function CreateGroupModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const [formData, setFormData] = useState({
     name: '',
     condition: '',
     description: '',
-    isPrivate: false
+    isPrivate: false,
+    rules: []
   });
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.condition) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      const response = await fetch('/api/v1/support-groups', {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_URL}/api/v1/support-groups`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, createdBy: userId })
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
       });
 
-      if (response.ok) {
+      const result = await response.json();
+      if (result.success) {
+        alert('Group created successfully!');
         onSuccess();
+      } else {
+        alert('Failed to create group');
       }
     } catch (error) {
       console.error('Error creating group:', error);
+      alert('Failed to create group');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 className="text-2xl font-bold mb-4">Create Support Group</h2>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Group Name</label>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900">Create Support Group</h2>
+          <p className="text-sm text-gray-600">Start a community for people with similar health challenges</p>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Group Name *
+            </label>
             <input
               type="text"
-              required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg"
               placeholder="e.g., Diabetes Support Network"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Condition</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Condition *
+            </label>
             <input
               type="text"
-              required
               value={formData.condition}
               onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg"
-              placeholder="e.g., Type 2 Diabetes"
+              placeholder="e.g., Diabetes, Hypertension, Asthma"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Description</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
             <textarea
-              required
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg"
-              rows={3}
+              rows={4}
               placeholder="Describe the purpose of this group..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
           </div>
 
-          <div className="mb-6">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.isPrivate}
-                onChange={(e) => setFormData({ ...formData, isPrivate: e.target.checked })}
-                className="mr-2"
-              />
-              <span className="text-sm">Make this group private</span>
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              id="isPrivate"
+              checked={formData.isPrivate}
+              onChange={(e) => setFormData({ ...formData, isPrivate: e.target.checked })}
+              className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <label htmlFor="isPrivate" className="text-sm text-gray-700">
+              Make this group private (requires approval to join)
             </label>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-4">
             <button
-              type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition"
             >
               Cancel
             </button>
             <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition"
             >
-              Create Group
+              {submitting ? 'Creating...' : 'Create Group'}
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

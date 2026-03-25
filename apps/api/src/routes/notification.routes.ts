@@ -1,145 +1,82 @@
-import { Router } from 'express';
-import { notificationController } from '../controllers/notification.controller';
-import { authenticate } from '../middleware/auth';
-import { requireAdmin } from '../middleware/requireAdmin';
-import { notificationRateLimit } from '../middleware/rateLimit';
+import { Router, Request, Response } from 'express';
+import { notificationService } from '../services/notification.service';
+import { authenticate, AuthRequest } from '../middleware/auth.refactored';
 
 const router = Router();
 
-/**
- * @route   GET /api/notifications/unread-count
- * @desc    Get unread notification count for authenticated user
- * @access  Private
- */
-router.get(
-  '/unread-count',
-  authenticate,
-  notificationRateLimit,
-  notificationController.getUnreadCount
-);
+router.post('/send', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId, title, body, data, urgent, type } = req.body;
+    const result = await notificationService.sendNotification(userId, {
+      title,
+      body,
+      data,
+      urgent,
+      type
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Send failed' });
+  }
+});
 
-/**
- * @route   GET /api/notifications
- * @desc    Get notifications for authenticated user with filtering and pagination
- * @access  Private
- * @query   page - Page number (default: 1)
- * @query   limit - Items per page (default: 20)
- * @query   type - Filter by notification type
- * @query   isRead - Filter by read status (true/false)
- * @query   startDate - Filter by start date (ISO string)
- * @query   endDate - Filter by end date (ISO string)
- */
-router.get(
-  '/',
-  authenticate,
-  notificationRateLimit,
-  notificationController.getNotifications
-);
+router.post('/subscribe-device', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { endpoint, keys } = req.body;
+    await notificationService.subscribeDevice(req.userId, { endpoint, keys });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Subscription failed' });
+  }
+});
 
-/**
- * @route   POST /api/notifications/mark-all-read
- * @desc    Mark all notifications as read for authenticated user
- * @access  Private
- */
-router.post(
-  '/mark-all-read',
-  authenticate,
-  notificationRateLimit,
-  notificationController.markAllAsRead
-);
+router.post('/unsubscribe-device', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { endpoint } = req.body;
+    await notificationService.unsubscribeDevice(req.userId, endpoint);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Unsubscription failed' });
+  }
+});
 
-/**
- * @route   POST /api/notifications/:id/read
- * @desc    Mark a specific notification as read
- * @access  Private
- */
-router.post(
-  '/:id/read',
-  authenticate,
-  notificationRateLimit,
-  notificationController.markAsRead
-);
+router.get('/unread-count', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const count = await notificationService.getUnreadCount(req.userId);
+    res.json({ count });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Count fetch failed' });
+  }
+});
 
-/**
- * @route   DELETE /api/notifications/:id
- * @desc    Delete a specific notification (soft delete)
- * @access  Private
- */
-router.delete(
-  '/:id',
-  authenticate,
-  notificationRateLimit,
-  notificationController.deleteNotification
-);
+router.post('/batch-send', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { notifications } = req.body;
+    const result = await notificationService.sendBatchNotifications(notifications);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Batch send failed' });
+  }
+});
 
-/**
- * @route   GET /api/notifications/preferences
- * @desc    Get user's notification preferences
- * @access  Private
- */
-router.get(
-  '/preferences',
-  authenticate,
-  notificationRateLimit,
-  notificationController.getPreferences
-);
+router.post('/urgent-medical', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId, message, emergencyType } = req.body;
+    await notificationService.sendUrgentMedicalNotification(userId, message, emergencyType);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Send failed' });
+  }
+});
 
-/**
- * @route   PUT /api/notifications/preferences
- * @desc    Update user's notification preferences
- * @access  Private
- */
-router.put(
-  '/preferences',
-  authenticate,
-  notificationRateLimit,
-  notificationController.updatePreferences
-);
+router.post('/appointment-reminder', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId, appointmentId, reminderTime } = req.body;
+    await notificationService.sendAppointmentReminder(userId, appointmentId, reminderTime);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : 'Send failed' });
+  }
+});
 
-/**
- * @route   POST /api/notifications/unsubscribe/:token
- * @desc    Unsubscribe from email notifications via token
- * @access  Public (token-based authentication)
- */
-router.post(
-  '/unsubscribe/:token',
-  notificationController.unsubscribe
-);
-
-/**
- * @route   GET /api/notifications/queue/stats
- * @desc    Get email queue statistics
- * @access  Private (Admin only)
- */
-router.get(
-  '/queue/stats',
-  authenticate,
-  requireAdmin,
-  notificationController.getQueueStats
-);
-
-/**
- * @route   POST /api/notifications/queue/retry-failed
- * @desc    Retry failed email jobs
- * @access  Private (Admin only)
- */
-router.post(
-  '/queue/retry-failed',
-  authenticate,
-  requireAdmin,
-  notificationController.retryFailedJobs
-);
-
-/**
- * @route   POST /api/notifications/queue/reset-circuit-breaker
- * @desc    Reset email service circuit breaker
- * @access  Private (Admin only)
- */
-router.post(
-  '/queue/reset-circuit-breaker',
-  authenticate,
-  requireAdmin,
-  notificationController.resetCircuitBreaker
-);
-
-export { router as notificationRouter };
+export default router;

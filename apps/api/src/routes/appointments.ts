@@ -656,6 +656,124 @@ router.get('/debug', (req, res) => {
     });
 });
 
+// Mark appointment as completed
+router.post('/appointments/:id/complete', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { userId } = req.body;
+        console.log(`[API] Mark appointment as complete: id=${id}, userId=${userId}`);
+
+        let appointment;
+        try {
+            appointment = await prisma.appointment.findUnique({
+                where: { id },
+                include: {
+                    patient: { select: { id: true, email: true, username: true } },
+                    doctor: { select: { id: true, email: true, username: true } }
+                }
+            });
+        } catch (dbError) {
+            console.error('[API] DB fetch failed, checking in-memory store');
+            // Check in-memory store
+            const memAppointment = appointmentsStore.find((a: any) => a.id === id);
+            if (memAppointment) {
+                appointment = memAppointment;
+            }
+        }
+
+        if (!appointment) {
+            return res.status(404).json({ error: 'Appointment not found' });
+        }
+
+        // Check if user is authorized (doctor or patient can mark as complete)
+        if (appointment.patientId !== userId && appointment.doctorId !== userId) {
+            return res.status(403).json({ error: 'Not authorized to complete this appointment' });
+        }
+
+        // Only APPROVED appointments can be marked as COMPLETED
+        if (appointment.status !== 'APPROVED') {
+            return res.status(400).json({ error: 'Only approved appointments can be marked as completed' });
+        }
+
+        // Update appointment status
+        let updated;
+        try {
+            updated = await prisma.appointment.update({
+                where: { id },
+                data: { status: 'COMPLETED' }
+            });
+            console.log('[API] Appointment marked as completed in DB');
+        } catch (dbError) {
+            console.error('[API] DB update failed, updating in-memory store');
+            // Update in-memory store
+            const index = appointmentsStore.findIndex((a: any) => a.id === id);
+            if (index !== -1) {
+                appointmentsStore[index].status = 'COMPLETED';
+                updated = appointmentsStore[index];
+                saveStore();
+                console.log('[API] Appointment marked as completed in memory');
+            } else {
+                throw new Error('Failed to update appointment');
+            }
+        }
+
+        // Try to send notification (non-blocking)
+        try {
+            const completedBy = appointment.patientId === userId ? 'patient' : 'doctor';
+            const notifyUser = completedBy === 'patient' ? appointment.doctorId : appointment.patientId;
+
+            await notificationService.createNotification({
+                type: NotificationType.APPOINTMENT_UPDATE,
+                recipientIds: [notifyUser],
+                actorId: userId,
+                contentId: id,
+                contentType: ContentType.APPOINTMENT,
+                metadata: {
+                    title: 'Appointment Completed',
+                    body: `Appointment marked as completed by ${completedBy}`,
+                    link: `/appointments`,
+                    appointmentStatus: 'COMPLETED',
+                }
+            });
+            console.log('[API] Notification sent');
+        } catch (notifError) {
+            console.error('[API] Failed to send notification (non-critical):', notifError);
+        }
+
+        // Try to send email (non-blocking)
+        try {
+            const completedBy = appointment.patientId === userId ? 'patient' : 'doctor';
+            const notifyUser = completedBy === 'patient' ? appointment.doctorId : appointment.patientId;
+            const notifyEmail = completedBy === 'patient' ? appointment.doctor?.email : appointment.patient?.email;
+
+            if (notifyEmail) {
+                const { emailService } = require('../services/email.service');
+                await emailService.sendEmail({
+                    to: notifyEmail,
+                    subject: 'Appointment Completed - MedThread',
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                            <h2 style="color: #2563eb;">Appointment Completed</h2>
+                            <p>Your appointment scheduled for ${new Date(appointment.startTime).toLocaleString()} has been marked as completed.</p>
+                            ${completedBy === 'doctor' && appointment.patientId === notifyUser ? '<p>You can now leave a review for your doctor.</p>' : ''}
+                            <p>Thank you for using MedThread!</p>
+                        </div>
+                    `,
+                    text: `Appointment completed. Scheduled for ${new Date(appointment.startTime).toLocaleString()}`
+                });
+                console.log('[API] Email sent');
+            }
+        } catch (emailError) {
+            console.error('[API] Failed to send email (non-critical):', emailError);
+        }
+
+        res.json(updated);
+    } catch (error: any) {
+        console.error('[API] Complete error:', error);
+        res.status(500).json({ error: 'Failed to complete appointment', details: error.message });
+    }
+});
+
 // Debug route to check conversation and appointment details
 router.get('/debug/conversation/:id', async (req, res) => {
     try {

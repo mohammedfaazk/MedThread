@@ -7,9 +7,7 @@
  * This is REVOLUTIONARY - nothing like this exists anywhere.
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@medthread/database';
 
 interface DetectionResult {
   disease: string;

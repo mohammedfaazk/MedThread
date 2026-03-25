@@ -3,12 +3,12 @@ import { uploadSingle, uploadMultiple, processImage, generateThumbnail } from '.
 import { uploadToCloudinary, deleteFromCloudinary, uploadBase64ToCloudinary } from '../config/cloudinary';
 import { authenticate, AuthRequest } from '../middleware/auth.refactored';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { uploadLimiter } from '../middleware/rateLimiter';
+import { uploadRateLimit } from '../middleware/rateLimiter';
 
 const router = Router();
 
 // Apply rate limiting to all upload routes
-router.use(uploadLimiter);
+router.use(uploadRateLimit);
 
 // Upload single file
 router.post(

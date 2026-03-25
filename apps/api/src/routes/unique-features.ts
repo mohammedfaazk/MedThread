@@ -5,7 +5,7 @@
  */
 
 import express from 'express';
-import { authenticateToken } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
 import outbreakDetectionService from '../services/outbreak-detection.service';
 import smartDoctorMatchingService from '../services/smart-doctor-matching.service';
 
@@ -19,7 +19,7 @@ const router = express.Router();
  * GET /api/v1/unique/outbreak-alerts
  * Get outbreak alerts for user's location
  */
-router.get('/outbreak-alerts', authenticateToken, async (req, res) => {
+router.get('/outbreak-alerts', authenticate, async (req, res) => {
   try {
     const userId = req.user!.userId;
     const { location } = req.query;
@@ -48,7 +48,7 @@ router.get('/outbreak-alerts', authenticateToken, async (req, res) => {
  * POST /api/v1/unique/outbreak-alerts/:alertId/dismiss
  * Dismiss an outbreak alert
  */
-router.post('/outbreak-alerts/:alertId/dismiss', authenticateToken, async (req, res) => {
+router.post('/outbreak-alerts/:alertId/dismiss', authenticate, async (req, res) => {
   try {
     const userId = req.user!.userId;
     const { alertId } = req.params;
@@ -72,7 +72,7 @@ router.post('/outbreak-alerts/:alertId/dismiss', authenticateToken, async (req, 
  * GET /api/v1/unique/symptom-clusters
  * Get symptom clusters for analytics
  */
-router.get('/symptom-clusters', authenticateToken, async (req, res) => {
+router.get('/symptom-clusters', authenticate, async (req, res) => {
   try {
     const { location, severity, timeWindow } = req.query;
 
@@ -99,7 +99,7 @@ router.get('/symptom-clusters', authenticateToken, async (req, res) => {
  * POST /api/v1/unique/analyze-outbreaks
  * Trigger outbreak analysis (admin only)
  */
-router.post('/analyze-outbreaks', authenticateToken, async (req, res) => {
+router.post('/analyze-outbreaks', authenticate, async (req, res) => {
   try {
     // Check if user is admin
     const user = req.user!;
@@ -134,7 +134,7 @@ router.post('/analyze-outbreaks', authenticateToken, async (req, res) => {
  * POST /api/v1/unique/find-doctors
  * Find best matching doctors for patient
  */
-router.post('/find-doctors', authenticateToken, async (req, res) => {
+router.post('/find-doctors', authenticate, async (req, res) => {
   try {
     const userId = req.user!.userId;
     const criteria = req.body;
@@ -213,7 +213,7 @@ router.get('/top-doctors/:condition', async (req, res) => {
  * POST /api/v1/unique/update-specialization
  * Update doctor specialization based on outcome
  */
-router.post('/update-specialization', authenticateToken, async (req, res) => {
+router.post('/update-specialization', authenticate, async (req, res) => {
   try {
     const { doctorId, condition, outcome } = req.body;
 
@@ -251,7 +251,7 @@ router.post('/update-specialization', authenticateToken, async (req, res) => {
  * GET /api/v1/unique/health-insights
  * Get personalized health insights for user
  */
-router.get('/health-insights', authenticateToken, async (req, res) => {
+router.get('/health-insights', authenticate, async (req, res) => {
   try {
     const userId = req.user!.userId;
 

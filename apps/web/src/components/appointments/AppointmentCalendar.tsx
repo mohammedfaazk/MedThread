@@ -34,14 +34,20 @@ export default function AppointmentCalendar({ userId, role, onAppointmentClick }
 
   const fetchAppointments = async () => {
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('auth_token')
+      console.log('[AppointmentCalendar] Fetching appointments for userId:', userId, 'role:', role)
+      console.log('[AppointmentCalendar] Token exists:', !!token)
+      
       const response = await axios.get(
-        `${API_URL}/api/appointments?userId=${userId}&role=${role}`,
+        `${API_URL}/api/appointments/appointments?userId=${userId}&role=${role}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
+      
+      console.log('[AppointmentCalendar] Received appointments:', response.data.length)
+      console.log('[AppointmentCalendar] Appointments:', response.data)
       setAppointments(response.data)
     } catch (error) {
-      console.error('Error fetching appointments:', error)
+      console.error('[AppointmentCalendar] Error fetching appointments:', error)
     } finally {
       setLoading(false)
     }
@@ -130,40 +136,40 @@ export default function AppointmentCalendar({ userId, role, onAppointmentClick }
   return (
     <div className="bg-white rounded-lg shadow-sm">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">
+      <div className="p-3 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-bold text-gray-900">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button
               onClick={goToToday}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
               Today
             </button>
             <button
               onClick={previousMonth}
-              className="p-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="p-1.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
             <button
               onClick={nextMonth}
-              className="p-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="p-1.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* View Selector */}
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {['month', 'week', 'day'].map(v => (
             <button
               key={v}
               onClick={() => setView(v as any)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition ${
+              className={`px-3 py-1 text-xs font-medium rounded-lg transition ${
                 view === v
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -176,18 +182,18 @@ export default function AppointmentCalendar({ userId, role, onAppointmentClick }
       </div>
 
       {/* Calendar Grid */}
-      <div className="p-4">
+      <div className="p-3">
         {/* Day Headers */}
-        <div className="grid grid-cols-7 gap-2 mb-2">
+        <div className="grid grid-cols-7 gap-1 mb-1">
           {dayNames.map(day => (
-            <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
+            <div key={day} className="text-center text-xs font-semibold text-gray-600 py-1">
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar Days */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1">
           {getDaysInMonth(currentDate).map((date, index) => {
             const dayAppointments = getAppointmentsForDate(date)
             const isToday = date && 
@@ -198,23 +204,23 @@ export default function AppointmentCalendar({ userId, role, onAppointmentClick }
             return (
               <div
                 key={index}
-                className={`min-h-[100px] p-2 border rounded-lg ${
+                className={`min-h-[70px] p-1.5 border rounded-lg ${
                   date ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
                 } ${isToday ? 'border-blue-500 border-2' : 'border-gray-200'}`}
               >
                 {date && (
                   <>
-                    <div className={`text-sm font-semibold mb-1 ${
+                    <div className={`text-xs font-semibold mb-0.5 ${
                       isToday ? 'text-blue-600' : 'text-gray-900'
                     }`}>
                       {date.getDate()}
                     </div>
-                    <div className="space-y-1">
-                      {dayAppointments.slice(0, 3).map(apt => (
+                    <div className="space-y-0.5">
+                      {dayAppointments.slice(0, 2).map(apt => (
                         <button
                           key={apt.id}
                           onClick={() => onAppointmentClick?.(apt)}
-                          className={`w-full text-left px-2 py-1 rounded text-xs border ${getStatusColor(apt.status)}`}
+                          className={`w-full text-left px-1.5 py-0.5 rounded text-[10px] border ${getStatusColor(apt.status)}`}
                         >
                           <div className="font-medium truncate">
                             {new Date(apt.startTime).toLocaleTimeString('en-US', {
@@ -227,9 +233,9 @@ export default function AppointmentCalendar({ userId, role, onAppointmentClick }
                           </div>
                         </button>
                       ))}
-                      {dayAppointments.length > 3 && (
-                        <div className="text-xs text-gray-500 text-center">
-                          +{dayAppointments.length - 3} more
+                      {dayAppointments.length > 2 && (
+                        <div className="text-[10px] text-gray-500 text-center">
+                          +{dayAppointments.length - 2}
                         </div>
                       )}
                     </div>
@@ -242,26 +248,26 @@ export default function AppointmentCalendar({ userId, role, onAppointmentClick }
       </div>
 
       {/* Legend */}
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-green-100 border border-green-300"></div>
+      <div className="p-3 border-t border-gray-200 bg-gray-50">
+        <div className="flex flex-wrap gap-3 text-xs">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-green-100 border border-green-300"></div>
             <span className="text-gray-700">Approved</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-yellow-100 border border-yellow-300"></div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-yellow-100 border border-yellow-300"></div>
             <span className="text-gray-700">Pending</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-100 border border-blue-300"></div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-blue-100 border border-blue-300"></div>
             <span className="text-gray-700">Completed</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-red-100 border border-red-300"></div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-red-100 border border-red-300"></div>
             <span className="text-gray-700">Rejected</span>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gray-100 border border-gray-300"></div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded bg-gray-100 border border-gray-300"></div>
             <span className="text-gray-700">Cancelled</span>
           </div>
         </div>

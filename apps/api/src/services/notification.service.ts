@@ -2,23 +2,49 @@ import admin from 'firebase-admin';
 import { prisma } from '@medthread/database';
 
 export class NotificationService {
-  private messaging: admin.messaging.Messaging;
+  private messaging: admin.messaging.Messaging | null = null;
+  private isFirebaseConfigured = false;
   
   constructor() {
-    if (!admin.apps.length) {
-      try {
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL
-          })
-        });
-      } catch (error) {
-        console.error('Firebase admin initialization error:', error);
+    this.initializeFirebase();
+  }
+
+  private initializeFirebase() {
+    try {
+      if (!admin.apps.length) {
+        const projectId = process.env.FIREBASE_PROJECT_ID;
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+        const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+        
+        if (projectId && privateKey && clientEmail) {
+          admin.initializeApp({
+            credential: admin.credential.cert({
+              projectId,
+              privateKey,
+              clientEmail
+            })
+          });
+          this.messaging = admin.messaging();
+          this.isFirebaseConfigured = true;
+          console.log('[NotificationService] Firebase initialized successfully');
+        } else {
+          console.warn('[NotificationService] Firebase credentials not configured. Using fallback notification system.');
+          this.setupFallbackNotifications();
+        }
+      } else {
+        this.messaging = admin.messaging();
+        this.isFirebaseConfigured = true;
       }
+    } catch (error) {
+      console.error('[NotificationService] Firebase initialization error:', error);
+      this.setupFallbackNotifications();
     }
-    this.messaging = admin.messaging();
+  }
+
+  private setupFallbackNotifications() {
+    // Setup email-based notifications as fallback
+    console.log('[NotificationService] Setting up email-based notification fallback');
+    this.isFirebaseConfigured = false;
   }
   
   async sendNotification(userId: string, notification: {
@@ -26,7 +52,26 @@ export class NotificationService {
     body: string;
     data?: Record<string, string>;
     urgent?: boolean;
+    type?: string;
   }) {
+    try {
+      // Store notification in database first
+      const dbNotification = await this.storeNotification(userId, notification);
+
+      if (this.isFirebaseConfigured && this.messaging) {
+        await this.sendPushNotification(userId, notification);
+      } else {
+        await this.sendFallbackNotification(userId, notification);
+      }
+
+      return dbNotification;
+    } catch (error) {
+      console.error('[NotificationService] Failed to send notification:', error);
+      throw error;
+    }
+  }
+
+  private async sendPushNotification(userId: string, notification: any) {
     try {
       // Get user's device tokens
       const devices = await prisma.userDevice.findMany({
@@ -34,7 +79,7 @@ export class NotificationService {
       });
       
       if (devices.length === 0) {
-        console.log(`No active devices for user ${userId}`);
+        console.log(`[NotificationService] No active devices for user ${userId}`);
         return;
       }
       
@@ -44,7 +89,7 @@ export class NotificationService {
       });
       
       if (prefs && !this.shouldSendNotification(prefs, notification)) {
-        console.log(`Notification blocked by user preferences for ${userId}`);
+        console.log(`[NotificationService] Notification blocked by user preferences for ${userId}`);
         return;
       }
       
@@ -58,24 +103,27 @@ export class NotificationService {
         },
         data: {
           ...notification.data,
-          urgent: notification.urgent ? 'true' : 'false'
+          urgent: notification.urgent ? 'true' : 'false',
+          type: notification.type || 'general'
         },
         webpush: {
           fcmOptions: {
             link: notification.data?.url || 'https://medthread.com'
           },
           notification: {
-            requireInteraction: notification.urgent || false
+            requireInteraction: notification.urgent || false,
+            icon: '/medthread-logo-1.jpeg',
+            badge: '/medthread-logo-1.jpeg',
           }
         }
       };
       
-      const response = await this.messaging.sendMulticast({
+      const response = await this.messaging!.sendMulticast({
         tokens,
         ...message
       });
       
-      console.log(`Sent notification to ${response.successCount}/${tokens.length} devices`);
+      console.log(`[NotificationService] Sent push notification to ${response.successCount}/${tokens.length} devices`);
       
       // Remove invalid tokens
       if (response.failureCount > 0) {
@@ -94,7 +142,58 @@ export class NotificationService {
       
       return response;
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('[NotificationService] Push notification failed:', error);
+      throw error;
+    }
+  }
+
+  private async sendFallbackNotification(userId: string, notification: any) {
+    try {
+      // Email-based notification fallback
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true, username: true }
+      });
+
+      if (!user) return;
+
+      // Queue email notification
+      await prisma.email_queue.create({
+        data: {
+          userId,
+          notificationId: 'fallback-' + Date.now(),
+          type: 'notification',
+          status: 'pending',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }
+      });
+
+      console.log(`[NotificationService] Queued email notification for ${user.email}`);
+    } catch (error) {
+      console.error('[NotificationService] Fallback notification failed:', error);
+    }
+  }
+
+  private async storeNotification(userId: string, notification: any) {
+    try {
+      return await prisma.notifications.create({
+        data: {
+          type: notification.type || 'GENERAL',
+          recipientId: userId,
+          actorId: notification.actorId || 'system',
+          contentId: notification.contentId,
+          contentType: notification.contentType,
+          metadata: {
+            title: notification.title,
+            body: notification.body,
+            urgent: notification.urgent || false,
+            ...notification.data
+          },
+        }
+      });
+    } catch (error) {
+      console.error('[NotificationService] Failed to store notification:', error);
       throw error;
     }
   }
@@ -138,6 +237,147 @@ export class NotificationService {
     );
     
     return Promise.allSettled(promises);
+  }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    try {
+      const count = await prisma.notifications.count({
+        where: {
+          recipientId: userId,
+          isRead: false,
+          isDeleted: false
+        }
+      });
+      return count;
+    } catch (error) {
+      console.error('Error getting unread count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Subscribe user device for push notifications
+   */
+  async subscribeDevice(userId: string, subscription: {
+    endpoint: string;
+    keys: { p256dh: string; auth: string };
+  }) {
+    try {
+      await prisma.userDevice.upsert({
+        where: {
+          userId_fcmToken: {
+            userId,
+            fcmToken: subscription.endpoint
+          }
+        },
+        update: {
+          isActive: true,
+          updatedAt: new Date()
+        },
+        create: {
+          userId,
+          fcmToken: subscription.endpoint,
+          deviceType: 'web',
+          isActive: true,
+          subscriptionData: subscription,
+        }
+      });
+
+      console.log(`[NotificationService] Device subscribed for user ${userId}`);
+    } catch (error) {
+      console.error('[NotificationService] Device subscription failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Unsubscribe user device
+   */
+  async unsubscribeDevice(userId: string, endpoint: string) {
+    try {
+      await prisma.userDevice.updateMany({
+        where: {
+          userId,
+          fcmToken: endpoint
+        },
+        data: {
+          isActive: false
+        }
+      });
+
+      console.log(`[NotificationService] Device unsubscribed for user ${userId}`);
+    } catch (error) {
+      console.error('[NotificationService] Device unsubscription failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send urgent medical notifications
+   */
+  async sendUrgentMedicalNotification(userId: string, message: string, emergencyType: string) {
+    await this.sendNotification(userId, {
+      title: '🚨 Urgent Medical Alert',
+      body: message,
+      urgent: true,
+      type: 'MEDICAL_EMERGENCY',
+      data: {
+        emergencyType,
+        timestamp: new Date().toISOString(),
+        action: 'emergency'
+      }
+    });
+  }
+
+  /**
+   * Send appointment reminders
+   */
+  async sendAppointmentReminder(userId: string, appointmentId: string, reminderTime: string) {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: {
+        doctor: { select: { username: true } },
+        patient: { select: { username: true } }
+      }
+    });
+
+    if (!appointment) return;
+
+    await this.sendNotification(userId, {
+      title: '📅 Appointment Reminder',
+      body: `Your appointment with Dr. ${appointment.doctor.username} is ${reminderTime}`,
+      type: 'APPOINTMENT_REMINDER',
+      data: {
+        appointmentId,
+        doctorName: appointment.doctor.username,
+        reminderTime
+      }
+    });
+  }
+
+  /**
+   * Batch send notifications
+   */
+  async sendBatchNotifications(notifications: Array<{
+    userId: string;
+    title: string;
+    body: string;
+    data?: Record<string, string>;
+    urgent?: boolean;
+    type?: string;
+  }>) {
+    const promises = notifications.map(notification => 
+      this.sendNotification(notification.userId, notification)
+    );
+    
+    const results = await Promise.allSettled(promises);
+    
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+    
+    console.log(`[NotificationService] Batch notifications: ${successful} successful, ${failed} failed`);
+    
+    return { successful, failed };
   }
 }
 

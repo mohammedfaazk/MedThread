@@ -127,8 +127,39 @@ export class AiSymptomAnalysisService {
     const primarySymptoms = symptoms.primarySymptoms.map((s: string) => s.toLowerCase());
     const description = symptoms.description.toLowerCase();
     
+    // Chest pain / Heart issues - EMERGENCY
+    if (primarySymptoms.some(s => s.includes('chest pain') || s.includes('heart pain') || s.includes('chest pressure'))) {
+      conditions.push({
+        condition: 'Possible Cardiac Event (Heart Attack, Angina)',
+        probability: 80,
+        reasoning: 'Chest/heart pain requires immediate evaluation to rule out cardiac emergency',
+        urgency: 'emergency'
+      });
+    }
+    
+    // Headache patterns
+    if (primarySymptoms.some(s => s.includes('headache'))) {
+      if (description.includes('severe') || description.includes('worst') || symptoms.severity === 'severe') {
+        conditions.push({
+          condition: 'Severe Headache (Migraine, Cluster Headache, or Serious Condition)',
+          probability: 70,
+          reasoning: 'Severe headache requires evaluation, especially if sudden or worst ever experienced',
+          urgency: 'high'
+        });
+      } else {
+        conditions.push({
+          condition: 'Tension Headache or Migraine',
+          probability: 65,
+          reasoning: 'Common headache pattern',
+          urgency: 'low'
+        });
+      }
+    }
+    
     // Common cold/flu
-    if (this.hasSymptoms(primarySymptoms, ['fever', 'cough', 'runny nose', 'sore throat'])) {
+    if (this.hasSymptoms(primarySymptoms, ['fever', 'cough']) || 
+        this.hasSymptoms(primarySymptoms, ['fever', 'sore throat']) ||
+        this.hasSymptoms(primarySymptoms, ['cough', 'runny nose'])) {
       conditions.push({
         condition: 'Common Cold or Influenza',
         probability: 75,
@@ -138,7 +169,8 @@ export class AiSymptomAnalysisService {
     }
     
     // COVID-19
-    if (this.hasSymptoms(primarySymptoms, ['fever', 'cough', 'loss of taste', 'loss of smell'])) {
+    if (this.hasSymptoms(primarySymptoms, ['fever', 'cough']) || 
+        primarySymptoms.some(s => s.includes('loss of taste') || s.includes('loss of smell'))) {
       conditions.push({
         condition: 'COVID-19',
         probability: 70,
@@ -148,8 +180,9 @@ export class AiSymptomAnalysisService {
     }
     
     // Migraine
-    if (this.hasSymptoms(primarySymptoms, ['headache', 'nausea']) && 
-        (description.includes('severe') || description.includes('throbbing'))) {
+    if (this.hasSymptoms(primarySymptoms, ['headache', 'nausea']) || 
+        (primarySymptoms.some(s => s.includes('headache')) && 
+         (description.includes('throbbing') || description.includes('pulsing')))) {
       conditions.push({
         condition: 'Migraine',
         probability: 65,
@@ -159,7 +192,9 @@ export class AiSymptomAnalysisService {
     }
     
     // Gastroenteritis
-    if (this.hasSymptoms(primarySymptoms, ['nausea', 'vomiting', 'diarrhea'])) {
+    if (this.hasSymptoms(primarySymptoms, ['nausea', 'vomiting']) ||
+        this.hasSymptoms(primarySymptoms, ['nausea', 'diarrhea']) ||
+        this.hasSymptoms(primarySymptoms, ['vomiting', 'diarrhea'])) {
       conditions.push({
         condition: 'Gastroenteritis',
         probability: 70,
@@ -169,7 +204,8 @@ export class AiSymptomAnalysisService {
     }
     
     // Urinary tract infection
-    if (this.hasSymptoms(primarySymptoms, ['burning urination', 'frequent urination', 'pain'])) {
+    if (primarySymptoms.some(s => s.includes('burning') && s.includes('urination')) ||
+        primarySymptoms.some(s => s.includes('frequent urination') || s.includes('painful urination'))) {
       conditions.push({
         condition: 'Urinary Tract Infection',
         probability: 75,
@@ -190,17 +226,19 @@ export class AiSymptomAnalysisService {
     }
     
     // Anxiety/Panic attack
-    if (this.hasSymptoms(primarySymptoms, ['chest pain', 'rapid heartbeat', 'shortness of breath', 'sweating'])) {
+    if (this.hasSymptoms(primarySymptoms, ['rapid heartbeat', 'shortness of breath']) ||
+        this.hasSymptoms(primarySymptoms, ['chest pain', 'sweating'])) {
       conditions.push({
         condition: 'Anxiety or Panic Attack',
         probability: 55,
-        reasoning: 'Symptoms consistent with anxiety, but cardiac causes must be ruled out',
+        reasoning: 'Symptoms consistent with anxiety, but cardiac causes must be ruled out first',
         urgency: 'medium'
       });
     }
     
     // Diabetes complications
-    if (this.hasSymptoms(primarySymptoms, ['excessive thirst', 'frequent urination', 'fatigue'])) {
+    if (this.hasSymptoms(primarySymptoms, ['excessive thirst', 'frequent urination']) ||
+        primarySymptoms.some(s => s.includes('thirst') || s.includes('urination'))) {
       conditions.push({
         condition: 'Diabetes or Hyperglycemia',
         probability: 65,
@@ -210,12 +248,42 @@ export class AiSymptomAnalysisService {
     }
     
     // Allergic reaction
-    if (this.hasSymptoms(primarySymptoms, ['rash', 'itching', 'swelling'])) {
+    if (primarySymptoms.some(s => s.includes('rash') || s.includes('itching') || s.includes('hives'))) {
       conditions.push({
         condition: 'Allergic Reaction',
         probability: 70,
         reasoning: 'Symptoms suggest allergic response',
         urgency: description.includes('throat') || description.includes('breathing') ? 'emergency' : 'low'
+      });
+    }
+    
+    // Respiratory issues
+    if (primarySymptoms.some(s => s.includes('shortness of breath') || s.includes('difficulty breathing'))) {
+      conditions.push({
+        condition: 'Respiratory Distress (Asthma, Pneumonia, or Other)',
+        probability: 75,
+        reasoning: 'Breathing difficulties require prompt evaluation',
+        urgency: 'high'
+      });
+    }
+    
+    // Fever alone
+    if (primarySymptoms.some(s => s.includes('fever')) && conditions.length === 0) {
+      conditions.push({
+        condition: 'Fever of Unknown Origin',
+        probability: 60,
+        reasoning: 'Fever indicates infection or inflammation',
+        urgency: 'medium'
+      });
+    }
+    
+    // If no specific matches, provide general assessment
+    if (conditions.length === 0 && primarySymptoms.length > 0) {
+      conditions.push({
+        condition: 'Symptoms Require Medical Evaluation',
+        probability: 50,
+        reasoning: 'Your symptoms don\'t match common patterns but should be evaluated by a doctor',
+        urgency: 'medium'
       });
     }
     

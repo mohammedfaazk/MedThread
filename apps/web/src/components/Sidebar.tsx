@@ -11,14 +11,20 @@ import axios from 'axios'
 import { motion } from 'framer-motion'
 import { 
   LayoutDashboard, 
-  Stethoscope, 
+  Search, 
   Calendar, 
   MessageSquare, 
   Pill, 
   User, 
   Settings, 
   PenSquare,
-  Coins
+  Coins,
+  BarChart3,
+  Users,
+  HelpCircle,
+  Trophy,
+  Heart,
+  Activity
 } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -67,12 +73,13 @@ export function Sidebar() {
 
   const commonCategories: NavItem[] = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/patient' },
-    { name: 'Symptom Checker', icon: Stethoscope, href: '/symptom-checker' },
+    { name: 'AI Detective', icon: Search, href: '/ai-detective' },
     { name: 'Book Appointment', icon: Calendar, href: '/appointments' },
   ]
 
   const doctorNav: NavItem[] = [
     { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/doctor' },
+    { name: 'Priority Feed', icon: Activity, href: '/doctor-feed' },
     { name: 'Appointments', icon: Calendar, href: '/dashboard/doctor/appointments' },
     { name: 'Chat with Patients', icon: MessageSquare, href: '/chat' },
     { name: 'Discussion Threads', icon: PenSquare, href: '#' }, // Triggers modal (Create Post)
@@ -159,6 +166,41 @@ export function Sidebar() {
             })}
           </div>
 
+          {/* Community Features */}
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 mb-4 shadow-lg">
+            <div className="px-4 py-3 border-b border-cyan-200/30">
+              <h3 className="text-xs font-bold text-gray-700 uppercase">Community</h3>
+            </div>
+            <Link
+              href="/support-groups"
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${pathname === '/support-groups' || pathname?.startsWith('/support-groups/') ? 'bg-blue-500/10 text-blue-600 font-semibold' : 'text-gray-900'}`}
+            >
+              <Users className="w-5 h-5" />
+              <span>Support Groups</span>
+            </Link>
+            <Link
+              href="/qa-forum"
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${pathname === '/qa-forum' || pathname?.startsWith('/qa-forum/') ? 'bg-blue-500/10 text-blue-600 font-semibold' : 'text-gray-900'}`}
+            >
+              <HelpCircle className="w-5 h-5" />
+              <span>Q&A Forum</span>
+            </Link>
+            <Link
+              href="/health-challenges"
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${pathname === '/health-challenges' || pathname?.startsWith('/health-challenges/') ? 'bg-blue-500/10 text-blue-600 font-semibold' : 'text-gray-900'}`}
+            >
+              <Trophy className="w-5 h-5" />
+              <span>Health Challenges</span>
+            </Link>
+            <Link
+              href="/success-stories"
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${pathname === '/success-stories' ? 'bg-blue-500/10 text-blue-600 font-semibold' : 'text-gray-900'}`}
+            >
+              <Heart className="w-5 h-5" />
+              <span>Success Stories</span>
+            </Link>
+          </div>
+
           {/* Communities */}
           <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 mb-4 shadow-lg">
             <div className="px-4 py-3 border-b border-cyan-200/30 flex items-center justify-between">
@@ -211,6 +253,15 @@ export function Sidebar() {
               <h3 className="text-xs font-bold text-gray-700 uppercase">Library</h3>
             </div>
             <Link
+              href="/articles"
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${pathname === '/articles' ? 'bg-blue-500/10 text-blue-600 font-semibold' : 'text-gray-900'}`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <span>Articles</span>
+            </Link>
+            <Link
               href="/saved"
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${pathname === '/saved' ? 'bg-blue-500/10 text-blue-600 font-semibold' : 'text-gray-900'}`}
             >
@@ -252,6 +303,13 @@ export function Sidebar() {
             >
               <Coins className="w-5 h-5" />
               <span>Coin Shop</span>
+            </Link>
+            <Link
+              href="/analytics"
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-gray-50 transition-all ${pathname === '/analytics' ? 'bg-blue-500/10 text-blue-600 font-semibold' : 'text-gray-900'}`}
+            >
+              <BarChart3 className="w-5 h-5" />
+              <span>Analytics</span>
             </Link>
           </div>
 

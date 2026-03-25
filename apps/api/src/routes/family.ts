@@ -1,12 +1,11 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth';
-import { PrismaClient } from '@prisma/client';
+import { authenticate } from '../middleware/auth';
+import { prisma } from '@medthread/database';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all family groups for current user
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
   try {
     const userId = req.user!.userId;
 
@@ -36,7 +35,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Create new family group
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
     const userId = req.user!.userId;
     const { name, members, emergencyContacts } = req.body;
@@ -66,7 +65,7 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // Get single family group
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
@@ -101,7 +100,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Add member to family group
-router.post('/:id/members', authenticateToken, async (req, res) => {
+router.post('/:id/members', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
@@ -141,7 +140,7 @@ router.post('/:id/members', authenticateToken, async (req, res) => {
 });
 
 // Update family group
-router.patch('/:id', authenticateToken, async (req, res) => {
+router.patch('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
@@ -174,7 +173,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete family group
-router.delete('/:id', authenticateToken, async (req, res) => {
+router.delete('/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;

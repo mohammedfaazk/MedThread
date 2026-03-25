@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
 import { getImageUrl } from '@/lib/imageUrl'
+import AppointmentCalendar from '@/components/appointments/AppointmentCalendar'
 import {
     Calendar,
     Clock,
@@ -572,6 +573,35 @@ export default function DoctorDashboard() {
                         </div>
 
                     </div>
+
+                    {/* Appointment Calendar Section */}
+                    {!isDoctorPending && (
+                        <div className="mt-6">
+                            <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl transition-all">
+                                <div className="p-6 border-b border-neutral-400/20">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <GlassIcon icon={Calendar} color="blue" label="Calendar" size={24} />
+                                            <div>
+                                                <h2 className="text-xl font-bold text-gray-900">Appointment Calendar</h2>
+                                                <p className="text-sm text-gray-500">View and manage your appointments</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <AppointmentCalendar 
+                                        userId={effectiveUserId || ''} 
+                                        role="doctor"
+                                        onAppointmentClick={(apt) => {
+                                            console.log('Appointment clicked:', apt)
+                                            // You can add navigation or modal logic here
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

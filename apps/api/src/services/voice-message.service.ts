@@ -1,11 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@medthread/database';
 import fs from 'fs/promises';
 import path from 'path';
 
-const prisma = new PrismaClient();
-
 export const voiceMessageService = {
-  // Create voice message
+  // Create voice message (stores as regular message with voice attachment)
   async createVoiceMessage(data: {
     userId: string;
     chatId: string;
@@ -14,25 +12,27 @@ export const voiceMessageService = {
     duration: number;
     fileSize: number;
   }) {
-    return await prisma.voiceMessage.create({
-      data: {
-        userId: data.userId,
-        chatId: data.chatId,
-        filePath: data.filePath,
-        fileName: data.fileName,
-        duration: data.duration,
-        fileSize: data.fileSize,
-        transcription: null // Can be added later with speech-to-text
-      }
-    });
+    // For now, we'll return the file info without storing in a separate table
+    // The actual message will be sent through the regular chat system
+    return {
+      id: `voice-${Date.now()}`,
+      userId: data.userId,
+      chatId: data.chatId,
+      filePath: data.filePath,
+      fileName: data.fileName,
+      duration: data.duration,
+      fileSize: data.fileSize,
+      createdAt: new Date()
+    };
   },
 
-  // Get voice message
+  // Get voice message (placeholder - voice messages are stored as regular messages)
   async getVoiceMessage(messageId: string) {
-    return await prisma.voiceMessage.findUnique({
+    // Voice messages are stored as regular messages with attachments
+    const message = await prisma.message.findUnique({
       where: { id: messageId },
       include: {
-        user: {
+        sender: {
           select: {
             id: true,
             username: true,
@@ -42,14 +42,22 @@ export const voiceMessageService = {
         }
       }
     });
+
+    return message;
   },
 
   // Get chat voice messages
   async getChatVoiceMessages(chatId: string) {
-    return await prisma.voiceMessage.findMany({
-      where: { chatId },
+    // Get messages that contain voice attachments
+    const messages = await prisma.message.findMany({
+      where: { 
+        conversationId: chatId,
+        content: {
+          contains: '🎤 Voice message'
+        }
+      },
       include: {
-        user: {
+        sender: {
           select: {
             id: true,
             username: true,
@@ -60,49 +68,53 @@ export const voiceMessageService = {
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    return messages;
   },
 
   // Delete voice message
   async deleteVoiceMessage(messageId: string, userId: string) {
-    const voiceMessage = await prisma.voiceMessage.findUnique({
+    const message = await prisma.message.findUnique({
       where: { id: messageId }
     });
 
-    if (!voiceMessage) {
+    if (!message) {
       throw new Error('Voice message not found');
     }
 
-    if (voiceMessage.userId !== userId) {
+    if (message.senderId !== userId) {
       throw new Error('Unauthorized to delete this voice message');
     }
 
-    // Delete file from filesystem
-    try {
-      await fs.unlink(voiceMessage.filePath);
-    } catch (error) {
-      console.error('Error deleting voice file:', error);
+    // Delete file from filesystem if attachment exists
+    if (message.attachment) {
+      try {
+        const filePath = message.attachment.replace(/^\//, '');
+        await fs.unlink(path.join(process.cwd(), filePath));
+      } catch (error) {
+        console.error('Error deleting voice file:', error);
+      }
     }
 
-    // Delete from database
-    return await prisma.voiceMessage.delete({
+    // Delete message from database
+    return await prisma.message.delete({
       where: { id: messageId }
-    });
-  },
-
-  // Update transcription (for future speech-to-text integration)
-  async updateTranscription(messageId: string, transcription: string) {
-    return await prisma.voiceMessage.update({
-      where: { id: messageId },
-      data: { transcription }
     });
   },
 
   // Get user voice messages
   async getUserVoiceMessages(userId: string) {
-    return await prisma.voiceMessage.findMany({
-      where: { userId },
+    const messages = await prisma.message.findMany({
+      where: { 
+        senderId: userId,
+        content: {
+          contains: '🎤 Voice message'
+        }
+      },
       orderBy: { createdAt: 'desc' },
       take: 50
     });
+
+    return messages;
   }
 };

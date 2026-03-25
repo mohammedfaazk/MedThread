@@ -75,12 +75,85 @@ export const validateChatAccess = async (
       });
     }
 
-    // Validate appointment exists
+    // Check if conversation has an appointment
+    // If no appointment, allow direct messaging between verified users
     if (!conversation.appointment) {
-      return res.status(403).json({ 
-        error: 'No appointment associated with this conversation',
-        code: 'NO_APPOINTMENT'
+      console.log('[ChatPermission] No appointment found - checking direct messaging permissions');
+      
+      // Get conversation participants
+      const participants = await prisma.user.findMany({
+        where: {
+          conversations: {
+            some: {
+              id: conversationId
+            }
+          }
+        },
+        select: {
+          id: true,
+          username: true,
+          role: true,
+          doctorVerificationStatus: true
+        }
       });
+
+      // Check if user is a participant
+      const isParticipant = participants.some(p => p.id === userId);
+      if (!isParticipant) {
+        return res.status(403).json({ 
+          error: 'You are not authorized to access this conversation',
+          code: 'NOT_PARTICIPANT'
+        });
+      }
+
+      // Check if any doctor in the conversation is verified
+      const doctors = participants.filter(p => p.role === 'DOCTOR');
+      if (doctors.length > 0) {
+        const allDoctorsVerified = doctors.every(
+          d => d.doctorVerificationStatus === DoctorVerificationStatus.APPROVED
+        );
+        
+        if (!allDoctorsVerified) {
+          const unverifiedDoctors = doctors.filter(
+            d => d.doctorVerificationStatus !== DoctorVerificationStatus.APPROVED
+          );
+          return res.status(403).json({ 
+            error: 'All doctors in this conversation must be verified',
+            code: 'DOCTOR_NOT_VERIFIED',
+            details: {
+              unverifiedDoctors: unverifiedDoctors.map(d => ({
+                username: d.username,
+                status: d.doctorVerificationStatus
+              }))
+            }
+          });
+        }
+      }
+
+      // Check for blocking
+      if (participants.length === 2) {
+        const isBlocked = await prisma.block.findFirst({
+          where: {
+            OR: [
+              { blockerId: participants[0].id, blockedId: participants[1].id },
+              { blockerId: participants[1].id, blockedId: participants[0].id }
+            ]
+          }
+        });
+
+        if (isBlocked) {
+          return res.status(403).json({ 
+            error: 'Chat access blocked',
+            code: 'USER_BLOCKED'
+          });
+        }
+      }
+
+      // Allow direct messaging
+      req.conversationId = conversationId;
+      req.canAccessChat = true;
+      console.log('[ChatPermission] Direct messaging allowed');
+      return next();
     }
 
     const appointment = conversation.appointment;
@@ -219,8 +292,60 @@ export const canAccessConversation = async (
       return { allowed: false, reason: 'Conversation not found', code: 'CONVERSATION_NOT_FOUND' };
     }
 
+    // If no appointment, check direct messaging permissions
     if (!conversation.appointment) {
-      return { allowed: false, reason: 'No appointment', code: 'NO_APPOINTMENT' };
+      // Get conversation participants
+      const participants = await prisma.user.findMany({
+        where: {
+          conversations: {
+            some: {
+              id: conversationId
+            }
+          }
+        },
+        select: {
+          id: true,
+          role: true,
+          doctorVerificationStatus: true
+        }
+      });
+
+      // Check if user is a participant
+      const isParticipant = participants.some(p => p.id === userId);
+      if (!isParticipant) {
+        return { allowed: false, reason: 'Not a participant', code: 'NOT_PARTICIPANT' };
+      }
+
+      // Check if any doctor in the conversation is verified
+      const doctors = participants.filter(p => p.role === 'DOCTOR');
+      if (doctors.length > 0) {
+        const allDoctorsVerified = doctors.every(
+          d => d.doctorVerificationStatus === DoctorVerificationStatus.APPROVED
+        );
+        
+        if (!allDoctorsVerified) {
+          return { allowed: false, reason: 'Doctor not verified', code: 'DOCTOR_NOT_VERIFIED' };
+        }
+      }
+
+      // Check blocking
+      if (participants.length === 2) {
+        const isBlocked = await prisma.block.findFirst({
+          where: {
+            OR: [
+              { blockerId: participants[0].id, blockedId: participants[1].id },
+              { blockerId: participants[1].id, blockedId: participants[0].id }
+            ]
+          }
+        });
+
+        if (isBlocked) {
+          return { allowed: false, reason: 'User blocked', code: 'USER_BLOCKED' };
+        }
+      }
+
+      // Allow direct messaging
+      return { allowed: true };
     }
 
     const appointment = conversation.appointment;

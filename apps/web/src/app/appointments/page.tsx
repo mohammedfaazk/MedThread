@@ -3,7 +3,7 @@
 import { NavbarEnhanced } from '@/components/NavbarEnhanced'
 import { Sidebar } from '@/components/Sidebar'
 import { useJWTAuth } from '@/context/JWTAuthContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { getImageUrl } from '@/lib/imageUrl'
 import axios from 'axios'
@@ -50,6 +50,7 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 export default function AppointmentsPage() {
     const { user, role, loading } = useJWTAuth()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const [doctors, setDoctors] = useState<Doctor[]>([])
     const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null)
     const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
@@ -60,6 +61,17 @@ export default function AppointmentsPage() {
     const [booking, setBooking] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [specialtyFilter, setSpecialtyFilter] = useState('')
+    const [locationFilter, setLocationFilter] = useState('')
+    const [showAvailableOnly, setShowAvailableOnly] = useState(false)
+    const [doctorAvailability, setDoctorAvailability] = useState<Record<string, boolean>>({})
+
+    // Read specialty from URL params
+    useEffect(() => {
+        const specialty = searchParams.get('specialty')
+        if (specialty) {
+            setSpecialtyFilter(specialty)
+        }
+    }, [searchParams])
 
     useEffect(() => {
         if (!loading && (!user || role !== 'PATIENT')) {
@@ -72,6 +84,32 @@ export default function AppointmentsPage() {
             loadVerifiedDoctors()
         }
     }, [user, role])
+
+    // Check availability for all doctors
+    useEffect(() => {
+        if (doctors.length > 0) {
+            checkDoctorsAvailability()
+        }
+    }, [doctors])
+
+    const checkDoctorsAvailability = async () => {
+        const availabilityMap: Record<string, boolean> = {}
+        
+        for (const doctor of doctors) {
+            try {
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+                const response = await axios.get(`${API_URL}/api/appointments/doctors/${doctor.id}/availability`)
+                const slots = response.data || []
+                // Doctor has availability if they have any unbooked slots
+                availabilityMap[doctor.id] = slots.some((slot: TimeSlot) => !slot.isBooked)
+            } catch (error) {
+                console.error(`Failed to check availability for doctor ${doctor.id}:`, error)
+                availabilityMap[doctor.id] = false
+            }
+        }
+        
+        setDoctorAvailability(availabilityMap)
+    }
 
     const loadVerifiedDoctors = async () => {
         setLoadingDoctors(true)
@@ -148,7 +186,15 @@ export default function AppointmentsPage() {
         const matchesSearch = doctor.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
             doctor.specialty?.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesSpecialty = !specialtyFilter || doctor.specialty === specialtyFilter
-        return matchesSearch && matchesSpecialty
+        
+        // Location filter - check city, state, or hospital affiliation
+        const matchesLocation = !locationFilter || 
+            doctor.hospitalAffiliation?.toLowerCase().includes(locationFilter.toLowerCase())
+        
+        // Availability filter
+        const matchesAvailability = !showAvailableOnly || doctorAvailability[doctor.id] === true
+        
+        return matchesSearch && matchesSpecialty && matchesLocation && matchesAvailability
     })
 
     const specialties = Array.from(new Set(doctors.map(d => d.specialty).filter(Boolean)))
@@ -174,8 +220,19 @@ export default function AppointmentsPage() {
                 <main className="flex-1 p-8 lg:p-12 overflow-y-auto">
                     {/* Header */}
                     <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-slate-900 mb-2">Book an Appointment</h1>
-                        <p className="text-slate-500">Choose from our verified medical professionals</p>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h1 className="text-3xl font-bold text-slate-900 mb-2">Book an Appointment</h1>
+                                <p className="text-black">Choose from our verified medical professionals</p>
+                            </div>
+                            <button
+                                onClick={() => router.push('/appointments/history')}
+                                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg"
+                            >
+                                <Clock className="w-5 h-5" />
+                                View History
+                            </button>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -183,30 +240,95 @@ export default function AppointmentsPage() {
                         <div className="lg:col-span-2">
                             {/* Search and Filter */}
                             <div className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg mb-6 hover:shadow-xl transition-all">
-                                <div className="flex flex-col md:flex-row gap-4">
-                                    <div className="flex-1 relative">
+                                <div className="flex flex-col gap-4">
+                                    {/* Search Bar */}
+                                    <div className="relative">
                                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                         <input
                                             type="text"
                                             placeholder="Search doctors by name or specialty..."
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="w-full pl-12 pr-4 py-3 border border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/50 backdrop-blur-sm transition-all"
+                                            className="w-full pl-12 pr-4 py-2.5 border border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/50 backdrop-blur-sm transition-all text-sm"
                                         />
                                     </div>
-                                    <div className="relative">
-                                        <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                        <select
-                                            value={specialtyFilter}
-                                            onChange={(e) => setSpecialtyFilter(e.target.value)}
-                                            className="pl-12 pr-8 py-3 border border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-white/50 backdrop-blur-sm min-w-[200px] transition-all"
-                                        >
-                                            <option value="">All Specialties</option>
-                                            {specialties.map(specialty => (
-                                                <option key={specialty} value={specialty}>{specialty}</option>
-                                            ))}
-                                        </select>
+                                    
+                                    {/* Filters Row - Equal Width */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        {/* Specialty Filter */}
+                                        <div className="relative">
+                                            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                            <select
+                                                value={specialtyFilter}
+                                                onChange={(e) => setSpecialtyFilter(e.target.value)}
+                                                className="w-full pl-10 pr-8 py-2.5 border border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 appearance-none bg-white/50 backdrop-blur-sm transition-all text-sm cursor-pointer"
+                                            >
+                                                <option value="">All Specialties</option>
+                                                {specialties.map(specialty => (
+                                                    <option key={specialty} value={specialty}>{specialty}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        
+                                        {/* Location Filter */}
+                                        <div className="relative">
+                                            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                            <input
+                                                type="text"
+                                                placeholder="Location or hospital..."
+                                                value={locationFilter}
+                                                onChange={(e) => setLocationFilter(e.target.value)}
+                                                className="w-full pl-10 pr-4 py-2.5 border border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 bg-white/50 backdrop-blur-sm transition-all text-sm"
+                                            />
+                                        </div>
+                                        
+                                        {/* Availability Toggle */}
+                                        <label className="flex items-center gap-1.5 cursor-pointer pl-2 pr-2.5 h-[42px] border border-neutral-400/20 rounded-xl bg-white/50 backdrop-blur-sm hover:bg-white/70 transition-all">
+                                            <input
+                                                type="checkbox"
+                                                checked={showAvailableOnly}
+                                                onChange={(e) => setShowAvailableOnly(e.target.checked)}
+                                                className="w-3.5 h-3.5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                                            />
+                                            <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
+                                                Available Only
+                                            </span>
+                                        </label>
                                     </div>
+                                    
+                                    {/* Active Filters Display */}
+                                    {(specialtyFilter || locationFilter || showAvailableOnly) && (
+                                        <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-400/20">
+                                            <span className="text-xs text-slate-500 font-medium">Active filters:</span>
+                                            {specialtyFilter && (
+                                                <span className="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                                    {specialtyFilter}
+                                                    <X 
+                                                        className="w-3 h-3 cursor-pointer hover:text-blue-900" 
+                                                        onClick={() => setSpecialtyFilter('')}
+                                                    />
+                                                </span>
+                                            )}
+                                            {locationFilter && (
+                                                <span className="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                                    📍 {locationFilter}
+                                                    <X 
+                                                        className="w-3 h-3 cursor-pointer hover:text-green-900" 
+                                                        onClick={() => setLocationFilter('')}
+                                                    />
+                                                </span>
+                                            )}
+                                            {showAvailableOnly && (
+                                                <span className="px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium flex items-center gap-1">
+                                                    ✓ Available
+                                                    <X 
+                                                        className="w-3 h-3 cursor-pointer hover:text-purple-900" 
+                                                        onClick={() => setShowAvailableOnly(false)}
+                                                    />
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -276,9 +398,23 @@ export default function AppointmentsPage() {
                                                         <p className="text-slate-500 text-sm line-clamp-2">{doctor.bio}</p>
                                                     )}
 
-                                                    <div className="mt-4 flex items-center gap-2">
-                                                        <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                                        <span className="text-xs font-semibold text-green-700">Verified Doctor</span>
+                                                    <div className="mt-4 flex items-center gap-3">
+                                                        <div className="flex items-center gap-2">
+                                                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                                            <span className="text-xs font-semibold text-green-700">Verified Doctor</span>
+                                                        </div>
+                                                        {doctorAvailability[doctor.id] !== undefined && (
+                                                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                                                                doctorAvailability[doctor.id] 
+                                                                    ? 'bg-green-50 text-green-700' 
+                                                                    : 'bg-gray-50 text-gray-500'
+                                                            }`}>
+                                                                <Clock className="w-3 h-3" />
+                                                                <span className="text-xs font-semibold">
+                                                                    {doctorAvailability[doctor.id] ? 'Available' : 'No slots'}
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

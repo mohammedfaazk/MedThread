@@ -1,7 +1,7 @@
 {
+  "/appointments/page": "app/appointments/page.js",
   "/chat/page": "app/chat/page.js",
-  "/trends/page": "app/trends/page.js",
-  "/shop/page": "app/shop/page.js",
-  "/diet/page": "app/diet/page.js",
-  "/page": "app/page.js"
+  "/page": "app/page.js",
+  "/login/page": "app/login/page.js",
+  "/dashboard/patient/page": "app/dashboard/patient/page.js"
 }

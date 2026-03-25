@@ -1,187 +1,463 @@
 import { prisma } from '@medthread/database';
 
+interface CreateChallengeData {
+  title: string;
+  description: string;
+  category: string;
+  difficulty: string;
+  riskLevel: 'LOW' | 'HIGH';
+  startDate: Date;
+  endDate: Date;
+  goals: {
+    type: string;
+    value: number;
+  };
+  rewards: {
+    points: number;
+  };
+}
+
 export class HealthChallengesService {
-  async getChallenges(filters?: {
+  /**
+   * Create a new health challenge
+   */
+  async createChallenge(data: CreateChallengeData, creatorId: string) {
+    try {
+      const challenge = await prisma.healthChallenge.create({
+        data: {
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          difficulty: data.difficulty,
+          riskLevel: data.riskLevel,
+          requiresDoctorApproval: data.riskLevel === 'HIGH',
+          isDoctorApproved: data.riskLevel === 'LOW', // LOW-RISK auto-approved, HIGH-RISK needs doctor approval
+          approvedByDoctors: [],
+          type: data.goals.type.toUpperCase(),
+          goal: data.goals.value,
+          unit: data.goals.type,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          rewards: data.rewards,
+          participants: [],
+          leaderboard: [],
+          createdBy: creatorId,
+          isActive: true,
+          participantCount: 0
+        }
+      });
+
+      return challenge;
+    } catch (error) {
+      console.error('[HealthChallenges] Error creating challenge:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all active challenges
+   * Shows ALL challenges to everyone, but patients can only join approved ones
+   */
+  async getActiveChallenges(filters?: {
     category?: string;
     difficulty?: string;
-    status?: string;
+    page?: number;
+    limit?: number;
+    userRole?: string;
   }) {
-    const where: any = {};
-    
-    if (filters?.category) where.category = filters.category;
-    if (filters?.difficulty) where.difficulty = filters.difficulty;
-    if (filters?.status) {
-      if (filters.status === 'active') {
-        where.startDate = { lte: new Date() };
-        where.endDate = { gte: new Date() };
-      }
-    }
+    try {
+      const page = filters?.page || 1;
+      const limit = filters?.limit || 20;
+      const skip = (page - 1) * limit;
 
-    return prisma.healthChallenge.findMany({
-      where,
-      include: {
-        _count: {
-          select: { participants: true }
+      const where: any = { isActive: true };
+
+      if (filters?.category) {
+        where.category = filters.category;
+      }
+
+      if (filters?.difficulty) {
+        where.difficulty = filters.difficulty;
+      }
+
+      const [challenges, total] = await Promise.all([
+        prisma.healthChallenge.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit
+        }),
+        prisma.healthChallenge.count({ where })
+      ]);
+
+      return {
+        challenges,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
         }
-      },
-      orderBy: { startDate: 'desc' }
-    });
+      };
+    } catch (error) {
+      console.error('[HealthChallenges] Error getting challenges:', error);
+      throw error;
+    }
   }
 
+  /**
+   * Get single challenge
+   */
   async getChallenge(challengeId: string) {
-    return prisma.healthChallenge.findUnique({
-      where: { id: challengeId },
-      include: {
-        participants: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                username: true,
-                profilePicture: true
-              }
-            }
-          },
-          orderBy: { points: 'desc' },
-          take: 10
+    try {
+      const challenge = await prisma.healthChallenge.findUnique({
+        where: { id: challengeId }
+      });
+
+      return challenge;
+    } catch (error) {
+      console.error('[HealthChallenges] Error getting challenge:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Join a challenge
+   * Patients can only join approved challenges (LOW-RISK or doctor-approved HIGH-RISK)
+   */
+  async joinChallenge(challengeId: string, userId: string) {
+    try {
+      // Check if already joined
+      const existing = await prisma.challengeParticipant.findFirst({
+        where: {
+          challengeId,
+          userId
+        }
+      });
+
+      if (existing) {
+        throw new Error('Already joined this challenge');
+      }
+
+      // Get challenge
+      const challenge = await prisma.healthChallenge.findUnique({
+        where: { id: challengeId },
+        select: { 
+          title: true, 
+          riskLevel: true, 
+          requiresDoctorApproval: true,
+          isDoctorApproved: true
+        }
+      });
+
+      if (!challenge) {
+        throw new Error('Challenge not found');
+      }
+
+      // Check if challenge is approved (for HIGH-RISK challenges)
+      if (challenge.requiresDoctorApproval && !challenge.isDoctorApproved) {
+        throw new Error('This challenge has not been approved by a doctor yet');
+      }
+
+      // Join the challenge
+      const participant = await prisma.challengeParticipant.create({
+        data: {
+          challengeId,
+          userId,
+          progress: 0,
+          points: 0,
+          isApproved: true
+        }
+      });
+
+      // Update participant count
+      await prisma.healthChallenge.update({
+        where: { id: challengeId },
+        data: { participantCount: { increment: 1 } }
+      });
+
+      return participant;
+    } catch (error) {
+      console.error('[HealthChallenges] Error joining challenge:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Leave a challenge
+   */
+  async leaveChallenge(challengeId: string, userId: string) {
+    try {
+      await prisma.challengeParticipant.deleteMany({
+        where: {
+          challengeId,
+          userId
+        }
+      });
+
+      // Update participant count
+      await prisma.healthChallenge.update({
+        where: { id: challengeId },
+        data: { participantCount: { decrement: 1 } }
+      });
+    } catch (error) {
+      console.error('[HealthChallenges] Error leaving challenge:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update progress
+   */
+  async updateProgress(challengeId: string, userId: string, progress: number) {
+    try {
+      const participant = await prisma.challengeParticipant.updateMany({
+        where: {
+          challengeId,
+          userId
         },
-        _count: {
-          select: { participants: true }
-        }
-      }
-    });
-  }
+        data: { progress }
+      });
 
-  async joinChallenge(userId: string, challengeId: string) {
-    // Check if already joined
-    const existing = await prisma.challengeParticipant.findUnique({
-      where: {
-        userId_challengeId: { userId, challengeId }
-      }
-    });
-
-    if (existing) {
-      throw new Error('Already joined this challenge');
+      return participant;
+    } catch (error) {
+      console.error('[HealthChallenges] Error updating progress:', error);
+      throw error;
     }
-
-    return prisma.challengeParticipant.create({
-      data: {
-        userId,
-        challengeId,
-        points: 0,
-        progress: 0
-      }
-    });
   }
 
-  async leaveChallenge(userId: string, challengeId: string) {
-    return prisma.challengeParticipant.delete({
-      where: {
-        userId_challengeId: { userId, challengeId }
-      }
-    });
-  }
-
-  async updateProgress(userId: string, challengeId: string, data: {
-    points?: number;
-    progress?: number;
-    completedTasks?: string[];
-  }) {
-    const participant = await prisma.challengeParticipant.findUnique({
-      where: {
-        userId_challengeId: { userId, challengeId }
-      }
-    });
-
-    if (!participant) {
-      throw new Error('Not participating in this challenge');
-    }
-
-    return prisma.challengeParticipant.update({
-      where: {
-        userId_challengeId: { userId, challengeId }
-      },
-      data: {
-        points: data.points !== undefined ? participant.points + data.points : undefined,
-        progress: data.progress,
-        completedTasks: data.completedTasks
-      }
-    });
-  }
-
+  /**
+   * Get leaderboard
+   */
   async getLeaderboard(challengeId: string, limit: number = 50) {
-    return prisma.challengeParticipant.findMany({
-      where: { challengeId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-            profilePicture: true
-          }
-        }
-      },
-      orderBy: [
-        { points: 'desc' },
-        { progress: 'desc' }
-      ],
-      take: limit
-    });
+    try {
+      const participants = await prisma.challengeParticipant.findMany({
+        where: { challengeId },
+        orderBy: [
+          { progress: 'desc' },
+          { joinedAt: 'asc' }
+        ],
+        take: limit
+      });
+
+      return participants;
+    } catch (error) {
+      console.error('[HealthChallenges] Error getting leaderboard:', error);
+      throw error;
+    }
   }
 
+  /**
+   * Get user's challenges with full challenge details
+   */
   async getUserChallenges(userId: string) {
-    return prisma.challengeParticipant.findMany({
-      where: { userId },
-      include: {
-        challenge: {
-          include: {
-            _count: {
-              select: { participants: true }
-            }
-          }
+    try {
+      const participants = await prisma.challengeParticipant.findMany({
+        where: { userId }
+      });
+
+      // Fetch challenge details for each participant
+      const challengesWithDetails = await Promise.all(
+        participants.map(async (p) => {
+          const challenge = await prisma.healthChallenge.findUnique({
+            where: { id: p.challengeId }
+          });
+
+          return {
+            id: p.challengeId,
+            participantId: p.id,
+            progress: p.progress,
+            points: p.points,
+            joinedAt: p.joinedAt,
+            isCompleted: p.isCompleted,
+            completedAt: p.completedAt,
+            title: challenge?.title,
+            description: challenge?.description,
+            category: challenge?.category,
+            difficulty: challenge?.difficulty,
+            riskLevel: challenge?.riskLevel,
+            goal: challenge?.goal,
+            unit: challenge?.unit,
+            startDate: challenge?.startDate,
+            endDate: challenge?.endDate
+          };
+        })
+      );
+
+      return challengesWithDetails;
+    } catch (error) {
+      console.error('[HealthChallenges] Error getting user challenges:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get popular challenges
+   */
+  async getPopularChallenges(limit: number = 10) {
+    try {
+      const challenges = await prisma.healthChallenge.findMany({
+        where: { isActive: true },
+        orderBy: { participantCount: 'desc' },
+        take: limit
+      });
+
+      return challenges;
+    } catch (error) {
+      console.error('[HealthChallenges] Error getting popular challenges:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Doctor approves a challenge (makes HIGH-RISK challenges visible to patients)
+   */
+  async approveChallengeByDoctor(challengeId: string, doctorId: string, doctorName: string) {
+    try {
+      const challenge = await prisma.healthChallenge.findUnique({
+        where: { id: challengeId }
+      });
+
+      if (!challenge) {
+        throw new Error('Challenge not found');
+      }
+
+      // Get current approvals
+      const approvals = Array.isArray(challenge.approvedByDoctors) 
+        ? challenge.approvedByDoctors 
+        : [];
+
+      // Check if doctor already approved
+      if (approvals.some((a: any) => a.doctorId === doctorId)) {
+        throw new Error('You have already approved this challenge');
+      }
+
+      // Add doctor approval
+      const newApproval = {
+        doctorId,
+        doctorName,
+        approvedAt: new Date().toISOString()
+      };
+
+      const updatedChallenge = await prisma.healthChallenge.update({
+        where: { id: challengeId },
+        data: {
+          isDoctorApproved: true,
+          approvedByDoctors: [...approvals, newApproval]
         }
-      },
-      orderBy: { joinedAt: 'desc' }
-    });
+      });
+
+      return updatedChallenge;
+    } catch (error) {
+      console.error('[HealthChallenges] Error approving challenge:', error);
+      throw error;
+    }
   }
 
-  async createChallenge(data: {
-    title: string;
-    description: string;
-    category: string;
-    difficulty: string;
-    startDate: Date;
-    endDate: Date;
-    goals: any;
-    rewards: any;
-  }) {
-    return prisma.healthChallenge.create({
-      data
-    });
+  /**
+   * Get challenges pending doctor approval (HIGH-RISK challenges not yet approved)
+   */
+  async getChallengesPendingApproval() {
+    try {
+      const challenges = await prisma.healthChallenge.findMany({
+        where: {
+          riskLevel: 'HIGH',
+          isDoctorApproved: false,
+          isActive: true
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      return challenges;
+    } catch (error) {
+      console.error('[HealthChallenges] Error getting pending challenges:', error);
+      throw error;
+    }
   }
 
-  async getStats(challengeId: string) {
-    const participants = await prisma.challengeParticipant.findMany({
-      where: { challengeId }
-    });
+  /**
+   * Get pending approval requests for a doctor
+   * @deprecated - No longer used with new approval flow
+   */
+  async getPendingApprovals(doctorId: string) {
+    try {
+      const requests = await prisma.challengeApprovalRequest.findMany({
+        where: {
+          status: 'PENDING'
+        },
+        orderBy: { createdAt: 'asc' }
+      });
 
-    const totalPoints = participants.reduce((sum, p) => sum + p.points, 0);
-    const avgProgress = participants.length > 0
-      ? participants.reduce((sum, p) => sum + p.progress, 0) / participants.length
-      : 0;
-    const completed = participants.filter(p => p.progress >= 100).length;
+      return requests;
+    } catch (error) {
+      console.error('[HealthChallenges] Error getting pending approvals:', error);
+      throw error;
+    }
+  }
 
-    return {
-      totalParticipants: participants.length,
-      totalPoints,
-      averageProgress: Math.round(avgProgress),
-      completedCount: completed,
-      completionRate: participants.length > 0
-        ? Math.round((completed / participants.length) * 100)
-        : 0
-    };
+  /**
+   * Approve a challenge request (doctor only)
+   * @deprecated - No longer used with new approval flow
+   */
+  async approveRequest(requestId: string, doctorId: string, notes?: string) {
+    try {
+      const request = await prisma.challengeApprovalRequest.update({
+        where: { id: requestId },
+        data: {
+          status: 'APPROVED',
+          doctorId,
+          notes,
+          respondedAt: new Date()
+        }
+      });
+
+      // Create participant record
+      await prisma.challengeParticipant.create({
+        data: {
+          challengeId: request.challengeId,
+          userId: request.patientId,
+          progress: 0,
+          points: 0,
+          isApproved: true,
+          approvedBy: doctorId,
+          approvedAt: new Date()
+        }
+      });
+
+      // Update participant count
+      await prisma.healthChallenge.update({
+        where: { id: request.challengeId },
+        data: { participantCount: { increment: 1 } }
+      });
+
+      return request;
+    } catch (error) {
+      console.error('[HealthChallenges] Error approving request:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reject a challenge request (doctor only)
+   * @deprecated - No longer used with new approval flow
+   */
+  async rejectRequest(requestId: string, doctorId: string, notes: string) {
+    try {
+      const request = await prisma.challengeApprovalRequest.update({
+        where: { id: requestId },
+        data: {
+          status: 'REJECTED',
+          doctorId,
+          notes,
+          respondedAt: new Date()
+        }
+      });
+
+      return request;
+    } catch (error) {
+      console.error('[HealthChallenges] Error rejecting request:', error);
+      throw error;
+    }
   }
 }
 

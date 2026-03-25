@@ -86,7 +86,9 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
 
       if (response.ok) {
         const data = await response.json();
-        setUnreadCount(data.data.count || 0);
+        // Safely access nested properties
+        const count = data?.data?.count ?? 0;
+        setUnreadCount(count);
       } else if (response.status === 500) {
         // Server error - silently fail and set count to 0
         console.warn('Notifications service unavailable');
