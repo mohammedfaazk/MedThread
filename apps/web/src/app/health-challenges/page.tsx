@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Trophy, Target, Users, Calendar, Award, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useJWTAuth } from '@/context/JWTAuthContext';
+import PageLoader from '@/components/PageLoader';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 

@@ -4,6 +4,7 @@ import { authenticate } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { notificationService } from '../services/notification.service';
 import { NotificationType, ContentType } from '@prisma/client';
+import { analyticsEvents } from '../services/analytics-events.service';
 
 const router = Router();
 
@@ -199,6 +200,13 @@ router.post('/book', async (req, res) => {
                 }
             });
             console.log('[API] Saved to DB');
+
+            // Emit analytics event for appointment booking
+            analyticsEvents.emitAppointmentBooked({
+              appointmentId: appointment.id,
+              doctorId: appointment.doctorId,
+              patientId: appointment.patientId
+            });
 
             // Create APPOINTMENT_REQUEST notification for doctor
             try {

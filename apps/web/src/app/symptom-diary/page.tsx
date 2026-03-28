@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import DiaryEntry from '@/components/symptom-diary/DiaryEntry';
 import { useAuth } from '@/hooks/useAuth';
+import PageLoader from '@/components/PageLoader';
 
 export default function SymptomDiaryPage() {
   const { user } = useAuth();

@@ -177,11 +177,16 @@ export class NotificationService {
 
   private async storeNotification(userId: string, notification: any) {
     try {
+      // Use the recipient's ID as actorId if not provided (self-notification)
+      // This prevents foreign key constraint errors
+      const actorId = notification.actorId || userId;
+      
       return await prisma.notifications.create({
         data: {
-          type: notification.type || 'GENERAL',
+          id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: notification.type || 'REPLY',
           recipientId: userId,
-          actorId: notification.actorId || 'system',
+          actorId: actorId,
           contentId: notification.contentId,
           contentType: notification.contentType,
           metadata: {
@@ -190,6 +195,7 @@ export class NotificationService {
             urgent: notification.urgent || false,
             ...notification.data
           },
+          updatedAt: new Date()
         }
       });
     } catch (error) {

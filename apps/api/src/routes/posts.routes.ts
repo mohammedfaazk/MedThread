@@ -3,6 +3,7 @@ import { prisma } from '@medthread/database';
 import { getPaginationParams, createPaginatedResponse, getSkipTake } from '../utils/pagination';
 import { authenticate } from '../middleware/auth.refactored';
 import { createContentLimiter } from '../middleware/rateLimiter';
+import { analyticsEvents } from '../services/analytics-events.service';
 
 export const postsRouter = Router();
 
@@ -225,6 +226,14 @@ postsRouter.post('/', authenticate, createContentLimiter, async (req, res) => {
           }
         }
       }
+    });
+
+    // Emit analytics event for post creation
+    analyticsEvents.emitPostCreated({
+      postId: post.id,
+      authorRole: post.author.role,
+      communityId: post.communityId || '',
+      priority: tags?.includes('urgent') ? 'urgent' : tags?.includes('high') ? 'high' : 'normal'
     });
 
     res.status(201).json({ success: true, data: post });

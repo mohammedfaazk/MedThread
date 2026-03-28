@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Plus, Search, Lock, Globe, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import PageLoader from '@/components/PageLoader';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -54,14 +55,7 @@ export default function SupportGroupsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading support groups...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading support groups..." />;
   }
 
   return (

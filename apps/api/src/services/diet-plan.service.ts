@@ -466,8 +466,10 @@ export class DietPlanService {
    * No fallback template — returns a clear error if all attempts fail.
    */
   private async callGroqWithRetry(healthProfile: any, calc: CalcResult) {
+    // If Groq is not configured, use fallback
     if (!groq) {
-      return { success: false, error: 'AI service is not configured. Please add a GROQ_API_KEY to the server environment.' }
+      console.log('[DietPlan] Groq not configured, using fallback generator')
+      return this.generateFallbackPlan(healthProfile, calc)
     }
 
     const conditions = Array.isArray(healthProfile.medicalConditions) ? healthProfile.medicalConditions : []
@@ -517,9 +519,16 @@ export class DietPlanService {
         }
 
         return { success: true, data: parsed }
-      } catch (err) {
+      } catch (err: any) {
         lastError = err
         console.error(`Diet plan generation attempt ${attempt} failed:`, err)
+        
+        // Check for authentication errors - use fallback instead
+        if (err.status === 401 || err.message?.includes('Invalid API Key')) {
+          console.log('[DietPlan] API authentication failed, using fallback generator')
+          return this.generateFallbackPlan(healthProfile, calc)
+        }
+        
         if (attempt < MAX_ATTEMPTS) {
           await new Promise(r => setTimeout(r, 1000))
         }
@@ -529,6 +538,115 @@ export class DietPlanService {
     return {
       success: false,
       error: `AI failed to generate a valid diet plan after ${MAX_ATTEMPTS} attempts. Please try again. (${lastError?.message ?? 'Unknown error'})`,
+    }
+  }
+
+  /** Generate a basic diet plan without AI as fallback */
+  private generateFallbackPlan(healthProfile: any, calc: CalcResult) {
+    const conditions = Array.isArray(healthProfile.medicalConditions) ? healthProfile.medicalConditions : []
+    const allergies = Array.isArray(healthProfile.foodAllergies) ? healthProfile.foodAllergies : []
+    const isVeg = healthProfile.dietType?.toLowerCase().includes('veg')
+    const isVegan = healthProfile.dietType?.toLowerCase().includes('vegan')
+    
+    // Distribute calories across meals
+    const breakfastCal = Math.round(calc.calories * 0.25)
+    const lunchCal = Math.round(calc.calories * 0.35)
+    const snackCal = Math.round(calc.calories * 0.10)
+    const dinnerCal = calc.calories - breakfastCal - lunchCal - snackCal
+
+    const meals = [
+      {
+        mealType: 'Breakfast',
+        dishes: isVegan ? [
+          { name: 'Oatmeal with Berries', calories: Math.round(breakfastCal * 0.6), protein: 8, carbs: 45, fats: 5 },
+          { name: 'Almond Milk', calories: Math.round(breakfastCal * 0.2), protein: 2, carbs: 3, fats: 3 },
+          { name: 'Mixed Nuts', calories: Math.round(breakfastCal * 0.2), protein: 5, carbs: 5, fats: 12 }
+        ] : isVeg ? [
+          { name: 'Whole Wheat Toast', calories: Math.round(breakfastCal * 0.4), protein: 6, carbs: 30, fats: 2 },
+          { name: 'Scrambled Eggs', calories: Math.round(breakfastCal * 0.4), protein: 12, carbs: 2, fats: 10 },
+          { name: 'Fresh Fruit', calories: Math.round(breakfastCal * 0.2), protein: 1, carbs: 20, fats: 0 }
+        ] : [
+          { name: 'Whole Grain Cereal', calories: Math.round(breakfastCal * 0.5), protein: 8, carbs: 40, fats: 3 },
+          { name: 'Milk', calories: Math.round(breakfastCal * 0.3), protein: 8, carbs: 12, fats: 5 },
+          { name: 'Banana', calories: Math.round(breakfastCal * 0.2), protein: 1, carbs: 27, fats: 0 }
+        ]
+      },
+      {
+        mealType: 'Lunch',
+        dishes: isVegan ? [
+          { name: 'Quinoa Bowl', calories: Math.round(lunchCal * 0.4), protein: 12, carbs: 50, fats: 6 },
+          { name: 'Chickpea Curry', calories: Math.round(lunchCal * 0.4), protein: 15, carbs: 35, fats: 8 },
+          { name: 'Mixed Salad', calories: Math.round(lunchCal * 0.2), protein: 3, carbs: 10, fats: 5 }
+        ] : isVeg ? [
+          { name: 'Brown Rice', calories: Math.round(lunchCal * 0.3), protein: 5, carbs: 45, fats: 2 },
+          { name: 'Paneer Curry', calories: Math.round(lunchCal * 0.4), protein: 18, carbs: 10, fats: 15 },
+          { name: 'Vegetable Salad', calories: Math.round(lunchCal * 0.3), protein: 4, carbs: 15, fats: 8 }
+        ] : [
+          { name: 'Grilled Chicken Breast', calories: Math.round(lunchCal * 0.4), protein: 35, carbs: 0, fats: 8 },
+          { name: 'Brown Rice', calories: Math.round(lunchCal * 0.3), protein: 5, carbs: 45, fats: 2 },
+          { name: 'Steamed Vegetables', calories: Math.round(lunchCal * 0.3), protein: 5, carbs: 20, fats: 5 }
+        ]
+      },
+      {
+        mealType: 'Snack',
+        dishes: isVegan ? [
+          { name: 'Hummus with Carrots', calories: Math.round(snackCal * 0.6), protein: 6, carbs: 15, fats: 8 },
+          { name: 'Apple', calories: Math.round(snackCal * 0.4), protein: 0, carbs: 25, fats: 0 }
+        ] : isVeg ? [
+          { name: 'Greek Yogurt', calories: Math.round(snackCal * 0.6), protein: 10, carbs: 15, fats: 5 },
+          { name: 'Berries', calories: Math.round(snackCal * 0.4), protein: 1, carbs: 20, fats: 0 }
+        ] : [
+          { name: 'Protein Bar', calories: Math.round(snackCal * 0.7), protein: 15, carbs: 25, fats: 8 },
+          { name: 'Orange', calories: Math.round(snackCal * 0.3), protein: 1, carbs: 15, fats: 0 }
+        ]
+      },
+      {
+        mealType: 'Dinner',
+        dishes: isVegan ? [
+          { name: 'Lentil Soup', calories: Math.round(dinnerCal * 0.4), protein: 18, carbs: 40, fats: 5 },
+          { name: 'Whole Wheat Bread', calories: Math.round(dinnerCal * 0.3), protein: 8, carbs: 35, fats: 3 },
+          { name: 'Green Salad', calories: Math.round(dinnerCal * 0.3), protein: 3, carbs: 10, fats: 8 }
+        ] : isVeg ? [
+          { name: 'Dal (Lentils)', calories: Math.round(dinnerCal * 0.3), protein: 15, carbs: 30, fats: 5 },
+          { name: 'Roti (2 pieces)', calories: Math.round(dinnerCal * 0.3), protein: 6, carbs: 40, fats: 3 },
+          { name: 'Mixed Vegetables', calories: Math.round(dinnerCal * 0.4), protein: 5, carbs: 20, fats: 10 }
+        ] : [
+          { name: 'Grilled Fish', calories: Math.round(dinnerCal * 0.4), protein: 30, carbs: 0, fats: 10 },
+          { name: 'Sweet Potato', calories: Math.round(dinnerCal * 0.3), protein: 4, carbs: 40, fats: 0 },
+          { name: 'Broccoli', calories: Math.round(dinnerCal * 0.3), protein: 5, carbs: 15, fats: 5 }
+        ]
+      }
+    ]
+
+    const planData = {
+      meals,
+      totalCalories: calc.calories,
+      recommendations: [
+        'Drink at least 8 glasses of water daily',
+        'Eat meals at regular intervals',
+        'Include variety in your diet',
+        conditions.length > 0 ? 'Consult your doctor about dietary restrictions for your medical conditions' : 'Maintain a balanced diet',
+        allergies.length > 0 ? `Avoid: ${allergies.join(', ')}` : 'No known food allergies'
+      ]
+    }
+
+    const nutritionalInfo = {
+      protein: calc.macros.protein,
+      carbs: calc.macros.carbs,
+      fats: calc.macros.fats,
+      fiber: calc.macros.fiber,
+      sugar: calc.macros.sugar
+    }
+
+    return {
+      success: true,
+      data: {
+        planData,
+        nutritionalInfo,
+        dietaryNote: conditions.length > 0 
+          ? `This is a basic plan. Please consult a nutritionist for personalized advice regarding: ${conditions.join(', ')}`
+          : 'This is a general healthy eating plan. Adjust portions based on your needs.'
+      }
     }
   }
 

@@ -15,6 +15,7 @@ import axios from 'axios'
 import { motion } from 'framer-motion'
 import { getImageUrl } from '@/lib/imageUrl'
 import AppointmentCalendar from '@/components/appointments/AppointmentCalendar'
+import PageLoader from '@/components/PageLoader'
 import {
     Calendar,
     Clock,
@@ -222,14 +223,7 @@ export default function DoctorDashboard() {
     }
 
     if (loading || !user) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-slate-500 font-medium">Loading...</p>
-                </div>
-            </div>
-        )
+        return <PageLoader message="Loading doctor dashboard..." />
     }
 
     const pendingAppointments = appointments.filter(apt => apt.status === 'PENDING')

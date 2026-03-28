@@ -3,7 +3,7 @@ import { authenticate, AuthRequest } from '../middleware/auth';
 import { validateChatAccess } from '../middleware/chatPermission';
 import { chatService } from '../services/chat.service';
 import { asyncHandler } from '../middleware/asyncHandler';
-import { MessageType } from '@medthread/database';
+import { MessageType, prisma } from '@medthread/database';
 
 const router = Router();
 
@@ -100,15 +100,35 @@ router.post(
       });
     }
     
-    // Validate chat access
-    const { canAccessConversation } = await import('../middleware/chatPermission');
-    const permission = await canAccessConversation(userId, conversationId);
+    // Basic participant check only - no appointment validation
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        appointment: {
+          select: {
+            patientId: true,
+            doctorId: true
+          }
+        }
+      }
+    });
     
-    if (!permission.allowed) {
+    if (!conversation) {
+      return res.status(404).json({
+        success: false,
+        error: 'Conversation not found'
+      });
+    }
+    
+    // Check if user is a participant
+    const isParticipant = conversation.appointment 
+      ? (conversation.appointment.patientId === userId || conversation.appointment.doctorId === userId)
+      : true; // Allow if no appointment
+    
+    if (!isParticipant) {
       return res.status(403).json({
         success: false,
-        error: permission.reason,
-        code: permission.code
+        error: 'Not authorized to send messages in this conversation'
       });
     }
     

@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@medthread/ui', '@medthread/types'],
+  transpilePackages: ['@medthread/ui', '@medthread/types', 'lucide-react'],
   experimental: {
-    optimizePackageImports: ['@medthread/ui']
+    optimizePackageImports: ['@medthread/ui', 'lucide-react']
   },
   // Webpack optimizations to prevent chunk loading errors
   webpack: (config, { dev, isServer }) => {

@@ -109,40 +109,40 @@ class RateLimiter {
 
 // Predefined rate limiters
 export const rateLimiters = {
-  // General API rate limiting - more lenient for development
+  // General API rate limiting - very lenient for development
   general: new RateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: process.env.NODE_ENV === 'production' ? 100 : 1000,
+    maxRequests: process.env.NODE_ENV === 'production' ? 100 : 10000,
     message: 'Too many requests from this IP, please try again later.'
   }),
 
-  // Strict rate limiting for authentication endpoints - more lenient for development
+  // Strict rate limiting for authentication endpoints - very lenient for development
   auth: new RateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: process.env.NODE_ENV === 'production' ? 5 : 50,
+    maxRequests: process.env.NODE_ENV === 'production' ? 5 : 500,
     message: 'Too many authentication attempts, please try again later.',
     skipSuccessfulRequests: true
   }),
 
-  // Rate limiting for posting content - more lenient for development
+  // Rate limiting for posting content - very lenient for development
   posting: new RateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: process.env.NODE_ENV === 'production' ? 5 : 50,
+    maxRequests: process.env.NODE_ENV === 'production' ? 5 : 500,
     message: 'Too many posts created, please wait before posting again.',
     keyGenerator: (req) => `${req.ip}:${req.userId || 'anonymous'}`
   }),
 
-  // Rate limiting for search endpoints - more lenient for development
+  // Rate limiting for search endpoints - very lenient for development
   search: new RateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: process.env.NODE_ENV === 'production' ? 30 : 300,
+    maxRequests: process.env.NODE_ENV === 'production' ? 30 : 3000,
     message: 'Too many search requests, please slow down.'
   }),
 
-  // Rate limiting for medical AI endpoints - more lenient for development
+  // Rate limiting for medical AI endpoints - very lenient for development
   medicalAI: new RateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: process.env.NODE_ENV === 'production' ? 10 : 100,
+    maxRequests: process.env.NODE_ENV === 'production' ? 10 : 1000,
     message: 'Too many AI requests, please wait before trying again.',
     keyGenerator: (req) => `${req.ip}:${req.userId || 'anonymous'}`
   }),

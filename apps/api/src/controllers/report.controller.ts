@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.refactored';
 import { reportService } from '../services/report.service';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { analyticsEvents } from '../services/analytics-events.service';
 
 export class ReportController {
   // Report a post
@@ -11,6 +12,12 @@ export class ReportController {
     const userId = req.userId!;
 
     const report = await reportService.reportPost(userId, postId, reason, details);
+
+    // Emit analytics event for report filed
+    analyticsEvents.emitReportFiled({
+      reportId: report.id,
+      reason: reason
+    });
 
     res.status(201).json({
       success: true,
@@ -27,6 +34,12 @@ export class ReportController {
 
     const report = await reportService.reportComment(userId, commentId, reason, details);
 
+    // Emit analytics event for report filed
+    analyticsEvents.emitReportFiled({
+      reportId: report.id,
+      reason: reason
+    });
+
     res.status(201).json({
       success: true,
       data: report,
@@ -41,6 +54,12 @@ export class ReportController {
     const userId = req.userId!;
 
     const report = await reportService.reportUser(userId, reportedUserId, reason, details);
+
+    // Emit analytics event for report filed
+    analyticsEvents.emitReportFiled({
+      reportId: report.id,
+      reason: reason
+    });
 
     res.status(201).json({
       success: true,

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Shield, Users, FileText, MessageSquare, Flag, Activity, ScrollText, LogOut, BarChart3, Trophy } from 'lucide-react';
+import '@/styles/glassmorphic-analytics.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -45,10 +46,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="dashboard-page">
+        <div className="ambient-orb-bottom" />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" 
+                 style={{ borderColor: '#669ae3', borderTopColor: 'transparent' }}></div>
+            <p style={{ color: '#8899b4' }}>Loading...</p>
+          </div>
         </div>
       </div>
     );
@@ -72,31 +77,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation Bar */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="dashboard-page min-h-screen">
+      {/* Ambient Orbs */}
+      <div className="ambient-orb-bottom" />
+      
+      {/* Top Navigation Bar - Glassmorphic */}
+      <header className="admin-header sticky top-0 z-50">
+        <div className="max-w-full px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
-              <Shield className="w-8 h-8 text-blue-600" />
+              <div className="admin-logo-badge">
+                <Shield className="w-5 h-5" style={{ color: '#669ae3' }} />
+              </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
+                <h1 className="admin-title">Admin Panel</h1>
+                <p className="admin-subtitle">MedThread Management</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              className="admin-logout-btn"
             >
               <LogOut className="w-4 h-4" />
-              Logout
+              <span>Logout</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar Navigation */}
-        <aside className="w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)] sticky top-16">
+      <div className="flex dashboard-content">
+        {/* Sidebar Navigation - Glassmorphic */}
+        <aside className="admin-sidebar">
           <nav className="p-4 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -106,14 +117,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-                    isActive
-                      ? 'bg-blue-50 text-blue-600 font-semibold'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  className={`admin-nav-item ${isActive ? 'active' : ''}`}
                 >
-                  <Icon className="w-5 h-5" />
-                  {item.label}
+                  <div className="admin-nav-icon">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span>{item.label}</span>
                 </Link>
               );
             })}
@@ -121,7 +130,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1">
+        <main className="flex-1 relative z-1">
           {children}
         </main>
       </div>

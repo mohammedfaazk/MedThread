@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import MedicationList from '@/components/medication/MedicationList';
 import MedicationForm from '@/components/medication/MedicationForm';
 import { useAuth } from '@/hooks/useAuth';
+import PageLoader from '@/components/PageLoader';
 
 export default function MedicationsPage() {
   const { user } = useAuth();

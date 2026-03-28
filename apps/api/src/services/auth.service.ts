@@ -154,6 +154,8 @@ export class AuthService {
 
     // Verify password
     console.log('🔍 Comparing password...');
+    console.log('🔍 Password length received:', input.password?.length);
+    console.log('🔍 Password first 3 chars:', input.password?.substring(0, 3));
     const isValidPassword = await bcrypt.compare(input.password, user.passwordHash);
     console.log('🔐 Password validation result:', isValidPassword ? '✅ VALID' : '❌ INVALID');
 

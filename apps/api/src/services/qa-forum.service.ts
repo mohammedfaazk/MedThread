@@ -229,11 +229,12 @@ export class QAForumService {
         await notificationService.sendNotification(question.authorId, {
           title: 'New Answer to Your Question',
           body: `Someone answered your question: "${question.title}"`,
-          type: 'FORUM_ANSWER',
+          type: 'REPLY',
           data: {
             questionId: data.questionId,
             answerId: answer.id
-          }
+          },
+          actorId: data.authorId
         });
       }
 

@@ -5,6 +5,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/global-error.js"
     ],
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -21,110 +26,92 @@
       "static/chunks/main-app.js",
       "static/chunks/app/not-found.js"
     ],
-    "/health-challenges/page": [
+    "/u/[username]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/health-challenges/page.js"
+      "static/css/app/u/[username]/page.css",
+      "static/chunks/app/u/[username]/page.js"
     ],
-    "/success-stories/[id]/page": [
+    "/admin/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/success-stories/[id]/page.js"
+      "static/css/app/admin/layout.css",
+      "static/chunks/app/admin/layout.js"
     ],
-    "/qa-forum/page": [
+    "/admin/analytics/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/qa-forum/page.js"
+      "static/css/app/admin/analytics/page.css",
+      "static/chunks/app/admin/analytics/page.js"
     ],
-    "/page": [
+    "/trends/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
-    ],
-    "/dashboard/patient/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/patient/page.js"
-    ],
-    "/symptom-checker/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/symptom-checker/page.js"
-    ],
-    "/ai-detective/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/ai-detective/page.js"
-    ],
-    "/doctor-feed/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/doctor-feed/page.js"
-    ],
-    "/appointments/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/appointments/page.js"
+      "static/chunks/app/trends/page.js"
     ],
     "/m/[community]/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/m/[community]/page.js"
     ],
-    "/login/page": [
+    "/doctor-feed/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/login/page.js"
+      "static/css/app/doctor-feed/page.css",
+      "static/chunks/app/doctor-feed/page.js"
+    ],
+    "/dashboard/patient/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/dashboard/patient/page.css",
+      "static/chunks/app/dashboard/patient/page.js"
+    ],
+    "/diet/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/diet/page.js"
+    ],
+    "/health-profile/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/health-profile/page.css",
+      "static/chunks/app/health-profile/page.js"
+    ],
+    "/ai-detective/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/ai-detective/page.js"
+    ],
+    "/appointments/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/appointments/page.css",
+      "static/chunks/app/appointments/page.js"
     ],
     "/admin/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/page.js"
     ],
-    "/admin/layout": [
+    "/admin/moderation/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/layout.js"
-    ],
-    "/admin/analytics/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/analytics/page.js"
+      "static/chunks/app/admin/moderation/page.js"
     ],
     "/admin/health-challenges/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/admin/health-challenges/page.js"
     ],
-    "/profile/page": [
+    "/admin/backup/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/profile/page.js"
+      "static/chunks/app/admin/backup/page.js"
     ],
-    "/doctor/challenge-approvals/page": [
+    "/analytics/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/doctor/challenge-approvals/page.js"
-    ],
-    "/u/[username]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/u/[username]/page.js"
-    ],
-    "/post/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/post/[id]/page.js"
-    ],
-    "/dashboard/doctor/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/doctor/page.js"
-    ],
-    "/chat/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/chat/page.js"
+      "static/chunks/app/analytics/page.js"
     ]
   }
 }

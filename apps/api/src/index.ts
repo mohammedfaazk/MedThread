@@ -36,6 +36,10 @@ import doctorProfileAnalyticsRouter from './routes/doctor-profile-analytics.rout
 import postPriorityRouter from './routes/post-priority.routes';
 import adminUserActivityRouter from './routes/admin-user-activity.routes';
 import regionalSymptomAnalyticsRouter from './routes/regional-symptom-analytics.routes';
+import adminAnalyticsRouter from './routes/admin-analytics.routes';
+import communityAnalyticsRouter from './routes/community-analytics.routes';
+import doctorPublicAnalyticsRouter from './routes/doctor-public-analytics.routes';
+import analyticsSSERouter from './routes/analytics-sse.routes';
 import { paymentRouter } from './routes/payment.routes';
 import { fileUploadRouter } from './routes/file-upload.routes';
 import notificationRouter from './routes/notification.routes';
@@ -156,16 +160,18 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(sanitizeInput); // Prevent NoSQL injection
 
-// Apply rate limiting to all routes
-app.use('/api/', apiLimiter);
+// Apply rate limiting to all routes (disabled in development for easier testing)
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api/', apiLimiter);
+}
 
-// Apply specific rate limiters
-// TEMPORARILY DISABLED FOR DEBUGGING
-// app.use('/api/auth', authRateLimit);
-app.use('/api/v1/posts', postingRateLimit);
-app.use('/api/v1/search', searchRateLimit);
-app.use('/api/upload', uploadRateLimit);
-app.use('/api/reports', reportingRateLimit);
+// Apply specific rate limiters (disabled in development)
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api/v1/posts', postingRateLimit);
+  app.use('/api/v1/search', searchRateLimit);
+  app.use('/api/upload', uploadRateLimit);
+  app.use('/api/reports', reportingRateLimit);
+}
 
 // CSRF token endpoint
 app.get('/api/csrf-token', getCsrfToken);
@@ -187,6 +193,10 @@ app.use('/api/doctor-profile-analytics', doctorProfileAnalyticsRouter);
 app.use('/api/post-priority', postPriorityRouter);
 app.use('/api/admin-user-activity', adminUserActivityRouter);
 app.use('/api/regional-symptom-analytics', regionalSymptomAnalyticsRouter);
+app.use('/api/admin-analytics', adminAnalyticsRouter);
+app.use('/api/community-analytics', communityAnalyticsRouter);
+app.use('/api/doctor-public-analytics', doctorPublicAnalyticsRouter);
+app.use('/api/analytics-sse', analyticsSSERouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/threads', threadRouter);
 app.use('/api/users', userRouter);

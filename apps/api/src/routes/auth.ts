@@ -3,6 +3,7 @@ import { prisma } from '@medthread/database';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
+import { analyticsEvents } from '../services/analytics-events.service';
 
 export const authRouter = Router();
 
@@ -41,11 +42,26 @@ authRouter.post('/register', async (req, res) => {
       }
     });
 
+    // Create user analytics entry with initial lastActive
+    await prisma.userAnalytics.create({
+      data: {
+        id: user.id,
+        userId: user.id,
+        lastActive: new Date()
+      }
+    });
+
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
+
+    // Emit analytics event for new user registration
+    analyticsEvents.emitUserRegistered({
+      role: user.role,
+      registeredAt: user.createdAt || new Date()
+    });
 
     res.json({
       success: true,
@@ -86,11 +102,28 @@ authRouter.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Update user analytics lastActive timestamp
+    await prisma.userAnalytics.upsert({
+      where: { userId: user.id },
+      update: { lastActive: new Date() },
+      create: {
+        id: user.id,
+        userId: user.id,
+        lastActive: new Date()
+      }
+    });
+
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
+
+    // Emit analytics event for user login (active user)
+    analyticsEvents.emitUserActive({
+      userId: user.id,
+      role: user.role
+    });
 
     res.json({
       success: true,

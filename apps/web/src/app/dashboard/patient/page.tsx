@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { getImageUrl } from '@/lib/imageUrl'
 import { motion } from 'framer-motion'
+import PageLoader from '@/components/PageLoader'
 import {
     Plus,
     Calendar,
@@ -187,14 +188,7 @@ export default function PatientDashboard() {
     }
 
     if (loading || !user) {
-        return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-slate-500 font-medium">Preparing your healthy experience...</p>
-                </div>
-            </div>
-        )
+        return <PageLoader message="Preparing your healthy experience..." />
     }
 
     return (

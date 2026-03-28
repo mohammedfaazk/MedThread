@@ -9,6 +9,7 @@ import { MedicalDisclaimer } from '@/components/MedicalDisclaimer';
 import Link from 'next/link';
 import { MessageSquare, ThumbsUp, Clock, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import PageLoader from '@/components/PageLoader';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -116,14 +117,7 @@ export default function DoctorFeedPage() {
   };
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading doctor feed..." />;
   }
 
   const isDoctor = role === 'DOCTOR' || role === 'VERIFIED_DOCTOR';

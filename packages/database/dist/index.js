@@ -34,6 +34,14 @@ exports.prisma = new client_1.PrismaClient({
         },
     },
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
+    // Configure connection pool to prevent exhaustion
+    // @ts-ignore - Prisma connection pool configuration
+    __internal: {
+        engine: {
+            connection_limit: 10,
+            pool_timeout: 10,
+        },
+    },
 });
 // Handle graceful shutdown
 process.on('beforeExit', async () => {

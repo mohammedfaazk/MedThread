@@ -7,6 +7,7 @@ import { useJWTAuth } from '@/context/JWTAuthContext'
 import { MessageCircle, ThumbsUp, CheckCircle, Award, Search, Plus } from 'lucide-react'
 import Link from 'next/link'
 import IridescenceLayout from '@/components/IridescenceLayout'
+import PageLoader from '@/components/PageLoader'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -77,19 +78,7 @@ export default function QAForumPage() {
   const popularTags = ['diabetes', 'hypertension', 'mental-health', 'nutrition', 'exercise', 'medication']
 
   if (loading) {
-    return (
-      <IridescenceLayout>
-        <NavbarEnhanced />
-        <div className="max-w-[1440px] mx-auto flex">
-          <Sidebar />
-          <main className="flex-1 p-8">
-            <div className="text-center py-12">
-              <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-            </div>
-          </main>
-        </div>
-      </IridescenceLayout>
-    )
+    return <PageLoader message="Loading Q&A forum..." />;
   }
 
   return (

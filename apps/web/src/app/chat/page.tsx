@@ -6,6 +6,7 @@ import Link from 'next/link';
 import ChatInbox from '@/components/Chat/ChatInbox';
 import ChatWindow from '@/components/Chat/ChatWindow';
 import IridescenceLayout from '@/components/IridescenceLayout';
+import PageLoader from '@/components/PageLoader';
 import { 
   ArrowLeft, 
   AlertCircle, 
@@ -158,14 +159,7 @@ export default function ChatPage() {
 
   if (!currentUserId || !token) {
     if (isLoading) {
-      return (
-        <div className="flex items-center justify-center h-screen" style={{ background: 'linear-gradient(135deg, #f6e3af 0%, #7dc2f1 100%)' }}>
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-700">Loading...</p>
-          </div>
-        </div>
-      );
+      return <PageLoader message="Loading chat..." />;
     }
     
     return (

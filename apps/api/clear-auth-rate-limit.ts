@@ -8,7 +8,13 @@ async function clearAuthRateLimit() {
             'rate_limit:::ffff:127.0.0.1',
             'rate_limit:127.0.0.1',
             'rate_limit:localhost',
-            'rate_limit:unknown'
+            'rate_limit:unknown',
+            // Auth-specific rate limit keys
+            'auth_rate_limit:::1',
+            'auth_rate_limit:::ffff:127.0.0.1',
+            'auth_rate_limit:127.0.0.1',
+            'auth_rate_limit:localhost',
+            'auth_rate_limit:unknown'
         ];
 
         for (const key of keys) {

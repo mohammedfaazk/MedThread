@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from './auth.refactored';
+import { AuthRequest } from './auth';
 import { ForbiddenError } from '../utils/errors';
 
 export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {

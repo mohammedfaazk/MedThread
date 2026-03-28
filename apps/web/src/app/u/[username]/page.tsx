@@ -14,6 +14,8 @@ import { DoctorPublicStats } from '@/components/analytics/DoctorPublicStats'
 import { DoctorProfileGraphs } from '@/components/doctor/DoctorProfileGraphs'
 import { AnalyticsTracker } from '@/lib/analytics'
 import { ReviewsList } from '@/components/doctor/ReviewsList'
+import { DoctorIdentityCard3D } from '@/components/doctor/DoctorIdentityCard3D'
+import '@/styles/glassmorphic-analytics.css'
 
 export default function UserProfilePage({ params }: { params: { username: string } }) {
   const [showBooking, setShowBooking] = useState(false)
@@ -247,142 +249,207 @@ export default function UserProfilePage({ params }: { params: { username: string
       <div className="min-h-screen">
         <Navbar />
 
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg hover:shadow-xl transition-all">
-            <div className="flex items-start gap-6">
-            {/* Avatar */}
-            <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
-              {profileUser.avatar ? (
-                <img
-                  src={getImageUrl(profileUser.avatar) || ''}
-                  alt={profileUser.username || 'User'}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    // Fallback to initial if image fails to load
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-              ) : (
-                <span>{(profileUser.username || profileUser.full_name || profileUser.name || params.username)[0].toUpperCase()}</span>
-              )}
-            </div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2">
-                {profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR'
-                  ? `Dr. ${profileUser.username || profileUser.full_name || profileUser.name || params.username}`
-                  : (profileUser.username || profileUser.full_name || profileUser.name || `u/${params.username}`)
-                }
-              </h1>
-              <div className="flex gap-6 text-sm text-gray-600 mb-4">
-                <div>
-                  <span className="font-semibold">
-                    <CountUpNumber value={profileUser.totalKarma || 0} />
-                  </span> Karma
-                </div>
-                
-                {/* Doctor-specific info */}
-                {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') && (
-                  <>
-                    {profileUser.yearsOfExperience && (
-                      <div>
-                        <span className="font-semibold">
-                          <CountUpNumber value={profileUser.yearsOfExperience} />
-                        </span> years experience
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          {/* Top Section with 3D Card for Doctors */}
+          {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') ? (
+            <div className="flex gap-6 items-start flex-col lg:flex-row">
+              {/* Left Column - Main Profile Card */}
+              <div className="flex-1 w-full lg:w-auto">
+                <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg hover:shadow-xl transition-all">
+                  {/* Profile Header */}
+                  <div className="mb-6">
+                    <h1 className="text-4xl font-bold mb-3 text-gray-900">
+                      Dr. {profileUser.username || profileUser.full_name || profileUser.name || params.username}
+                    </h1>
+                    <div className="flex flex-wrap gap-6 text-sm mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-3xl font-bold text-blue-600">
+                          <CountUpNumber value={profileUser.totalKarma || 0} />
+                        </span>
+                        <span className="text-gray-600 font-medium">Karma</span>
+                      </div>
+                      {profileUser.yearsOfExperience && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-3xl font-bold text-blue-600">
+                            <CountUpNumber value={profileUser.yearsOfExperience} />
+                          </span>
+                          <span className="text-gray-600 font-medium">years experience</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bio Section */}
+                  {profileUser.bio && (
+                    <div className="bg-white/50 rounded-xl p-5 border border-gray-200 mb-6">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">About</h3>
+                      <p className="text-gray-700 leading-relaxed">{profileUser.bio}</p>
+                    </div>
+                  )}
+
+                  {/* Additional Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {(profileUser.specialty || profileUser.specialization) && (
+                      <div className="bg-white/50 rounded-xl p-4 border border-gray-200">
+                        <div className="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Specialty</div>
+                        <div className="text-gray-900 font-semibold">{profileUser.specialty || profileUser.specialization}</div>
                       </div>
                     )}
                     {profileUser.hospitalAffiliation && (
-                      <div>
-                        🏥 <span className="font-semibold">{profileUser.hospitalAffiliation}</span>
+                      <div className="bg-white/50 rounded-xl p-4 border border-gray-200">
+                        <div className="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Hospital</div>
+                        <div className="text-gray-900 font-semibold">{profileUser.hospitalAffiliation}</div>
                       </div>
                     )}
-                    {(profileUser.specialty || profileUser.specialization) && (
-                      <div className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-bold uppercase">
-                        {profileUser.specialty || profileUser.specialization}
-                      </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 flex-wrap">
+                    {effectiveCurrentUserId && effectiveCurrentUserId !== profileUser.id && (
+                      <>
+                        <Link href={`/profile?tab=consultation&doctor=${doctorId}`}>
+                          <button 
+                            className="px-6 py-2.5 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
+                            onClick={async () => {
+                              const token = localStorage.getItem('auth_token');
+                              if (token && effectiveCurrentUserId) {
+                                await AnalyticsTracker.trackCommentConversion({
+                                  commentId: 'profile_message_click',
+                                  doctorId: profileUser.id,
+                                  patientId: effectiveCurrentUserId,
+                                  postId: 'profile_message_click',
+                                  action: 'message_click'
+                                }, token);
+                              }
+                            }}
+                          >
+                            💬 Message Doctor
+                          </button>
+                        </Link>
+
+                        {currentUserRole === 'PATIENT' && (
+                          <button
+                            onClick={() => setShowBooking(!showBooking)}
+                            className="px-6 py-2.5 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors shadow-md hover:shadow-lg"
+                          >
+                            📅 {showBooking ? 'Hide Booking' : 'Book Appointment'}
+                          </button>
+                        )}
+
+                        <ReportButton 
+                          type="user" 
+                          targetId={profileUser.id}
+                          targetTitle={`User: ${profileUser.username || profileUser.full_name || profileUser.name || params.username}`}
+                          className="px-6 py-2.5 border-2 border-gray-300 rounded-full font-semibold hover:bg-gray-50 transition-colors"
+                        />
+                      </>
                     )}
-                  </>
-                )}
-                
-                {/* Role badges */}
-                {profileUser.role === 'VERIFIED_DOCTOR' && (
-                  <div className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold uppercase flex items-center gap-1">
-                    ✓ Verified Doctor
+                    
+                    {effectiveCurrentUserId && effectiveCurrentUserId === profileUser.id && (
+                      <Link href="/profile">
+                        <button className="px-6 py-2.5 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg">
+                          ✏️ Edit Profile
+                        </button>
+                      </Link>
+                    )}
                   </div>
-                )}
-                {profileUser.role === 'PATIENT' && (
-                  <div className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-bold uppercase">
-                    Patient
-                  </div>
-                )}
+                </div>
               </div>
-              <div className="flex gap-3">
-                {/* Only show action buttons if NOT viewing own profile */}
-                {effectiveCurrentUserId && effectiveCurrentUserId !== profileUser.id && (
-                  <>
-                    {/* Message button */}
-                    <Link href={`/profile?tab=consultation&doctor=${doctorId}`}>
-                      <button 
-                        className="px-6 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50"
-                        onClick={async () => {
-                          // Track message click conversion
-                          const token = localStorage.getItem('auth_token');
-                          if (token && effectiveCurrentUserId) {
-                            await AnalyticsTracker.trackCommentConversion({
-                              commentId: 'profile_message_click', // Special identifier for direct profile messages
-                              doctorId: profileUser.id,
-                              patientId: effectiveCurrentUserId,
-                              postId: 'profile_message_click',
-                              action: 'message_click'
-                            }, token);
-                          }
-                        }}
-                      >
-                        Message
-                      </button>
-                    </Link>
 
-                    {/* Show booking button only if viewing a doctor profile and user is a patient */}
-                    {profileUser.role === 'VERIFIED_DOCTOR' && currentUserRole === 'PATIENT' && (
-                      <button
-                        onClick={() => setShowBooking(!showBooking)}
-                        className="px-6 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600"
-                      >
-                        {showBooking ? 'Hide Booking' : 'Book Appointment'}
-                      </button>
-                    )}
-
-                    {/* Report button */}
-                    <ReportButton 
-                      type="user" 
-                      targetId={profileUser.id}
-                      targetTitle={`User: ${profileUser.username || profileUser.full_name || profileUser.name || params.username}`}
-                      className="px-6 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50"
+              {/* Right Column - 3D Identity Card (Separate Section) */}
+              <div className="w-full lg:w-auto flex justify-center lg:justify-start">
+                <DoctorIdentityCard3D 
+                  doctor={{
+                    id: profileUser.id,
+                    name: profileUser.username || profileUser.full_name || profileUser.name,
+                    specialty: profileUser.specialty || profileUser.specialization,
+                    clinic_name: profileUser.hospitalAffiliation,
+                    yearsOfExperience: profileUser.yearsOfExperience,
+                    profile_photo: profileUser.avatar ? (getImageUrl(profileUser.avatar) || undefined) : undefined,
+                    verification_status: profileUser.verification_status,
+                    role: profileUser.role,
+                    medicalLicenseNumber: profileUser.medicalLicenseNumber,
+                    totalKarma: profileUser.totalKarma
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            /* Regular Profile Card for Patients */
+            <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg hover:shadow-xl transition-all">
+              <div className="flex items-start gap-6">
+                {/* Avatar */}
+                <div className="w-24 h-24 bg-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
+                  {profileUser.avatar ? (
+                    <img
+                      src={getImageUrl(profileUser.avatar) || ''}
+                      alt={profileUser.username || 'User'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
-                  </>
-                )}
-                
-                {/* Show "Edit Profile" button if viewing own profile */}
-                {effectiveCurrentUserId && effectiveCurrentUserId === profileUser.id && (
-                  <Link href="/profile">
-                    <button className="px-6 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600">
-                      Edit Profile
-                    </button>
-                  </Link>
-                )}
+                  ) : (
+                    <span>{(profileUser.username || profileUser.full_name || profileUser.name || params.username)[0].toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-3xl font-bold mb-2">
+                    {profileUser.username || profileUser.full_name || profileUser.name || `u/${params.username}`}
+                  </h1>
+                  <div className="flex gap-6 text-sm text-gray-600 mb-4">
+                    <div>
+                      <span className="font-semibold">
+                        <CountUpNumber value={profileUser.totalKarma || 0} />
+                      </span> Karma
+                    </div>
+                    {profileUser.role === 'PATIENT' && (
+                      <div className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-bold uppercase">
+                        Patient
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    {effectiveCurrentUserId && effectiveCurrentUserId !== profileUser.id && (
+                      <>
+                        <Link href={`/profile?tab=consultation&doctor=${doctorId}`}>
+                          <button className="px-6 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50">
+                            Message
+                          </button>
+                        </Link>
+                        <ReportButton 
+                          type="user" 
+                          targetId={profileUser.id}
+                          targetTitle={`User: ${profileUser.username || profileUser.full_name || profileUser.name || params.username}`}
+                          className="px-6 py-2 border border-gray-300 rounded-full font-semibold hover:bg-gray-50"
+                        />
+                      </>
+                    )}
+                    {effectiveCurrentUserId && effectiveCurrentUserId === profileUser.id && (
+                      <Link href="/profile">
+                        <button className="px-6 py-2 bg-blue-500 text-white rounded-full font-semibold hover:bg-blue-600">
+                          Edit Profile
+                        </button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-            </div>
+          )}
 
+          {/* Stats and Analytics Section - Full Width */}
+          <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-8 shadow-lg hover:shadow-xl transition-all mt-6">
             {/* Doctor Analytics Stats - Only show for doctors */}
             {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') && (
-              <div className="mt-6 border-t border-gray-200 pt-6">
+              <div className="mb-6">
                 <DoctorPublicStats doctorId={profileUser.id} />
               </div>
             )}
 
             {/* Doctor Profile Graphs - Only show for doctors */}
             {(profileUser.role === 'VERIFIED_DOCTOR' || profileUser.role === 'DOCTOR') && (
-              <div className="mt-6">
+              <div className="border-t border-gray-200 pt-6">
                 <DoctorProfileGraphs doctorId={profileUser.id} />
               </div>
             )}
