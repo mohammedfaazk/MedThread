@@ -27,6 +27,7 @@ import { uploadRouter } from './routes/upload.routes';
 import { adminRouter } from './routes/admin.routes';
 import { reportRouter } from './routes/report.routes';
 import { postsRouter as postsRouterV2 } from './routes/posts.routes';
+import postsRouterOld from './routes/posts';
 import { analyticsRouter } from './routes/analytics.routes';
 import { healthAnalyticsRouter } from './routes/health-analytics.routes';
 import { doctorAnalyticsRouter } from './routes/doctor-analytics.routes';
@@ -34,6 +35,8 @@ import { platformAnalyticsRouter } from './routes/platform-analytics.routes';
 import enhancedAnalyticsRouter from './routes/enhanced-analytics';
 import doctorProfileAnalyticsRouter from './routes/doctor-profile-analytics.routes';
 import postPriorityRouter from './routes/post-priority.routes';
+import fixPrioritiesRouter from './routes/fix-priorities.routes';
+import analyzeAllPostsRouter from './routes/analyze-all-posts';
 import adminUserActivityRouter from './routes/admin-user-activity.routes';
 import regionalSymptomAnalyticsRouter from './routes/regional-symptom-analytics.routes';
 import adminAnalyticsRouter from './routes/admin-analytics.routes';
@@ -126,6 +129,38 @@ setSocketInstance(io);
 // Initialize Socket Handlers
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
+  
+  // Handle user joining their personal room for targeted notifications
+  socket.on('join_room', (userId: string) => {
+    if (userId) {
+      socket.join(`user_${userId}`);
+      console.log(`[Socket] User ${userId} joined room: user_${userId}`);
+    }
+  });
+
+  // Handle user location registration for proximity-based notifications
+  socket.on('register_location', async (data: { userId: string; pincode?: string; city?: string; state?: string }) => {
+    try {
+      const { userId, pincode, city, state } = data;
+      if (userId) {
+        // Store user location in socket data for proximity matching
+        socket.data.userId = userId;
+        socket.data.pincode = pincode;
+        socket.data.city = city;
+        socket.data.state = state;
+        
+        // Join location-based rooms for targeted notifications
+        if (pincode) socket.join(`pincode_${pincode}`);
+        if (city) socket.join(`city_${city}`);
+        if (state) socket.join(`state_${state}`);
+        
+        console.log(`[Socket] User ${userId} registered location: ${pincode}, ${city}, ${state}`);
+      }
+    } catch (error) {
+      console.error('[Socket] Error registering location:', error);
+    }
+  });
+  
   chatHandler(io, socket);
   notificationHandler(io, socket);
   analyticsHandler(io, socket);
@@ -181,6 +216,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authRouter);
+app.use('/api/v1/auth', authRouter); // Add v1 alias for consistency
 app.use('/api/upload', uploadRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/reports', reportRouter);
@@ -191,6 +227,8 @@ app.use('/api/platform-analytics', platformAnalyticsRouter);
 app.use('/api/enhanced-analytics', enhancedAnalyticsRouter);
 app.use('/api/doctor-profile-analytics', doctorProfileAnalyticsRouter);
 app.use('/api/post-priority', postPriorityRouter);
+app.use('/api/fix-priorities', fixPrioritiesRouter);
+app.use('/api/analyze-all-posts', analyzeAllPostsRouter);
 app.use('/api/admin-user-activity', adminUserActivityRouter);
 app.use('/api/regional-symptom-analytics', regionalSymptomAnalyticsRouter);
 app.use('/api/admin-analytics', adminAnalyticsRouter);
@@ -215,9 +253,11 @@ app.use('/api/health-insights', healthInsightsRouter);
 app.use('/api/file-upload', fileUploadRouter);
 
 // Posts & Comments System
-app.use('/api/v1/posts', postsRouter);
+// Use the new posts router with mock data fallback
+app.use('/api/v1/posts', postsRouterV2);
 app.use('/api/v1/comments', commentsRouter);
 app.use('/api/v1/communities', communitiesRouter);
+app.use('/api/communities', communitiesRouter); // Add non-v1 alias for consistency
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/karma', karmaRouter);
 app.use('/api/v1/awards', awardsRouter);
@@ -325,10 +365,10 @@ httpServer.listen(PORT, () => {
   console.log('⏰ Initializing cron jobs...');
   cronJobsService.initializeCronJobs();
 
-  // Run heatmap aggregation once on startup in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔄 Running initial heatmap aggregation for development...');
-    const { runHeatmapAggregation } = require('./services/heatmapAggregator.service');
-    runHeatmapAggregation().catch(console.error);
-  }
+  // Disabled heatmap aggregation on startup to save database connections
+  // if (process.env.NODE_ENV === 'development') {
+  //   console.log('🔄 Running initial heatmap aggregation for development...');
+  //   const { runHeatmapAggregation } = require('./services/heatmapAggregator.service');
+  //   runHeatmapAggregation().catch(console.error);
+  // }
 });

@@ -159,6 +159,12 @@ export function PostCard({
     high: 'bg-red-100 text-red-700 border-red-300'
   }
 
+  const priorityBorderColors = {
+    HIGH: 'border-l-4 border-l-red-500',
+    MEDIUM: 'border-l-4 border-l-amber-500',
+    LOW: 'border-l-4 border-l-green-500'
+  }
+
   const handleVote = (e: React.MouseEvent, value: 1 | -1) => {
     e.preventDefault()
     e.stopPropagation()
@@ -190,6 +196,37 @@ export function PostCard({
     navigator.clipboard.writeText(`${window.location.origin}/post/${id}`)
     alert('Link copied to clipboard!')
     analytics.trackShare('post', id, 'clipboard')
+  }
+
+  const handleFixPriority = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!confirm('Re-analyze priority for this post? This will update the priority based on current content.')) {
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please login to fix priority')
+        return
+      }
+
+      const response = await axios.post(
+        `${API_URL}/api/fix-priorities/post/${id}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (response.data.success) {
+        alert(`Priority updated to ${response.data.data.analysis.priorityLevel} (score: ${response.data.data.analysis.urgencyScore})`)
+        window.location.reload()
+      }
+    } catch (error: any) {
+      console.error('Failed to fix priority:', error)
+      alert(error.response?.data?.error || 'Failed to fix priority')
+    }
   }
 
   const handleCardClick = () => {
@@ -276,7 +313,7 @@ export function PostCard({
     <SpotlightCard>
       <div 
         onClick={handleCardClick}
-        className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-lg hover:shadow-xl"
+        className={`bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 hover:border-white/40 transition-all cursor-pointer shadow-lg hover:shadow-xl ${priorityBorderColors[priorityLevel] || ''}`}
       >
         {ClickSparkComponent}
         <div className="flex">
@@ -365,7 +402,7 @@ export function PostCard({
                   </button>
                   
                   {showMenu && (
-                    <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[120px]">
+                    <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[160px]">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -376,6 +413,18 @@ export function PostCard({
                       >
                         <Edit2 className="w-4 h-4" />
                         Edit
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          handleFixPriority(e)
+                          setShowMenu(false)
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 text-blue-600 flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Fix Priority
                       </button>
                       <button
                         onClick={handleDelete}
@@ -391,8 +440,8 @@ export function PostCard({
               )}
             </div>
 
-            {/* Priority Badge - Show for patient posts with priority analysis */}
-            {authorType === 'patient' && urgencyScore >= 0 && (
+            {/* Priority Badge - Show on ALL posts */}
+            {(
               <div className="mb-3" onClick={(e) => e.stopPropagation()}>
                 <PostPriorityBadge
                   priority={priorityLevel}

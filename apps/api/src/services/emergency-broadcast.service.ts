@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@medthread/database';
 import { getSocketInstance } from '../socket';
 import { notificationService } from './notification.service';
-
-const prisma = new PrismaClient();
 
 interface BroadcastData {
   title: string;

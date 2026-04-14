@@ -23,29 +23,32 @@ export function PostPriorityBadge({
     const configs = {
       HIGH: {
         emoji: '🔴',
-        label: 'High',
+        label: 'HIGH',
         icon: AlertTriangle,
         bgColor: 'bg-red-100',
         textColor: 'text-red-800',
-        borderColor: 'border-red-200',
+        borderColor: 'border-red-300',
+        leftBorderColor: 'border-l-red-500',
         description: 'Requires immediate medical attention'
       },
       MEDIUM: {
         emoji: '🟡',
-        label: 'Medium',
+        label: 'MEDIUM',
         icon: TrendingUp,
-        bgColor: 'bg-yellow-100',
-        textColor: 'text-yellow-800',
-        borderColor: 'border-yellow-200',
+        bgColor: 'bg-amber-100',
+        textColor: 'text-amber-800',
+        borderColor: 'border-amber-300',
+        leftBorderColor: 'border-l-amber-500',
         description: 'Needs timely medical care'
       },
       LOW: {
         emoji: '🟢',
-        label: 'Low',
+        label: 'LOW',
         icon: CheckCircle,
         bgColor: 'bg-green-100',
         textColor: 'text-green-800',
-        borderColor: 'border-green-200',
+        borderColor: 'border-green-300',
+        leftBorderColor: 'border-l-green-500',
         description: 'General wellness or minor concern'
       }
     };

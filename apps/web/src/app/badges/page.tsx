@@ -144,10 +144,10 @@ export default function BadgesPage() {
   return (
     <IridescenceLayout>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <NavbarEnhanced />
-      <div className="flex max-w-[1400px] mx-auto">
-        <Sidebar />
-        <div className="flex-1 px-6 py-8">
+        <NavbarEnhanced />
+        <div className="flex max-w-[1400px] mx-auto">
+          <Sidebar />
+          <div className="flex-1 px-6 py-8">
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
@@ -339,6 +339,7 @@ export default function BadgesPage() {
             </>
           )}
         </div>
+      </div>
       </div>
     </IridescenceLayout>
   )

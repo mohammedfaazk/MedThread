@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '@medthread/database';
 import { subDays } from 'date-fns';
+import { getSymptomHeatmapMock, getRegionDataMock, getTrendsSeriesMock } from './analytics.controller.mock';
 
 export async function getSymptomHeatmap(req: Request, res: Response) {
   try {
@@ -35,8 +36,16 @@ export async function getSymptomHeatmap(req: Request, res: Response) {
     }));
 
     res.json({ success: true, data });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Analytics] Error in getSymptomHeatmap:', err);
+    
+    // If database connection failed, use mock data
+    if (err.message?.includes("Can't reach database") || 
+        err.message?.includes("Tenant or user not found")) {
+      console.log('[Analytics] Database unavailable, using mock data');
+      return getSymptomHeatmapMock(req, res);
+    }
+    
     res.status(500).json({ success: false, message: 'Failed to fetch heatmap data' });
   }
 }
@@ -61,8 +70,16 @@ export async function getRegionData(req: Request, res: Response) {
     }));
 
     res.json({ success: true, data });
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Analytics] Error in getRegionData:', err);
+    
+    // If database connection failed, use mock data
+    if (err.message?.includes("Can't reach database") || 
+        err.message?.includes("Tenant or user not found")) {
+      console.log('[Analytics] Database unavailable, using mock region data');
+      return getRegionDataMock(req, res);
+    }
+    
     res.status(500).json({ success: false, message: 'Failed to fetch region data' });
   }
 }
@@ -88,8 +105,16 @@ export async function getTrendsSeries(req: Request, res: Response) {
     });
 
     res.json({ success: true, data: rows });
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error('[Analytics] Error in getTrendsSeries:', err);
+    
+    // If database connection failed, use mock data
+    if (err.message?.includes("Can't reach database") || 
+        err.message?.includes("Tenant or user not found")) {
+      console.log('[Analytics] Database unavailable, using mock trends data');
+      return getTrendsSeriesMock(req, res);
+    }
+    
     res.status(500).json({ success: false, message: 'Failed to fetch trends series' });
   }
 }

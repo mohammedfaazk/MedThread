@@ -1,8 +1,5 @@
 {
-  "/dashboard/patient/page": "app/dashboard/patient/page.js",
-  "/trends/page": "app/trends/page.js",
   "/page": "app/page.js",
-  "/doctor-feed/page": "app/doctor-feed/page.js",
-  "/analytics/page": "app/analytics/page.js",
-  "/admin/analytics/page": "app/admin/analytics/page.js"
+  "/m/[community]/page": "app/m/[community]/page.js",
+  "/dashboard/patient/page": "app/dashboard/patient/page.js"
 }

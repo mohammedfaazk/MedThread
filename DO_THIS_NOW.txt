@@ -1,0 +1,49 @@
+===============================================
+MEDTHREAD - FIX TRENDS 404 ERROR
+===============================================
+
+STEP 1: KILL ALL NODE PROCESSES
+--------------------------------
+taskkill /F /IM node.exe /T
+
+STEP 2: WAIT 10 SECONDS
+------------------------
+(Count to 10)
+
+STEP 3: CLEAN CACHE
+-------------------
+cd C:\Project\MEDTHREAD8.0\MedThread\apps\web
+Remove-Item -Recurse -Force .next
+
+STEP 4: START SERVER
+--------------------
+npm run dev
+
+STEP 5: WAIT FOR "READY"
+------------------------
+You must see: ✓ Ready in X.Xs
+
+STEP 6: TEST
+------------
+Open: http://localhost:3000/trends
+
+===============================================
+
+IF STILL 404:
+- Try: http://localhost:3000/trends-test-123
+- If that works, trends folder has an issue
+- If that also 404s, dev server problem
+
+SKIP TRENDS OPTION:
+cd src\app
+Rename-Item trends _disabled
+cd ..\..
+npm run dev
+
+===============================================
+
+THE PROBLEM: Dev server not compiling /trends
+THE FIX: Complete restart (kill process, clean cache, restart)
+YOU MUST: Do this on your machine (I can't restart your server)
+
+===============================================

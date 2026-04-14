@@ -3,15 +3,19 @@ import Groq from 'groq-sdk';// -------------------------------------------------
 // Symptom chip weights — used when structured chip data is available
 // ---------------------------------------------------------------------------
 const CHIP_WEIGHTS: Record<string, number> = {
-  // HIGH (8-10)
+  // HIGH (8-10) - LIFE-THREATENING EMERGENCIES
   'chest pain': 10, 'shortness of breath': 10, 'difficulty breathing': 10,
   'seizure': 10, 'unconscious': 10, 'severe bleeding': 10, 'anaphylaxis': 10,
   'stroke symptoms': 10, 'heart attack': 10, 'choking': 10,
+  'cardiac arrest': 10, 'not breathing': 10, 'unresponsive': 10,
   'severe abdominal pain': 9, 'severe allergic reaction': 9, 'diabetic emergency': 9,
   'severe asthma': 9, 'severe injury': 9, 'severe burns': 9,
+  'suicidal thoughts': 10, 'overdose': 10, 'poisoning': 10,
   'high fever': 8, 'blood in urine': 8, 'blood in stool': 8,
   'severe vomiting': 8, 'broken bone': 8, 'difficulty swallowing': 8,
-  // MEDIUM (4-7)
+  'crushing chest pain': 10, 'radiating pain': 9, 'severe chest pressure': 10,
+  
+  // MEDIUM (4-7) - URGENT BUT NOT IMMEDIATELY LIFE-THREATENING
   'fever': 6, 'dizziness': 5, 'joint pain': 5, 'back pain': 5,
   'stomach pain': 5, 'swelling': 5, 'depression': 5, 'weight loss': 5,
   'urinary problems': 5, 'memory problems': 5, 'nausea': 4,
@@ -20,9 +24,13 @@ const CHIP_WEIGHTS: Record<string, number> = {
   'ear pain': 4, 'eye pain': 4, 'loss of appetite': 4, 'chills': 4,
   'persistent cough': 5, 'sore throat': 3, 'constipation': 3,
   'bruising': 3, 'weight gain': 4, 'skin problems': 3, 'sweating': 3,
-  // LOW (1-2)
+  'infection': 5, 'vomiting': 5, 'bleeding': 6, 'worsening symptoms': 6,
+  
+  // LOW (1-2) - ROUTINE/WELLNESS
   'cough': 2, 'cold': 2, 'runny nose': 2, 'sneezing': 1,
   'mild headache': 2, 'tiredness': 2, 'stress': 2, 'dry skin': 1,
+  'vitamin deficiency': 1, 'supplement question': 1, 'diet advice': 1,
+  'exercise question': 1, 'sleep hygiene': 2, 'wellness': 1,
 };
 
 // Duration multipliers — longer duration = higher urgency
@@ -44,6 +52,12 @@ const TEXT_KEYWORDS = {
     'severe allergic reaction': 9, 'can\'t breathe': 10, 'choking': 10,
     'severe pain': 8, 'emergency': 9, 'critical': 9, 'life threatening': 10,
     'blood in urine': 8, 'blood in stool': 8, 'diabetic emergency': 9,
+    'stroke': 10, 'heart failure': 10, 'cardiac arrest': 10, 'myocardial infarction': 10,
+    'severe chest pain': 10, 'crushing chest pain': 10, 'radiating pain': 9,
+    'loss of consciousness': 10, 'unresponsive': 10, 'not breathing': 10,
+    'severe injury': 9, 'major trauma': 9, 'broken bone': 7, 'fracture': 7,
+    'suicidal': 10, 'suicide': 10, 'self harm': 9, 'overdose': 10,
+    'poisoning': 10, 'allergic reaction': 8, 'anaphylactic': 10,
   },
   MEDIUM: {
     'persistent cough': 5, 'chronic fatigue': 5, 'mild fever': 4,
@@ -52,11 +66,15 @@ const TEXT_KEYWORDS = {
     'diarrhea': 4, 'constipation': 3, 'insomnia': 4, 'anxiety': 4,
     'depression': 5, 'muscle pain': 4, 'sore throat': 3, 'swelling': 5,
     'weight loss': 5, 'urinary problems': 5, 'memory problems': 5,
+    'persistent pain': 5, 'chronic pain': 5, 'worsening': 6, 'getting worse': 6,
+    'infection': 5, 'fever': 5, 'vomiting': 5, 'bleeding': 6,
   },
   LOW: {
     'cold': 2, 'sneezing': 1, 'runny nose': 2, 'mild headache': 2,
     'tiredness': 2, 'stress': 2, 'dry skin': 1, 'common cold': 2,
     'seasonal allergies': 2, 'minor ache': 2, 'wellness': 1,
+    'vitamin': 1, 'supplement': 1, 'diet': 1, 'exercise': 1, 'fitness': 1,
+    'sleep': 2, 'nutrition': 1, 'lifestyle': 1, 'prevention': 1,
   },
 };
 

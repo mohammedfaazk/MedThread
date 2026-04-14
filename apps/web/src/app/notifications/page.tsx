@@ -247,7 +247,7 @@ export default function NotificationsPage() {
   return (
     <IridescenceLayout>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Notifications</h1>
@@ -432,6 +432,7 @@ export default function NotificationsPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </IridescenceLayout>
   );

@@ -13,7 +13,7 @@
     "seed:analytics": "tsx seed-analytics.ts"
   },
   "dependencies": {
-    "@prisma/client": "^5.8.0"
+    "@prisma/client": "^5.22.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

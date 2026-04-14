@@ -85,6 +85,7 @@ interface AppState {
   sortBy: 'hot' | 'new' | 'top' | 'rising' | 'controversial'
   loading: boolean
   error: string | null
+  isSocketConnected: boolean
   
   // Actions
   setUser: (user: User | null) => void
@@ -123,6 +124,7 @@ export const useStore = create<AppState>()(
       sortBy: 'hot',
       loading: false,
       error: null,
+      isSocketConnected: false,
       
       setUser: (user) => set({ user }),
       
@@ -133,7 +135,7 @@ export const useStore = create<AppState>()(
       fetchPosts: async (options = {}) => {
         set({ loading: true, error: null })
         try {
-          const { community, sort = 'hot', limit = 20 } = options
+          const { community, sort = 'hot', limit = 100 } = options
           const params = new URLSearchParams()
           if (community) params.append('community', community)
           params.append('sort', sort)

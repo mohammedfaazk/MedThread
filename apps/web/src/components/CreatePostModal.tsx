@@ -59,14 +59,20 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
         const response = await axios.get(`${API_URL}/api/v1/communities`)
         // Handle both response formats
         const communitiesData = response.data.communities || response.data
-        setCommunities(Array.isArray(communitiesData) ? communitiesData : [])
+        const validCommunities = Array.isArray(communitiesData) ? communitiesData : []
+        setCommunities(validCommunities)
+        
         // Set default community
-        if (communitiesData.length > 0) {
-          setCommunityId(communitiesData[0].id)
+        if (validCommunities.length > 0) {
+          setCommunityId(validCommunities[0].id)
+        } else {
+          // No communities available
+          setVerificationError('No communities available. Please contact support.')
         }
       } catch (error) {
         console.error('Failed to fetch communities:', error)
         setCommunities([])
+        setVerificationError('Failed to load communities. Please refresh and try again.')
       } finally {
         setIsLoadingCommunities(false)
       }
@@ -264,11 +270,32 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
       
       onClose()
 
-      // Navigate to the new post (real-time updates will handle showing it in the feed)
-      router.push(`/post/${newPost.id}`)
+      // Refresh the feed to show the new post
+      fetchPosts()
+      
+      // Show success message
+      alert('Post created successfully!')
     } catch (error: any) {
       console.error('Failed to create post:', error)
-      alert(error.response?.data?.message || 'Failed to create post. Please try again.')
+      
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to create post. Please try again.'
+      
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Your session has expired. Please log in again.'
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.error || 'Invalid post data. Please check your inputs.'
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Community not found. Please select a different community.'
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Server error. Please try again in a moment.'
+      } else if (error.message === 'Network Error') {
+        errorMessage = 'Cannot connect to server. Please check your internet connection.'
+      }
+      
+      alert(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
