@@ -15,6 +15,7 @@ interface Review {
   createdAt: string;
   helpfulCount: number;
   patient: {
+    id: string;
     username: string;
     avatar?: string;
   };
@@ -32,9 +33,29 @@ export function ReviewsList({ doctorId }: ReviewsListProps) {
     totalReviews: 0,
     ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
   });
+  const [sortBy, setSortBy] = useState<'recent' | 'highest' | 'lowest' | 'helpful'>('recent');
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    overallRating: 5,
+    communicationRating: 5,
+    knowledgeRating: 5,
+    empathyRating: 5,
+    reviewText: ''
+  });
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReviews();
+    // Get current user ID from token
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setCurrentUserId(payload.userId);
+      } catch (error) {
+        console.error('Failed to parse token:', error);
+      }
+    }
   }, [doctorId]);
 
   const fetchReviews = async () => {
@@ -101,6 +122,84 @@ export function ReviewsList({ doctorId }: ReviewsListProps) {
     }
   };
 
+  const handleEditClick = (review: Review) => {
+    setEditingReview(review);
+    setEditFormData({
+      overallRating: review.overallRating,
+      communicationRating: review.communicationRating || 5,
+      knowledgeRating: review.knowledgeRating || 5,
+      empathyRating: review.empathyRating || 5,
+      reviewText: review.reviewText || ''
+    });
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingReview) return;
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_URL}/api/v1/reviews/${editingReview.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(editFormData)
+      });
+
+      if (response.ok) {
+        alert('Review updated successfully!');
+        setEditingReview(null);
+        fetchReviews();
+      } else {
+        const result = await response.json();
+        alert(result.error || 'Failed to update review');
+      }
+    } catch (error) {
+      console.error('Error updating review:', error);
+      alert('Failed to update review');
+    }
+  };
+
+  const handleDeleteClick = async (reviewId: string) => {
+    if (!confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_URL}/api/v1/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        alert('Review deleted successfully!');
+        fetchReviews();
+      } else {
+        const result = await response.json();
+        alert(result.error || 'Failed to delete review');
+      }
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      alert('Failed to delete review');
+    }
+  };
+
+  const sortedReviews = [...reviews].sort((a, b) => {
+    switch (sortBy) {
+      case 'highest':
+        return b.overallRating - a.overallRating;
+      case 'lowest':
+        return a.overallRating - b.overallRating;
+      case 'helpful':
+        return b.helpfulCount - a.helpfulCount;
+      case 'recent':
+      default:
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
+
   const StarDisplay = ({ rating }: { rating: number }) => (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -127,6 +226,127 @@ export function ReviewsList({ doctorId }: ReviewsListProps) {
 
   return (
     <div className="space-y-6">
+      {/* Edit Modal */}
+      {editingReview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4">Edit Review</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Overall Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => setEditFormData({ ...editFormData, overallRating: rating })}
+                      className="focus:outline-none"
+                    >
+                      <Star
+                        className={`w-8 h-8 ${
+                          rating <= editFormData.overallRating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Communication</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => setEditFormData({ ...editFormData, communicationRating: rating })}
+                      className="focus:outline-none"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          rating <= editFormData.communicationRating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Knowledge</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => setEditFormData({ ...editFormData, knowledgeRating: rating })}
+                      className="focus:outline-none"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          rating <= editFormData.knowledgeRating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Empathy</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => setEditFormData({ ...editFormData, empathyRating: rating })}
+                      className="focus:outline-none"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          rating <= editFormData.empathyRating
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2">Review Text</label>
+                <textarea
+                  value={editFormData.reviewText}
+                  onChange={(e) => setEditFormData({ ...editFormData, reviewText: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400 resize-none"
+                  rows={4}
+                  placeholder="Share your experience..."
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingReview(null)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEditSubmit}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Rating Summary */}
       <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-200">
         <div className="flex items-center gap-6">
@@ -162,16 +382,31 @@ export function ReviewsList({ doctorId }: ReviewsListProps) {
         </div>
       </div>
 
+      {/* Sort Dropdown */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Reviews</h3>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as any)}
+          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+        >
+          <option value="recent">Most Recent</option>
+          <option value="highest">Highest Rated</option>
+          <option value="lowest">Lowest Rated</option>
+          <option value="helpful">Most Helpful</option>
+        </select>
+      </div>
+
       {/* Reviews List */}
       <div className="space-y-4">
-        {reviews.length === 0 ? (
+        {sortedReviews.length === 0 ? (
           <div className="text-center py-12 bg-gray-50 rounded-xl">
             <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-600">No reviews yet</p>
             <p className="text-sm text-gray-500">Be the first to review this doctor</p>
           </div>
         ) : (
-          reviews.map((review) => (
+          sortedReviews.map((review) => (
             <div key={review.id} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition">
               {/* Review Header */}
               <div className="flex items-start justify-between mb-4">
@@ -239,6 +474,25 @@ export function ReviewsList({ doctorId }: ReviewsListProps) {
                   <ThumbsUp className="w-4 h-4" />
                   Helpful ({review.helpfulCount})
                 </button>
+                
+                {/* Edit/Delete buttons for own reviews */}
+                {currentUserId === review.patient.id && (
+                  <>
+                    <button
+                      onClick={() => handleEditClick(review)}
+                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 transition font-semibold"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(review.id)}
+                      className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 transition font-semibold"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
+                
                 <button
                   onClick={() => reportReview(review.id)}
                   className="flex items-center gap-1 text-sm text-gray-600 hover:text-red-600 transition"

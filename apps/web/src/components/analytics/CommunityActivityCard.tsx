@@ -77,7 +77,9 @@ export default function CommunityActivityCard({ onLiveUpdate }: CommunityActivit
       setData(result.data || []);
     } catch (err: any) {
       console.error('Error fetching community activity:', err);
-      setError(err.message);
+      // Handle both Error objects and API error responses
+      const errorMessage = err?.message || err?.error?.message || 'Failed to load community activity';
+      setError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setLoading(false);
     }

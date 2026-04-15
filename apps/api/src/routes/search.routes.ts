@@ -59,9 +59,22 @@ router.get('/autocomplete', async (req: AuthRequest, res: Response) => {
       userId: req.userId,
       limit: req.query.limit ? parseInt(req.query.limit as string) : 5
     });
-    res.json(result);
+    
+    // Format response to match frontend expectations
+    res.json({
+      success: true,
+      data: {
+        posts: result.posts || [],
+        users: result.doctors || [],
+        communities: [], // Add communities if needed
+        symptoms: result.symptoms || []
+      }
+    });
   } catch (error) {
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Autocomplete failed' });
+    res.status(500).json({ 
+      success: false,
+      error: error instanceof Error ? error.message : 'Autocomplete failed' 
+    });
   }
 });
 

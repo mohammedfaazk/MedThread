@@ -56,6 +56,7 @@ export default function AppointmentsPage() {
     const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null)
     const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
     const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null)
+    const [selectedDate, setSelectedDate] = useState('')
     const [reason, setReason] = useState('')
     const [loadingDoctors, setLoadingDoctors] = useState(false)
     const [loadingSlots, setLoadingSlots] = useState(false)
@@ -130,14 +131,47 @@ export default function AppointmentsPage() {
         }
     }
 
-    const loadDoctorAvailability = async (doctorId: string) => {
+    const loadDoctorAvailability = async (doctorId: string, date: string) => {
+        if (!date) return
+        
         setLoadingSlots(true)
+        setAvailableSlots([])
+        setSelectedSlot(null)
+        
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            console.log('[Appointments] Loading availability for doctor:', doctorId)
+            console.log('[Appointments] Loading availability for doctor:', doctorId, 'on date:', date)
+            
+            // Get the day of week from the selected date
+            const selectedDateObj = new Date(date)
+            const dayOfWeek = selectedDateObj.getDay()
+            
             const response = await axios.get(`${API_URL}/api/appointments/doctors/${doctorId}/availability`)
             console.log('[Appointments] Availability response:', response.data?.length || 0, 'slots')
-            setAvailableSlots(response.data || [])
+            
+            // Filter slots for the selected day of week
+            const slotsForDay = (response.data || []).filter((slot: TimeSlot) => slot.dayOfWeek === dayOfWeek)
+            
+            // Convert slots to actual date/time for the selected date
+            const slotsWithDates = slotsForDay.map((slot: TimeSlot) => {
+                const startTime = new Date(slot.startTime)
+                const endTime = new Date(slot.endTime)
+                
+                // Create new dates with the selected date but original times
+                const newStartTime = new Date(date)
+                newStartTime.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0)
+                
+                const newEndTime = new Date(date)
+                newEndTime.setHours(endTime.getHours(), endTime.getMinutes(), 0, 0)
+                
+                return {
+                    ...slot,
+                    startTime: newStartTime,
+                    endTime: newEndTime
+                }
+            })
+            
+            setAvailableSlots(slotsWithDates)
         } catch (error) {
             console.error('Failed to load availability:', error)
             setAvailableSlots([])
@@ -146,16 +180,26 @@ export default function AppointmentsPage() {
         }
     }
 
+    const handleDateChange = (date: string) => {
+        setSelectedDate(date)
+        setSelectedSlot(null)
+        
+        if (selectedDoctor && date) {
+            loadDoctorAvailability(selectedDoctor.id, date)
+        }
+    }
+
     const handleDoctorSelect = (doctor: Doctor) => {
         setSelectedDoctor(doctor)
+        setSelectedDate('')
         setSelectedSlot(null)
+        setAvailableSlots([])
         setReason('')
-        loadDoctorAvailability(doctor.id)
     }
 
     const handleBookAppointment = async () => {
         if (!selectedDoctor || !selectedSlot || !user) {
-            alert('Please select a doctor and time slot')
+            alert('Please select a doctor, date, and time slot')
             return
         }
 
@@ -172,7 +216,9 @@ export default function AppointmentsPage() {
 
             alert('Appointment request sent successfully! The doctor will review and approve it.')
             setSelectedDoctor(null)
+            setSelectedDate('')
             setSelectedSlot(null)
+            setAvailableSlots([])
             setReason('')
             router.push('/dashboard/patient')
         } catch (error: any) {
@@ -448,55 +494,74 @@ export default function AppointmentsPage() {
                                         </div>
 
                                         <div className="mb-6">
-                                            <label className="block text-sm font-semibold text-slate-700 mb-3">Available Time Slots</label>
-                                            {loadingSlots ? (
-                                                <div className="py-8 text-center">
-                                                    <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                                                    <p className="text-xs text-slate-400">Loading slots...</p>
-                                                </div>
-                                            ) : availableSlots.length === 0 ? (
-                                                <div className="py-8 text-center">
-                                                    <Clock className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                                                    <p className="text-sm text-slate-500">No slots available</p>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                                                    {availableSlots.map((slot) => {
-                                                        const startTime = new Date(slot.startTime)
-                                                        const endTime = new Date(slot.endTime)
-                                                        const isSelected = selectedSlot?.id === slot.id
-
-                                                        return (
-                                                            <button
-                                                                key={slot.id}
-                                                                onClick={() => setSelectedSlot(slot)}
-                                                                className={`w-full p-3 rounded-xl border-2 transition-all text-left ${isSelected
-                                                                    ? 'border-blue-500/60 bg-blue-50/50 backdrop-blur-sm'
-                                                                    : 'border-neutral-400/20 hover:border-blue-300/40 bg-white/50 backdrop-blur-sm'
-                                                                    }`}
-                                                            >
-                                                                <div className="flex items-center justify-between">
-                                                                    <div>
-                                                                        <p className="text-sm font-bold text-slate-900">
-                                                                            {DAYS[slot.dayOfWeek]}
-                                                                        </p>
-                                                                        <p className="text-xs text-slate-600">
-                                                                            {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                        </p>
-                                                                        <p className="text-xs text-slate-500 mt-1">
-                                                                            {startTime.toLocaleDateString()}
-                                                                        </p>
-                                                                    </div>
-                                                                    {isSelected && (
-                                                                        <CheckCircle2 className="w-5 h-5 text-blue-600" />
-                                                                    )}
-                                                                </div>
-                                                            </button>
-                                                        )
-                                                    })}
-                                                </div>
-                                            )}
+                                            <label className="block text-sm font-semibold text-slate-700 mb-3">Select Date</label>
+                                            <input
+                                                type="date"
+                                                value={selectedDate}
+                                                onChange={(e) => handleDateChange(e.target.value)}
+                                                min={new Date().toISOString().split('T')[0]}
+                                                className="w-full px-4 py-3 border-2 border-neutral-400/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 bg-white/50 backdrop-blur-sm transition-all text-slate-900 font-medium"
+                                            />
+                                            <p className="text-xs text-slate-500 mt-2">
+                                                Select a date to see available time slots
+                                            </p>
                                         </div>
+
+                                        {selectedDate && (
+                                            <div className="mb-6">
+                                                <label className="block text-sm font-semibold text-slate-700 mb-3">Available Time Slots</label>
+                                                {loadingSlots ? (
+                                                    <div className="py-8 text-center">
+                                                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                                                        <p className="text-xs text-slate-400">Loading available slots...</p>
+                                                    </div>
+                                                ) : availableSlots.length === 0 ? (
+                                                    <div className="py-8 text-center bg-gray-50/50 rounded-xl border border-gray-200">
+                                                        <Clock className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                                                        <p className="text-sm text-slate-500 font-medium">No slots available</p>
+                                                        <p className="text-xs text-slate-400 mt-1">Try selecting a different date</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-2 max-h-[280px] overflow-y-auto pr-2">
+                                                        {availableSlots.map((slot) => {
+                                                            const startTime = new Date(slot.startTime)
+                                                            const endTime = new Date(slot.endTime)
+                                                            const isSelected = selectedSlot?.id === slot.id
+
+                                                            return (
+                                                                <button
+                                                                    key={slot.id}
+                                                                    onClick={() => setSelectedSlot(slot)}
+                                                                    className={`w-full p-4 rounded-xl border-2 transition-all text-left ${isSelected
+                                                                        ? 'border-blue-500 bg-blue-50/70 backdrop-blur-sm shadow-md'
+                                                                        : 'border-neutral-400/20 hover:border-blue-300/50 bg-white/50 backdrop-blur-sm hover:shadow-sm'
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className={`p-2 rounded-lg ${isSelected ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                                                                                <Clock className={`w-5 h-5 ${isSelected ? 'text-blue-600' : 'text-gray-600'}`} />
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-sm font-bold text-slate-900">
+                                                                                    {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                                </p>
+                                                                                <p className="text-xs text-slate-500 mt-0.5">
+                                                                                    {DAYS[startTime.getDay()]}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                        {isSelected && (
+                                                                            <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                                                                        )}
+                                                                    </div>
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
 
                                         <div className="mb-6">
                                             <label className="block text-sm font-semibold text-slate-700 mb-2">Reason for Visit (Optional)</label>

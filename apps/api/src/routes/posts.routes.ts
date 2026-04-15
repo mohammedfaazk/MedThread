@@ -19,15 +19,28 @@ const PRIORITY_ORDER = { HIGH: 0, MEDIUM: 1, LOW: 2 };
  */
 postsRouter.get('/', async (req, res) => {
   try {
+    // Extract userId from token if provided (optional auth)
+    let userId: string | undefined;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+        userId = decoded.userId;
+      } catch (error) {
+        // Invalid token, continue without userId
+      }
+    }
+
     const { page, limit, sortBy, sortOrder } = getPaginationParams(req.query);
     const { skip, take } = getSkipTake(page, limit);
     
-    const { communityId, userId, tag } = req.query;
+    const { communityId, userId: queryUserId, tag } = req.query;
 
     // Build where clause
     const where: any = {};
     if (communityId) where.communityId = communityId as string;
-    if (userId) where.authorId = userId as string;
+    if (queryUserId) where.authorId = queryUserId as string;
     // Note: tag filtering removed as Post model doesn't have tags field
 
     const [posts, total] = await Promise.all([
@@ -68,6 +81,25 @@ postsRouter.get('/', async (req, res) => {
       prisma.post.count({ where })
     ]);
 
+    // If user is authenticated, check which posts are saved
+    let savedPostIds: Set<string> = new Set();
+    if (userId) {
+      const savedPosts = await prisma.savedPost.findMany({
+        where: {
+          userId,
+          postId: { in: posts.map(p => p.id) }
+        },
+        select: { postId: true }
+      });
+      savedPostIds = new Set(savedPosts.map(sp => sp.postId));
+    }
+
+    // Add isSaved flag to each post
+    const postsWithSavedStatus = posts.map(post => ({
+      ...post,
+      isSaved: savedPostIds.has(post.id)
+    }));
+
     // Analyze posts without priority in the background
     const postsWithoutPriority = posts.filter(p => !p.priority);
     if (postsWithoutPriority.length > 0) {
@@ -85,7 +117,7 @@ postsRouter.get('/', async (req, res) => {
       });
     }
 
-    const response = createPaginatedResponse(posts, total, page, limit);
+    const response = createPaginatedResponse(postsWithSavedStatus, total, page, limit);
     res.json({ success: true, ...response });
   } catch (error: any) {
     console.error('[API] Error fetching posts:', error);
@@ -132,11 +164,143 @@ postsRouter.get('/', async (req, res) => {
 });
 
 /**
+ * GET /api/posts/bookmarks
+ * Get user's bookmarked posts
+ */
+postsRouter.get('/bookmarks', authenticate, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const bookmarks = await prisma.savedPost.findMany({
+      where: { userId },
+      include: {
+        post: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+                role: true,
+                verified: true,
+                specialty: true,
+                doctorVerificationStatus: true,
+              }
+            },
+            community: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              }
+            },
+            priority: true,
+            _count: {
+              select: {
+                comments: true,
+                votes: true,
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const posts = bookmarks.map(b => ({
+      ...b.post,
+      commentCount: b.post._count.comments,
+    }));
+    res.json({ success: true, data: posts });
+  } catch (error: any) {
+    console.error('[API] Error fetching bookmarks:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch bookmarks' });
+  }
+});
+
+/**
+ * GET /api/posts/saved
+ * Get user's saved posts (alias for bookmarks)
+ */
+postsRouter.get('/saved', authenticate, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const bookmarks = await prisma.savedPost.findMany({
+      where: { userId },
+      include: {
+        post: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+                role: true,
+                verified: true,
+                specialty: true,
+                doctorVerificationStatus: true,
+              }
+            },
+            community: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              }
+            },
+            priority: true,
+            _count: {
+              select: {
+                comments: true,
+                votes: true,
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Return posts directly (not wrapped in success/data for backward compatibility)
+    const posts = bookmarks.map(b => ({
+      ...b.post,
+      commentCount: b.post._count.comments,
+    }));
+    res.json(posts);
+  } catch (error: any) {
+    console.error('[API] Error fetching saved posts:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch saved posts' });
+  }
+});
+
+/**
  * GET /api/posts/:id
  * Get single post with comments
  */
 postsRouter.get('/:id', async (req, res) => {
   try {
+    // Extract userId from token if provided (optional auth)
+    let userId: string | undefined;
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+        userId = decoded.userId;
+      } catch (error) {
+        // Invalid token, continue without userId
+      }
+    }
+
     const post = await prisma.post.findUnique({
       where: { id: req.params.id },
       include: {
@@ -192,7 +356,21 @@ postsRouter.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, error: 'Post not found' });
     }
 
-    res.json({ success: true, data: post });
+    // Check if user has saved this post
+    let isSaved = false;
+    if (userId) {
+      const savedPost = await prisma.savedPost.findUnique({
+        where: {
+          userId_postId: {
+            userId,
+            postId: post.id
+          }
+        }
+      });
+      isSaved = !!savedPost;
+    }
+
+    res.json({ success: true, data: { ...post, isSaved } });
   } catch (error) {
     console.error('[API] Error fetching post:', error);
     res.status(500).json({ success: false, error: 'Failed to fetch post' });
@@ -490,6 +668,61 @@ postsRouter.post('/', authenticate, async (req, res) => {
 });
 
 /**
+ * DELETE /api/posts/:id
+ * Delete a post (only by author or admin)
+ */
+postsRouter.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const postId = req.params.id;
+
+    if (!req.userId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    // Find the post
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true }
+    });
+
+    if (!post) {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
+
+    // Check if user is the author or admin
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { role: true }
+    });
+
+    if (post.authorId !== req.userId && user?.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, error: 'You can only delete your own posts' });
+    }
+
+    // Delete the post (cascade will handle related records)
+    await prisma.post.delete({
+      where: { id: postId }
+    });
+
+    console.log(`[API] Post ${postId} deleted by user ${req.userId}`);
+
+    res.json({ success: true, message: 'Post deleted successfully' });
+  } catch (error: any) {
+    console.error('[API] Error deleting post:', error);
+    
+    if (error.code === 'P2025') {
+      return res.status(404).json({ success: false, error: 'Post not found' });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to delete post',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
  * POST /api/v1/posts/:id/vote
  * Vote on a post (upvote or downvote)
  */
@@ -581,6 +814,249 @@ postsRouter.post('/:id/vote', authenticate, async (req, res) => {
       error: 'Failed to vote on post',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
+  }
+});
+
+/**
+ * POST /api/posts/:id/pin
+ * Pin a post (moderators/admins only)
+ */
+postsRouter.post('/:id/pin', authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: req.userId },
+      select: { role: true }
+    });
+
+    if (user?.role !== 'ADMIN' && user?.role !== 'MODERATOR') {
+      return res.status(403).json({ success: false, error: 'Unauthorized - Moderator access required' });
+    }
+
+    await prisma.post.update({
+      where: { id: req.params.id },
+      data: { isPinned: true }
+    });
+
+    res.json({ success: true, message: 'Post pinned successfully' });
+  } catch (error: any) {
+    console.error('[API] Error pinning post:', error);
+    res.status(500).json({ success: false, error: 'Failed to pin post' });
+  }
+});
+
+/**
+ * POST /api/posts/:id/unpin
+ * Unpin a post (moderators/admins only)
+ */
+postsRouter.post('/:id/unpin', authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: req.userId },
+      select: { role: true }
+    });
+
+    if (user?.role !== 'ADMIN' && user?.role !== 'MODERATOR') {
+      return res.status(403).json({ success: false, error: 'Unauthorized - Moderator access required' });
+    }
+
+    await prisma.post.update({
+      where: { id: req.params.id },
+      data: { isPinned: false }
+    });
+
+    res.json({ success: true, message: 'Post unpinned successfully' });
+  } catch (error: any) {
+    console.error('[API] Error unpinning post:', error);
+    res.status(500).json({ success: false, error: 'Failed to unpin post' });
+  }
+});
+
+/**
+ * POST /api/posts/:id/lock
+ * Lock a post (moderators/admins only)
+ */
+postsRouter.post('/:id/lock', authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: req.userId },
+      select: { role: true }
+    });
+
+    if (user?.role !== 'ADMIN' && user?.role !== 'MODERATOR') {
+      return res.status(403).json({ success: false, error: 'Unauthorized - Moderator access required' });
+    }
+
+    await prisma.post.update({
+      where: { id: req.params.id },
+      data: { isLocked: true }
+    });
+
+    res.json({ success: true, message: 'Post locked successfully' });
+  } catch (error: any) {
+    console.error('[API] Error locking post:', error);
+    res.status(500).json({ success: false, error: 'Failed to lock post' });
+  }
+});
+
+/**
+ * POST /api/posts/:id/unlock
+ * Unlock a post (moderators/admins only)
+ */
+postsRouter.post('/:id/unlock', authenticate, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: req.userId },
+      select: { role: true }
+    });
+
+    if (user?.role !== 'ADMIN' && user?.role !== 'MODERATOR') {
+      return res.status(403).json({ success: false, error: 'Unauthorized - Moderator access required' });
+    }
+
+    await prisma.post.update({
+      where: { id: req.params.id },
+      data: { isLocked: false }
+    });
+
+    res.json({ success: true, message: 'Post unlocked successfully' });
+  } catch (error: any) {
+    console.error('[API] Error unlocking post:', error);
+    res.status(500).json({ success: false, error: 'Failed to unlock post' });
+  }
+});
+
+/**
+ * POST /api/posts/:id/save
+ * Save/unsave a post (alias for bookmark)
+ */
+postsRouter.post('/:id/save', authenticate, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const postId = req.params.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    // Check if already saved
+    const existing = await prisma.savedPost.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId
+        }
+      }
+    });
+
+    if (existing) {
+      // Remove save
+      await prisma.savedPost.delete({
+        where: { id: existing.id }
+      });
+      return res.json({ success: true, message: 'Post unsaved', saved: false, isSaved: false });
+    } else {
+      // Add save
+      await prisma.savedPost.create({
+        data: {
+          userId,
+          postId
+        }
+      });
+      return res.json({ success: true, message: 'Post saved', saved: true, isSaved: true });
+    }
+  } catch (error: any) {
+    console.error('[API] Error saving post:', error);
+    res.status(500).json({ success: false, error: 'Failed to save post' });
+  }
+});
+
+/**
+ * POST /api/posts/:id/hide
+ * Hide/unhide a post
+ */
+postsRouter.post('/:id/hide', authenticate, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const postId = req.params.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    // Check if already hidden
+    const existing = await prisma.hiddenPost.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId
+        }
+      }
+    });
+
+    if (existing) {
+      // Remove hide
+      await prisma.hiddenPost.delete({
+        where: { id: existing.id }
+      });
+      return res.json({ success: true, message: 'Post unhidden', hidden: false, isHidden: false });
+    } else {
+      // Add hide
+      await prisma.hiddenPost.create({
+        data: {
+          userId,
+          postId
+        }
+      });
+      return res.json({ success: true, message: 'Post hidden', hidden: true, isHidden: true });
+    }
+  } catch (error: any) {
+    console.error('[API] Error hiding post:', error);
+    res.status(500).json({ success: false, error: 'Failed to hide post' });
+  }
+});
+
+/**
+ * POST /api/posts/:id/bookmark
+ * Bookmark a post
+ */
+postsRouter.post('/:id/bookmark', authenticate, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const postId = req.params.id;
+
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    // Check if already bookmarked
+    const existing = await prisma.savedPost.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId
+        }
+      }
+    });
+
+    if (existing) {
+      // Remove bookmark
+      await prisma.savedPost.delete({
+        where: { id: existing.id }
+      });
+      return res.json({ success: true, message: 'Bookmark removed', bookmarked: false });
+    } else {
+      // Add bookmark
+      await prisma.savedPost.create({
+        data: {
+          userId,
+          postId
+        }
+      });
+      return res.json({ success: true, message: 'Post bookmarked', bookmarked: true });
+    }
+  } catch (error: any) {
+    console.error('[API] Error bookmarking post:', error);
+    res.status(500).json({ success: false, error: 'Failed to bookmark post' });
   }
 });
 

@@ -184,4 +184,119 @@ router.post('/:id/vote', auth, requireVerifiedDoctor, async (req, res, next) => 
   }
 });
 
+// Mark comment as best answer - requires post author
+router.post('/:id/mark-best-answer', auth, async (req, res, next) => {
+  try {
+    const { prisma } = await import('@medthread/database');
+    const commentId = req.params.id;
+    const userId = req.userId!;
+
+    // Get comment with post
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      include: { post: true }
+    });
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    // Check if user is post author
+    if (comment.post.authorId !== userId) {
+      return res.status(403).json({ error: 'Only post author can mark best answer' });
+    }
+
+    // Unmark any existing best answer for this post
+    await prisma.comment.updateMany({
+      where: { 
+        postId: comment.postId,
+        isBestAnswer: true
+      },
+      data: { isBestAnswer: false }
+    });
+
+    // Mark this comment as best answer
+    const updated = await prisma.comment.update({
+      where: { id: commentId },
+      data: { isBestAnswer: true }
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Request private consultation from comment
+router.post('/:id/request-consultation', auth, async (req, res, next) => {
+  try {
+    const { prisma } = await import('@medthread/database');
+    const commentId = req.params.id;
+    const userId = req.userId!;
+    const { message } = req.body;
+
+    // Get comment with author
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      include: { author: true }
+    });
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comment not found' });
+    }
+
+    if (comment.author.role !== 'DOCTOR' && comment.author.role !== 'VERIFIED_DOCTOR') {
+      return res.status(400).json({ error: 'Can only request consultation from doctors' });
+    }
+
+    // Check if conversation already exists between these users
+    const existingConversation = await prisma.conversation.findFirst({
+      where: {
+        participants: {
+          every: {
+            id: {
+              in: [userId, comment.authorId]
+            }
+          }
+        }
+      },
+      include: {
+        participants: true
+      }
+    });
+
+    let conversation;
+    if (existingConversation && existingConversation.participants.length === 2) {
+      conversation = existingConversation;
+    } else {
+      // Create new conversation with participants
+      conversation = await prisma.conversation.create({
+        data: {
+          participants: {
+            connect: [
+              { id: userId },
+              { id: comment.authorId }
+            ]
+          }
+        }
+      });
+    }
+
+    // Send initial message
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        senderId: userId,
+        receiverId: comment.authorId,
+        content: message || `I would like to request a private consultation based on your comment.`,
+        type: 'TEXT'
+      }
+    });
+
+    res.json({ success: true, data: { conversationId: conversation.id } });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

@@ -28,6 +28,15 @@ interface Notification {
   };
 }
 
+interface EmergencyAlert {
+  id: string;
+  title: string;
+  message: string;
+  priority: 'CRITICAL' | 'HIGH' | 'MEDIUM';
+  type: string;
+  createdAt: string;
+}
+
 interface NotificationBellProps {
   className?: string;
 }
@@ -35,6 +44,7 @@ interface NotificationBellProps {
 export function NotificationBell({ className = '' }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [alerts, setAlerts] = useState<EmergencyAlert[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -64,6 +74,24 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
       console.error('Error fetching notifications:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch emergency alerts
+  const fetchAlerts = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/emergency-broadcast/active`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setAlerts(data.data || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
     }
   };
 
@@ -257,6 +285,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
   useEffect(() => {
     if (isOpen && user) {
       fetchNotifications();
+      fetchAlerts();
     }
   }, [isOpen, user]);
 
@@ -287,8 +316,10 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5 text-slate-700" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF4500] rounded-full"></span>
+        {(unreadCount + alerts.length) > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-[#FF4500] text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5">
+            {unreadCount + alerts.length}
+          </span>
         )}
       </button>
 
@@ -296,7 +327,7 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
         <div className="absolute right-0 top-14 w-96 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden z-50">
           {/* Header */}
           <div className="p-4 border-b border-neutral-400/20 bg-neutral-300/10 flex items-center justify-between">
-            <h3 className="font-semibold text-sm">Notifications</h3>
+            <h3 className="font-semibold text-sm">Alerts</h3>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <button
@@ -318,19 +349,72 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
 
           {/* Notifications List */}
           <div className="max-h-[400px] overflow-y-auto">
+            {/* Emergency Alerts Section */}
+            {alerts.length > 0 && (
+              <div className="border-b border-neutral-400/20">
+                <div className="p-3 bg-red-50/80 border-b border-red-200/50">
+                  <h4 className="text-xs font-semibold text-red-800 uppercase tracking-wide">
+                    Emergency Alerts ({alerts.length})
+                  </h4>
+                </div>
+                {alerts.map((alert) => (
+                  <Link
+                    key={alert.id}
+                    href="/alerts-history"
+                    onClick={() => setIsOpen(false)}
+                    className={`block p-4 hover:bg-red-50/50 border-b border-neutral-400/10 transition-all ${
+                      alert.priority === 'CRITICAL' ? 'bg-red-100/30' : 
+                      alert.priority === 'HIGH' ? 'bg-orange-50/30' : 'bg-blue-50/30'
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        alert.priority === 'CRITICAL' ? 'bg-red-100 text-red-600' :
+                        alert.priority === 'HIGH' ? 'bg-orange-100 text-orange-600' :
+                        'bg-blue-100 text-blue-600'
+                      }`}>
+                        <Bell className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {alert.title}
+                          </p>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            alert.priority === 'CRITICAL' ? 'bg-red-100 text-red-700' :
+                            alert.priority === 'HIGH' ? 'bg-orange-100 text-orange-700' :
+                            'bg-blue-100 text-blue-700'
+                          }`}>
+                            {alert.priority}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                          {alert.message}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatRelativeTime(alert.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            {/* Regular Notifications */}
             {loading ? (
               <div className="p-8 text-center text-sm text-gray-500">
                 Loading...
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-500">
-                No notifications yet
+                No alerts yet
               </div>
             ) : (
               notifications.map((notification) => (
                 <Link
                   key={notification.id}
-                  href={notification.metadata.link || '/notifications'}
+                  href={notification.metadata.link || '/alerts-history'}
                   onClick={() => handleNotificationClick(notification)}
                   className={`block p-4 hover:bg-neutral-300/20 border-b border-neutral-400/10 transition-all ${
                     !notification.isRead ? 'bg-blue-50/50' : ''
@@ -378,11 +462,11 @@ export function NotificationBell({ className = '' }: NotificationBellProps) {
           {/* Footer */}
           <div className="p-3 border-t border-neutral-400/20 bg-neutral-300/10">
             <Link
-              href="/notifications"
+              href="/alerts-history"
               onClick={() => setIsOpen(false)}
               className="block text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
-              View all notifications
+              View all alerts
             </Link>
           </div>
         </div>

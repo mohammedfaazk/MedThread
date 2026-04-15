@@ -35,8 +35,9 @@ export function EmergencyBroadcastBanner() {
       if (result.success) {
         setBroadcasts(result.data);
       }
-    } catch (error) {
-      console.error('Error fetching broadcasts:', error);
+    } catch (error: any) {
+      // Don't render error in UI, just log it
+      console.error('Error fetching broadcasts:', error?.message || error);
     }
   };
 
@@ -82,38 +83,50 @@ export function EmergencyBroadcastBanner() {
 
   if (activeBroadcasts.length === 0) return null;
 
-  return (
-    <div className="fixed top-0 left-0 right-0 z-50 space-y-1">
-      {activeBroadcasts.map((broadcast) => {
-        const styles = getPriorityStyles(broadcast.priority);
-        const Icon = styles.icon;
+  // Show only the highest priority alert
+  const priorityOrder = { CRITICAL: 0, HIGH: 1, MEDIUM: 2 };
+  const topAlert = activeBroadcasts.sort((a, b) => 
+    priorityOrder[a.priority] - priorityOrder[b.priority]
+  )[0];
 
-        return (
-          <div
-            key={broadcast.id}
-            className={`${styles.bg} ${styles.text} border-b-2 ${styles.border} shadow-lg`}
-          >
-            <div className="max-w-7xl mx-auto px-4 py-3">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 flex-1">
-                  <Icon className="w-5 h-5 flex-shrink-0 animate-pulse" />
-                  <div className="flex-1">
-                    <p className="font-bold text-sm">{broadcast.title}</p>
-                    <p className="text-sm opacity-90">{broadcast.message}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDismiss(broadcast.id)}
-                  className="p-1 hover:bg-white/20 rounded-lg transition flex-shrink-0"
-                  aria-label="Dismiss"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+  if (!topAlert) return null;
+
+  const styles = getPriorityStyles(topAlert.priority);
+  const Icon = styles.icon;
+  const hasMoreAlerts = activeBroadcasts.length > 1;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50">
+      <div
+        className={`${styles.bg} ${styles.text} border-b-2 ${styles.border} shadow-lg`}
+      >
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <Icon className="w-5 h-5 flex-shrink-0 animate-pulse" />
+              <div className="flex-1">
+                <p className="font-bold text-sm">{topAlert.title}</p>
+                <p className="text-sm opacity-90">{topAlert.message}</p>
+                {hasMoreAlerts && (
+                  <a 
+                    href="/alerts-history" 
+                    className="text-xs underline opacity-80 hover:opacity-100 mt-1 inline-block"
+                  >
+                    +{activeBroadcasts.length - 1} more alert{activeBroadcasts.length - 1 > 1 ? 's' : ''} - View all
+                  </a>
+                )}
               </div>
             </div>
+            <button
+              onClick={() => handleDismiss(topAlert.id)}
+              className="p-1 hover:bg-white/20 rounded-lg transition flex-shrink-0"
+              aria-label="Dismiss"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        );
-      })}
+        </div>
+      </div>
     </div>
   );
 }

@@ -54,7 +54,9 @@ export default function DoctorProfileCharts({ doctorId }: DoctorProfileChartsPro
       setData(chartData);
     } catch (err: any) {
       console.error('Failed to fetch doctor analytics:', err);
-      setError(err.message);
+      // Handle both Error objects and API error responses
+      const errorMessage = err?.message || err?.error?.message || 'Failed to load analytics';
+      setError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setLoading(false);
     }

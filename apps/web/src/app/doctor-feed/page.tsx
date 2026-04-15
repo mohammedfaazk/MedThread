@@ -34,6 +34,11 @@ interface Post {
     comments: number;
     votes: number;
   };
+  priority?: {
+    priorityLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+    urgencyScore: number;
+    detectedSymptoms: any[];
+  };
   priorityBadge?: {
     emoji: string;
     label: string;
@@ -179,10 +184,10 @@ export default function DoctorFeedPage() {
             {posts.map((post) => (
               <div key={post.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 {/* Priority Badge */}
-                {post.urgencyScore >= 0 && (
+                {post.priority && (
                   <div className="mb-4">
                     <PostPriorityBadge
-                      priority={post.urgencyScore >= 7 ? 'HIGH' : post.urgencyScore >= 4 ? 'MEDIUM' : 'LOW'}
+                      priority={post.priority.priorityLevel}
                       urgencyScore={post.urgencyScore}
                       detectedSymptoms={post.detectedSymptoms || []}
                       showDetails={post.urgencyScore > 5}
@@ -192,7 +197,7 @@ export default function DoctorFeedPage() {
 
                 {/* Post Header */}
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                     {post.author.avatar ? (
                       <img
                         src={post.author.avatar}
@@ -203,8 +208,8 @@ export default function DoctorFeedPage() {
                       post.author.username[0].toUpperCase()
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <Link 
                         href={`/u/${post.author.username}`}
                         className="font-semibold text-gray-900 hover:text-blue-600"
@@ -218,8 +223,8 @@ export default function DoctorFeedPage() {
                         {post.author.role === 'PATIENT' ? 'Patient' : post.author.role}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Clock className="w-4 h-4" />
+                    <div className="flex items-center gap-1.5 text-sm text-gray-500 mt-1 flex-wrap">
+                      <Clock className="w-4 h-4 flex-shrink-0" />
                       <span>{new Date(post.createdAt).toLocaleString()}</span>
                       {post.community && (
                         <>
@@ -267,23 +272,6 @@ export default function DoctorFeedPage() {
                     <span>View Profile</span>
                   </Link>
                 </div>
-
-                {/* Detected Symptoms */}
-                {post.detectedSymptoms.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-xs font-medium text-gray-600 mb-2">Detected Symptoms:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {post.detectedSymptoms.slice(0, 5).map((symptom, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md"
-                        >
-                          {symptom.symptom} ({symptom.weight})
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
 

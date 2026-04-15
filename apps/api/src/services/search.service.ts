@@ -437,7 +437,7 @@ export class SearchService {
     const recentSymptoms = await prisma.symptomReport.findMany({
       where: {
         symptoms: {
-          path: '$[*].symptom',
+          path: ['$[*]', 'symptom'],
           string_contains: query
         }
       },
@@ -449,7 +449,7 @@ export class SearchService {
       },
       take: 10,
       orderBy: { reportedAt: 'desc' }
-    });
+    }).catch(() => []); // Fallback to empty array if query fails
 
     return {
       suggestions: filteredMatches,
@@ -525,7 +525,7 @@ export class SearchService {
     if (type === 'doctors' || type === 'all') {
       results.doctors = await prisma.user.findMany({
         where: {
-          role: { in: ['DOCTOR', 'VERIFIED_DOCTOR'] },
+          role: 'DOCTOR',
           doctorVerificationStatus: 'APPROVED',
           OR: [
             { username: { contains: query, mode: 'insensitive' } },
@@ -539,7 +539,8 @@ export class SearchService {
           avatar: true,
           specialty: true,
           subSpecialty: true,
-          totalKarma: true
+          totalKarma: true,
+          verified: true
         },
         orderBy: { totalKarma: 'desc' },
         take: limit

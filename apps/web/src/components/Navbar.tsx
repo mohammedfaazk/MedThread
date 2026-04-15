@@ -1,12 +1,22 @@
-import { useState, useEffect, useRef } from 'react'
+'use client'
+
+import { useState, useEffect, useRef, memo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { Search, Leaf, ChevronDown, CheckCircle2, Clock, X, TrendingUp, Hash, User as UserIcon } from 'lucide-react'
-import { NotificationBell } from './NotificationBell'
+import dynamic from 'next/dynamic'
 import { useSearchHistory } from '@/hooks/useSearchHistory'
 import { getImageUrl } from '@/lib/imageUrl'
 import axios from 'axios'
+import { LoadingLink } from './LoadingLink'
+import { useLoading } from '@/contexts/LoadingContext'
+
+// Lazy load NotificationBell
+const NotificationBell = dynamic(() => import('./NotificationBell').then(m => ({ default: m.NotificationBell })), { 
+  ssr: false,
+  loading: () => <div className="w-10 h-10" />
+})
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -21,7 +31,7 @@ interface Suggestion {
   verified?: boolean
 }
 
-export function Navbar() {
+export const Navbar = memo(function Navbar() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -31,6 +41,7 @@ export function Navbar() {
   const router = useRouter()
   const { user, role, loading, logout, isDoctorVerified, isDoctorPending } = useJWTAuth()
   const { addToHistory, removeFromHistory, clearHistory, getRecentSearches } = useSearchHistory()
+  const { startLoading } = useLoading()
 
   // Check if user is a doctor (verified or unverified)
   const isDoctor = role === 'DOCTOR' || role === 'VERIFIED_DOCTOR' || isDoctorVerified || isDoctorPending
@@ -85,6 +96,7 @@ export function Navbar() {
     e.preventDefault()
     if (searchQuery.trim()) {
       addToHistory(searchQuery.trim())
+      startLoading()
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
       setShowSuggestions(false)
       setSearchQuery('')
@@ -94,6 +106,7 @@ export function Navbar() {
   const handleSuggestionClick = (suggestion: Suggestion) => {
     setShowSuggestions(false)
     setSearchQuery('')
+    startLoading()
 
     if (suggestion.type === 'post') {
       router.push(`/post/${suggestion.id}`)
@@ -107,12 +120,14 @@ export function Navbar() {
   const handleHistoryClick = (query: string) => {
     setSearchQuery(query)
     setShowSuggestions(false)
+    startLoading()
     router.push(`/search?q=${encodeURIComponent(query)}`)
   }
 
   const handleLogout = async () => {
     setShowUserMenu(false)
     logout()
+    startLoading()
     router.push('/login')
   }
 
@@ -124,7 +139,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 py-3">
       <div className="max-w-[1400px] mx-auto px-6 flex items-center gap-4">
         {/* Logo - Curved Container */}
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition group bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl px-4 py-2 shadow-lg hover:shadow-xl">
+        <LoadingLink href="/" className="flex items-center gap-2 hover:opacity-80 transition group bg-white/70 backdrop-blur-xl border border-white/20 rounded-2xl px-4 py-2 shadow-lg hover:shadow-xl">
           <div className="w-10 h-10 bg-gradient-to-br from-[#5CB8B2] to-[#4DA9A3] rounded-xl flex items-center justify-center shadow-lg shadow-[#9DD4D3] group-hover:scale-105 transition-transform">
             <Leaf className="text-white w-6 h-6" />
           </div>
@@ -132,7 +147,7 @@ export function Navbar() {
             <span className="font-bold text-xl tracking-tight text-slate-800 leading-none">MedThread</span>
             <span className="text-[10px] text-[#5CB8B2] font-bold uppercase tracking-widest mt-0.5">Healthcare</span>
           </div>
-        </Link>
+        </LoadingLink>
 
         {/* Search Bar - Curved Container */}
         <div ref={searchRef} className="flex-1 max-w-[500px] relative">
@@ -303,22 +318,22 @@ export function Navbar() {
 
                 {showUserMenu && (
                   <div className="absolute right-0 top-14 w-56 bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
-                    <Link href="/profile" className="block px-4 py-3 hover:bg-neutral-300/20 border-b border-neutral-400/20 transition-all">
+                    <LoadingLink href="/profile" className="block px-4 py-3 hover:bg-neutral-300/20 border-b border-neutral-400/20 transition-all">
                       <p className="font-semibold text-sm">My Profile</p>
                       <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                    </Link>
-                    <Link href={`/u/${user.username || user.id}`} className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Public Profile</Link>
+                    </LoadingLink>
+                    <LoadingLink href={`/u/${user.username || user.id}`} className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Public Profile</LoadingLink>
                     {isDoctor ? (
-                      <Link href="/dashboard/doctor" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Doctor Dashboard</Link>
+                      <LoadingLink href="/dashboard/doctor" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Doctor Dashboard</LoadingLink>
                     ) : (
                       <>
-                        <Link href="/dashboard/patient" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Patient Dashboard</Link>
-                        <Link href="/health-profile" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-green-600 transition-all">💚 Health Profile</Link>
-                        <Link href="/find-hospitals" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-emerald-600 transition-all">🏥 Find Hospitals</Link>
+                        <LoadingLink href="/dashboard/patient" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-blue-600 transition-all">Patient Dashboard</LoadingLink>
+                        <LoadingLink href="/health-profile" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-green-600 transition-all">💚 Health Profile</LoadingLink>
+                        <LoadingLink href="/find-hospitals" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm font-semibold text-emerald-600 transition-all">🏥 Find Hospitals</LoadingLink>
                       </>
                     )}
-                    <Link href="/settings" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Settings</Link>
-                    <Link href="/saved" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Saved Posts</Link>
+                    <LoadingLink href="/settings" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Settings</LoadingLink>
+                    <LoadingLink href="/saved" className="block px-4 py-2 hover:bg-neutral-300/20 text-sm transition-all">Saved Posts</LoadingLink>
                     <div className="border-t border-neutral-400/20">
                       <button
                         onClick={handleLogout}
@@ -332,15 +347,15 @@ export function Navbar() {
               </div>
             </>
           ) : !loading && (
-            <Link
+            <LoadingLink
               href="/login"
               className="px-6 py-2.5 bg-gradient-to-r from-[#FF4500] to-[#ff5722] text-white rounded-2xl text-sm font-semibold hover:shadow-xl transition-all shadow-lg hover:scale-105"
             >
               Log In
-            </Link>
+            </LoadingLink>
           )}
         </div>
       </div>
     </nav>
   )
-}
+})

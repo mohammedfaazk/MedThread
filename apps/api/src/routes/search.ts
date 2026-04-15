@@ -93,7 +93,10 @@ router.get('/autocomplete', async (req, res, next) => {
     const { q, type = 'all', limit } = req.query;
 
     if (!q) {
-      return res.status(400).json({ error: 'Query parameter is required' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Query parameter is required' 
+      });
     }
 
     const results = await searchService.autocomplete({
@@ -102,7 +105,16 @@ router.get('/autocomplete', async (req, res, next) => {
       limit: limit ? Number(limit) : undefined
     });
 
-    res.json(results);
+    // Format response to match frontend expectations
+    res.json({
+      success: true,
+      data: {
+        posts: results.posts || [],
+        users: results.doctors || [],
+        communities: [], // Add communities if needed
+        symptoms: results.symptoms || []
+      }
+    });
   } catch (error) {
     next(error);
   }

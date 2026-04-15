@@ -77,7 +77,6 @@ import medicalLibraryRouter from './routes/medical-library.routes';
 import translationRouter from './routes/translation.routes';
 import conversationSearchRouter from './routes/conversation-search.routes';
 import healthTipsRouter from './routes/health-tips.routes';
-import healthProfileRouter from './routes/health-profile.routes';
 import emergencyBroadcastRouter from './routes/emergency-broadcast.routes';
 import reviewsRouter from './routes/reviews.routes';
 import qaForumRouter from './routes/qa-forum.routes';
@@ -98,6 +97,8 @@ import performanceMonitorRoutes from './routes/performance-monitor.routes';
 import notificationEnhancedRoutes from './routes/notification.routes';
 import spamDetectionRoutes from './routes/spam-detection.routes';
 import cacheRoutes from './routes/cache.routes';
+import diseaseTrendsRouter from './routes/disease-trends.routes';
+
 import { performanceMonitorService } from './services/performance-monitor.service';
 import {
   authRateLimit,
@@ -296,7 +297,6 @@ app.use('/api/v1/health-risk', healthRiskRouter);
 
 // New Features
 app.use('/api/v1/health-tips', healthTipsRouter);
-app.use('/api/v1/health-profile', healthProfileRouter);
 app.use('/api/v1/emergency-broadcast', emergencyBroadcastRouter);
 app.use('/api/v1/reviews', reviewsRouter);
 
@@ -338,6 +338,7 @@ app.use('/api/v1/performance', performanceMonitorRoutes);
 app.use('/api/v1/notifications-enhanced', notificationEnhancedRoutes);
 app.use('/api/v1/spam-detection', spamDetectionRoutes);
 app.use('/api/v1/cache', cacheRoutes);
+app.use('/api/v1/disease-trends', diseaseTrendsRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

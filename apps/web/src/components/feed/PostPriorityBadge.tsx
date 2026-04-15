@@ -80,7 +80,7 @@ export function PostPriorityBadge({
     <div className={`
       p-3 rounded-lg border-l-4 ${config.bgColor} ${config.borderColor}
     `}>
-      <div className="flex items-start justify-between mb-2">
+      <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
           <span className="text-lg">{config.emoji}</span>
           <div>
@@ -101,32 +101,6 @@ export function PostPriorityBadge({
           </div>
         </div>
       </div>
-
-      {detectedSymptoms.length > 0 && (
-        <div className="mt-3">
-          <p className="text-xs font-medium text-gray-700 mb-2">
-            Detected Symptoms:
-          </p>
-          <div className="flex flex-wrap gap-1">
-            {detectedSymptoms.slice(0, 5).map((symptom, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md text-xs bg-white border border-gray-200"
-              >
-                {symptom.symptom}
-                <span className="ml-1 text-gray-500">
-                  ({symptom.weight})
-                </span>
-              </span>
-            ))}
-            {detectedSymptoms.length > 5 && (
-              <span className="text-xs text-gray-500">
-                +{detectedSymptoms.length - 5} more
-              </span>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

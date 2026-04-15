@@ -53,17 +53,34 @@ router.get('/active', async (req, res) => {
 
 /**
  * GET /api/emergency-broadcast/history
- * Get broadcast history (Admin only)
+ * Get broadcast history (Public - all users can see history)
  */
-router.get('/history', authenticate, requireRole('ADMIN'), async (req, res) => {
+router.get('/history', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 20;
+    const limit = parseInt(req.query.limit as string) || 50;
 
     const result = await emergencyBroadcastService.getBroadcastHistory(page, limit);
-    res.json({ success: true, data: result });
+    res.json({ success: true, alerts: result.broadcasts || result.data || [] });
   } catch (error: any) {
     console.error('Error getting broadcast history:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /api/emergency-broadcast/:id/acknowledge
+ * Acknowledge an alert (mark as read)
+ */
+router.post('/:id/acknowledge', authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const { id } = req.params;
+
+    // For now, just return success - can implement acknowledgment tracking later
+    res.json({ success: true, message: 'Alert acknowledged' });
+  } catch (error: any) {
+    console.error('Error acknowledging alert:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

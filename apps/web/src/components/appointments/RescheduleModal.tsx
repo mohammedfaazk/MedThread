@@ -1,139 +1,172 @@
 'use client';
 
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { X, Calendar, Clock } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface RescheduleModalProps {
-  appointment: {
-    id: string;
-    startTime: Date;
-    endTime: Date;
-    patientName?: string;
-    doctorName?: string;
-    reason?: string;
-  };
-  availableSlots: Array<{ startTime: Date; endTime: Date }>;
-  onReschedule: (appointmentId: string, newStartTime: Date, newEndTime: Date) => Promise<void>;
+  appointmentId: string;
+  currentDate: string;
+  currentTime: string;
+  doctorName: string;
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-export default function RescheduleModal({
-  appointment,
-  availableSlots,
-  onReschedule,
-  onClose
+export function RescheduleModal({
+  appointmentId,
+  currentDate,
+  currentTime,
+  doctorName,
+  onClose,
+  onSuccess
 }: RescheduleModalProps) {
-  const [selectedSlot, setSelectedSlot] = useState<{ startTime: Date; endTime: Date } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [newDate, setNewDate] = useState('');
+  const [newTime, setNewTime] = useState('');
+  const [reason, setReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleReschedule = async () => {
-    if (!selectedSlot) {
-      setError('Please select a time slot');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newDate || !newTime) {
+      alert('Please select both date and time');
       return;
     }
 
-    setLoading(true);
-    setError('');
+    setIsSubmitting(true);
 
     try {
-      await onReschedule(appointment.id, selectedSlot.startTime, selectedSlot.endTime);
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert('Please login to reschedule');
+        return;
+      }
+
+      // Combine date and time
+      const startTime = new Date(`${newDate}T${newTime}`);
+      const endTime = new Date(startTime.getTime() + 30 * 60000); // 30 minutes later
+
+      await axios.put(
+        `${API_URL}/api/v1/appointments/${appointmentId}/reschedule`,
+        {
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          reason
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      alert('Appointment rescheduled successfully! Waiting for doctor approval.');
+      onSuccess();
       onClose();
-    } catch (err) {
-      setError('Failed to reschedule appointment. Please try again.');
+    } catch (error: any) {
+      console.error('Failed to reschedule:', error);
+      alert(error.response?.data?.error || 'Failed to reschedule appointment');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Reschedule Appointment</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Reschedule Appointment</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Current Appointment Info */}
-        <div className="p-6 bg-gray-50 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900 mb-2">Current Appointment</h3>
-          <div className="space-y-1 text-sm text-gray-600">
-            <p><span className="font-medium">Date:</span> {format(new Date(appointment.startTime), 'MMMM d, yyyy')}</p>
-            <p><span className="font-medium">Time:</span> {format(new Date(appointment.startTime), 'h:mm a')} - {format(new Date(appointment.endTime), 'h:mm a')}</p>
-            {appointment.patientName && <p><span className="font-medium">Patient:</span> {appointment.patientName}</p>}
-            {appointment.doctorName && <p><span className="font-medium">Doctor:</span> {appointment.doctorName}</p>}
-            {appointment.reason && <p><span className="font-medium">Reason:</span> {appointment.reason}</p>}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-sm font-semibold text-blue-900 mb-2">Current Appointment</p>
+          <p className="text-sm text-blue-800">
+            <span className="font-semibold">Doctor:</span> {doctorName}
+          </p>
+          <p className="text-sm text-blue-800">
+            <span className="font-semibold">Date:</span> {new Date(currentDate).toLocaleDateString()}
+          </p>
+          <p className="text-sm text-blue-800">
+            <span className="font-semibold">Time:</span> {currentTime}
+          </p>
+        </div>
+
+        {/* Reschedule Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <Calendar className="w-4 h-4 inline mr-1" />
+              New Date
+            </label>
+            <input
+              type="date"
+              value={newDate}
+              onChange={(e) => setNewDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400"
+              required
+            />
           </div>
-        </div>
 
-        {/* Available Slots */}
-        <div className="p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">Select New Time Slot</h3>
-          
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
-            </div>
-          )}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <Clock className="w-4 h-4 inline mr-1" />
+              New Time
+            </label>
+            <input
+              type="time"
+              value={newTime}
+              onChange={(e) => setNewTime(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400"
+              required
+            />
+          </div>
 
-          {availableSlots.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>No available slots found.</p>
-              <p className="text-sm mt-2">Please try a different date or contact support.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-              {availableSlots.map((slot, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedSlot(slot)}
-                  className={`
-                    p-4 border-2 rounded-lg text-left transition
-                    ${selectedSlot === slot
-                      ? 'border-orange-500 bg-orange-50'
-                      : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50'
-                    }
-                  `}
-                >
-                  <div className="font-semibold text-gray-900">
-                    {format(new Date(slot.startTime), 'EEEE, MMMM d')}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {format(new Date(slot.startTime), 'h:mm a')} - {format(new Date(slot.endTime), 'h:mm a')}
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Reason for Rescheduling (Optional)
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Why do you need to reschedule?"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400 resize-none"
+              rows={3}
+            />
+          </div>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleReschedule}
-            disabled={loading || !selectedSlot}
-            className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Rescheduling...' : 'Confirm Reschedule'}
-          </button>
-        </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <p className="text-xs text-amber-800">
+              <span className="font-semibold">Note:</span> Your rescheduled appointment will need to be approved by the doctor again.
+            </p>
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50"
+            >
+              {isSubmitting ? 'Rescheduling...' : 'Reschedule'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

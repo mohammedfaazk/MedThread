@@ -181,6 +181,75 @@ router.post('/:reviewId/helpful', authenticate, async (req, res) => {
 });
 
 /**
+ * PUT /api/reviews/:id
+ * Edit a review
+ */
+router.put('/:id', authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const { id } = req.params;
+    const { overallRating, communicationRating, knowledgeRating, empathyRating, reviewText } = req.body;
+
+    const review = await prisma.patientFeedback.findUnique({ where: { id } });
+    
+    if (!review) {
+      return res.status(404).json({ success: false, error: 'Review not found' });
+    }
+
+    if (review.patientId !== userId) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const updated = await prisma.patientFeedback.update({
+      where: { id },
+      data: {
+        rating: overallRating,
+        communicationRating,
+        professionalismRating: knowledgeRating,
+        treatmentEffectivenessRating: empathyRating,
+        feedback: reviewText,
+        updatedAt: new Date()
+      }
+    });
+
+    await updateDoctorRating(review.doctorId);
+    res.json({ success: true, data: updated });
+  } catch (error: any) {
+    console.error('Error updating review:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/reviews/:id
+ * Delete a review
+ */
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).userId;
+    const { id } = req.params;
+
+    const review = await prisma.patientFeedback.findUnique({ where: { id } });
+    
+    if (!review) {
+      return res.status(404).json({ success: false, error: 'Review not found' });
+    }
+
+    if (review.patientId !== userId) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
+    }
+
+    await prisma.patientFeedback.delete({ where: { id } });
+    await updateDoctorRating(review.doctorId);
+    
+    res.json({ success: true, message: 'Review deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting review:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
  * POST /api/reviews/:id/report
  * Report a review
  */

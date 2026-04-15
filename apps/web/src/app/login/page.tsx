@@ -89,15 +89,35 @@ export default function LoginPage() {
       console.error('❌ Error status:', err.response?.status);
       console.error('❌ Error message:', err.message);
       
+      // Extract error message properly - handle both string and object errors
+      let errorMessage = 'Login failed';
+      
       if (err.response?.status === 401) {
-        setError('Invalid email or password');
+        errorMessage = 'Invalid email or password';
       } else if (err.response?.status === 400) {
-        setError(err.response?.data?.error || 'Invalid request');
+        const apiError = err.response?.data?.error;
+        errorMessage = typeof apiError === 'string' ? apiError : (apiError?.message || 'Invalid request');
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error. Please check if the database is connected.';
       } else if (err.code === 'ECONNREFUSED') {
-        setError('Cannot connect to server. Please check if the API is running.');
+        errorMessage = 'Cannot connect to server. Please check if the API is running.';
       } else {
-        setError(err.response?.data?.error || err.response?.data?.message || err.message || 'Login failed');
+        // Handle various error formats
+        const apiError = err.response?.data?.error;
+        const apiMessage = err.response?.data?.message;
+        
+        if (typeof apiError === 'string') {
+          errorMessage = apiError;
+        } else if (typeof apiError === 'object' && apiError?.message) {
+          errorMessage = apiError.message;
+        } else if (typeof apiMessage === 'string') {
+          errorMessage = apiMessage;
+        } else if (err.message) {
+          errorMessage = err.message;
+        }
       }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false)
     }

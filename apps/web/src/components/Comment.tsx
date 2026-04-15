@@ -30,6 +30,8 @@ interface CommentProps {
   userVote?: 1 | -1 | null
   isCollapsed?: boolean
   locationTier?: number
+  isBestAnswer?: boolean
+  postAuthorId?: string
   onAddReply?: (parentId: string, replyContent: string) => void
 }
 
@@ -47,6 +49,8 @@ export function Comment({
   userVote,
   isCollapsed,
   locationTier,
+  isBestAnswer,
+  postAuthorId,
   onAddReply
 }: CommentProps) {
   const [collapsed, setCollapsed] = useState(isCollapsed || false)
@@ -61,9 +65,13 @@ export function Comment({
   const [isDeleted, setIsDeleted] = useState(content === '[deleted]')
   const [commentAwards, setCommentAwards] = useState<any[]>([])
   const [awardsLoading, setAwardsLoading] = useState(false)
+  const [localIsBestAnswer, setLocalIsBestAnswer] = useState(isBestAnswer || false)
+  const [showConsultModal, setShowConsultModal] = useState(false)
+  const [consultMessage, setConsultMessage] = useState('')
   const { user, role } = useJWTAuth()
   
   const isAuthor = user?.username === author
+  const isPostAuthor = user?.id === postAuthorId
   const isUnverifiedDoctor = role === 'DOCTOR' && user?.doctorVerificationStatus !== 'APPROVED'
 
   useEffect(() => {
@@ -185,6 +193,60 @@ export function Comment({
     }
   }
 
+  const handleMarkBestAnswer = async () => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please login to mark best answer')
+        return
+      }
+
+      await axios.post(
+        `${API_URL}/api/v1/comments/${id}/mark-best-answer`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      setLocalIsBestAnswer(true)
+      alert('Marked as best answer!')
+    } catch (error: any) {
+      console.error('Failed to mark best answer:', error)
+      alert(error.response?.data?.error || 'Failed to mark best answer')
+    }
+  }
+
+  const handleRequestConsultation = async () => {
+    if (!consultMessage.trim()) {
+      alert('Please enter a message')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please login to request consultation')
+        return
+      }
+
+      const response = await axios.post(
+        `${API_URL}/api/v1/comments/${id}/request-consultation`,
+        { message: consultMessage },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (response.data.success) {
+        alert('Consultation request sent! The doctor will see your message in their chat.')
+        setShowConsultModal(false)
+        setConsultMessage('')
+        // Redirect to chat page
+        window.location.href = `/chat`
+      }
+    } catch (error: any) {
+      console.error('Failed to request consultation:', error)
+      alert(error.response?.data?.error || 'Failed to request consultation')
+    }
+  }
+
   if (collapsed) {
     return (
       <div className="p-3 hover:bg-neutral-300/20 cursor-pointer rounded-xl transition-all backdrop-blur-sm" onClick={() => setCollapsed(false)}>
@@ -253,6 +315,12 @@ export function Comment({
                 Verified Doctor
               </span>
             )}
+            {localIsBestAnswer && !isDeleted && (
+              <span className="px-2 py-0.5 bg-green-600 text-white rounded-full text-xs font-bold flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" />
+                Best Answer
+              </span>
+            )}
             {/* Proximity badge — only shown for doctor comments */}
             {authorType === 'doctor' && !isDeleted && locationTier !== undefined && locationTier <= 3 && (
               <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1 ${
@@ -318,7 +386,7 @@ export function Comment({
 
           {/* Actions */}
           {!isDeleted && (
-            <div className="flex items-center gap-3 text-xs text-gray-600">
+            <div className="flex items-center gap-3 text-xs text-gray-600 flex-wrap">
               <button
                 onClick={() => setShowReply(!showReply)}
                 className="font-semibold hover:bg-neutral-300/20 px-2 py-1 rounded-full transition-all"
@@ -326,6 +394,28 @@ export function Comment({
                 Reply
               </button>
               <AwardButton commentId={id} currentAwards={commentAwards} onAwardGiven={fetchCommentAwards} />
+              
+              {/* Mark as Best Answer - only for post author on doctor comments */}
+              {isPostAuthor && authorType === 'doctor' && !localIsBestAnswer && (
+                <button
+                  onClick={handleMarkBestAnswer}
+                  className="font-semibold hover:bg-green-100 text-green-600 px-2 py-1 rounded-full transition-all flex items-center gap-1"
+                >
+                  <CheckCircle className="w-3 h-3" />
+                  Mark Best Answer
+                </button>
+              )}
+              
+              {/* Request Consultation - only for non-authors on doctor comments */}
+              {!isAuthor && authorType === 'doctor' && user && (
+                <button
+                  onClick={() => setShowConsultModal(true)}
+                  className="font-semibold hover:bg-blue-100 text-blue-600 px-2 py-1 rounded-full transition-all"
+                >
+                  Request Consultation
+                </button>
+              )}
+              
               {isAuthor && !isEditing && (
                 <>
                   <button
@@ -348,7 +438,6 @@ export function Comment({
               >
                 Share
               </button>
-              {/* Only show report button if not the author */}
               {!isAuthor && (
                 <ReportButton 
                   type="comment" 
@@ -371,6 +460,43 @@ export function Comment({
                   [-] Collapse
                 </button>
               )}
+            </div>
+          )}
+
+          {/* Consultation Request Modal */}
+          {showConsultModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl p-6 max-w-md w-full">
+                <h3 className="text-xl font-bold mb-4">Request Private Consultation</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Send a consultation request to Dr. {author}
+                </p>
+                <textarea
+                  value={consultMessage}
+                  onChange={(e) => setConsultMessage(e.target.value)}
+                  placeholder="Describe your consultation needs..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-400 resize-none"
+                  rows={4}
+                />
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => {
+                      setShowConsultModal(false)
+                      setConsultMessage('')
+                    }}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleRequestConsultation}
+                    disabled={!consultMessage.trim()}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    Send Request
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

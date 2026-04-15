@@ -250,8 +250,8 @@ router.post('/:id/vote', auth, requireVerifiedDoctor, async (req, res, next) => 
   }
 });
 
-// Save/unsave post - requires verified doctor
-router.post('/:id/save', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Save/unsave post - any authenticated user can save
+router.post('/:id/save', auth, async (req, res, next) => {
   try {
     const result = await postService.savePost(req.params.id, req.userId!);
     res.json(result);
@@ -260,8 +260,8 @@ router.post('/:id/save', auth, requireVerifiedDoctor, async (req, res, next) => 
   }
 });
 
-// Hide/unhide post - requires verified doctor
-router.post('/:id/hide', auth, requireVerifiedDoctor, async (req, res, next) => {
+// Hide/unhide post - any authenticated user can hide
+router.post('/:id/hide', auth, async (req, res, next) => {
   try {
     const result = await postService.hidePost(req.params.id, req.userId!);
     res.json(result);

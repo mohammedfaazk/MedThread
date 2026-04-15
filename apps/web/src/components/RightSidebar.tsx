@@ -26,7 +26,7 @@ export function RightSidebar() {
 
   return (
     <aside className="hidden xl:block w-[312px] shrink-0">
-      <div className="sticky top-[68px] space-y-4">
+      <div className="sticky top-[68px] h-[calc(100vh-84px)] overflow-y-auto space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
         {/* About */}
         <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden shadow-lg">
           <div className="bg-[#00BCD4] h-12"></div>

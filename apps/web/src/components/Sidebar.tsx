@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
-const CreatePostModal = dynamic(() => import('./CreatePostModal').then(m => ({ default: m.CreatePostModal })), { ssr: false })
+const CreatePostModal = dynamic(() => import('./CreatePostModal').then(m => ({ default: m.CreatePostModal })), { 
+  ssr: false,
+  loading: () => null
+})
 import { useRouter, usePathname } from 'next/navigation'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import axios from 'axios'
@@ -36,7 +39,7 @@ interface Community {
   memberCount: number
 }
 
-export function Sidebar() {
+export const Sidebar = memo(function Sidebar() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [communities, setCommunities] = useState<Community[]>([])
   const [loadingCommunities, setLoadingCommunities] = useState(true)
@@ -118,7 +121,7 @@ export function Sidebar() {
   return (
     <>
       <aside className="hidden lg:block w-[260px] shrink-0">
-        <div className="sticky top-[68px] p-4">
+        <div className="sticky top-[68px] h-[calc(100vh-84px)] overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
           {/* Main Navigation */}
           <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 mb-4 overflow-hidden shadow-lg">
             {navItems.map((item, index) => {
@@ -322,4 +325,4 @@ export function Sidebar() {
       />
     </>
   )
-}
+})

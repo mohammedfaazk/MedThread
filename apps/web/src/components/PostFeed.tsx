@@ -1,10 +1,21 @@
 'use client'
 
 import { useStore } from '@/store/useStore'
-import { PostCard } from './PostCard'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo, useMemo } from 'react'
+import dynamic from 'next/dynamic'
 import { Flame, Sparkles, ArrowUp, TrendingUp } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
+
+// Lazy load PostCard for better performance
+const PostCard = dynamic(() => import('./PostCard').then(m => ({ default: m.PostCard })), {
+  loading: () => (
+    <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 p-6 animate-pulse">
+      <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+      <div className="h-20 bg-gray-200 rounded"></div>
+    </div>
+  ),
+  ssr: false
+})
 
 interface PostFeedProps {
   community?: string
@@ -12,7 +23,7 @@ interface PostFeedProps {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-export function PostFeed({ community }: PostFeedProps = {}) {
+export const PostFeed = memo(function PostFeed({ community }: PostFeedProps = {}) {
   const { posts, fetchPosts, sortBy, setSortBy, loading, isSocketConnected } = useStore()
   const [socket, setSocket] = useState<Socket | null>(null)
   const [newPostNotification, setNewPostNotification] = useState(false)
@@ -202,8 +213,8 @@ export function PostFeed({ community }: PostFeedProps = {}) {
     }
   }, [])
 
-  // Filter hidden posts
-  const visiblePosts = posts.filter(post => !post.isHidden)
+  // Filter hidden posts - memoized for performance
+  const visiblePosts = useMemo(() => posts.filter(post => !post.isHidden), [posts])
 
   return (
     <div className="space-y-3">
@@ -274,63 +285,17 @@ export function PostFeed({ community }: PostFeedProps = {}) {
         </div>
       )}
 
-      {/* Posts with Priority Section Headers */}
+      {/* Posts */}
       {!loading && visiblePosts.length === 0 ? (
         <div className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 p-8 text-center">
           <p className="text-gray-500">No posts found{community ? ' in this community' : ''} yet.</p>
           <p className="text-gray-400 text-sm mt-2">Be the first to create a post!</p>
         </div>
       ) : (
-        !loading && (() => {
-          // Group posts by priority
-          const highPosts = visiblePosts.filter(p => p.priorityLevel === 'HIGH')
-          const mediumPosts = visiblePosts.filter(p => p.priorityLevel === 'MEDIUM')
-          const lowPosts = visiblePosts.filter(p => p.priorityLevel === 'LOW')
-
-          return (
-            <>
-              {/* HIGH Priority Section */}
-              {highPosts.length > 0 && (
-                <>
-                  <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 font-bold">
-                    <span className="text-2xl">🔴</span>
-                    <span className="text-lg">URGENT POSTS ({highPosts.length})</span>
-                  </div>
-                  {highPosts.map((post) => (
-                    <PostCard key={post.id} {...post} />
-                  ))}
-                </>
-              )}
-
-              {/* MEDIUM Priority Section */}
-              {mediumPosts.length > 0 && (
-                <>
-                  <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 font-bold mt-4">
-                    <span className="text-2xl">🟡</span>
-                    <span className="text-lg">NEEDS ATTENTION ({mediumPosts.length})</span>
-                  </div>
-                  {mediumPosts.map((post) => (
-                    <PostCard key={post.id} {...post} />
-                  ))}
-                </>
-              )}
-
-              {/* LOW Priority Section */}
-              {lowPosts.length > 0 && (
-                <>
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 font-bold mt-4">
-                    <span className="text-2xl">🟢</span>
-                    <span className="text-lg">GENERAL DISCUSSION ({lowPosts.length})</span>
-                  </div>
-                  {lowPosts.map((post) => (
-                    <PostCard key={post.id} {...post} />
-                  ))}
-                </>
-              )}
-            </>
-          )
-        })()
+        !loading && visiblePosts.map((post) => (
+          <PostCard key={post.id} {...post} />
+        ))
       )}
     </div>
   )
-}
+})

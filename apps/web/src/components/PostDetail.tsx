@@ -62,8 +62,14 @@ export function PostDetail({ postId }: PostDetailProps) {
     const fetchPost = async () => {
       setLoading(true)
       try {
-        const response = await axios.get(`${API_URL}/api/v1/posts/${postId}`)
-        const apiPost = response.data
+        const token = localStorage.getItem('auth_token')
+        const headers: Record<string, string> = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        
+        const response = await axios.get(`${API_URL}/api/v1/posts/${postId}`, { headers })
+        const apiPost = response.data.data || response.data
         
         // Transform API post to match our Post interface
         const transformedPost: Post = {
@@ -82,7 +88,7 @@ export function PostDetail({ postId }: PostDetailProps) {
           upvotes: apiPost.upvotes || 0,
           downvotes: apiPost.downvotes || 0,
           score: apiPost.score || 0,
-          comments: apiPost.commentCount || 0,
+          comments: apiPost._count?.comments || 0,
           doctorReplies: 0,
           tags: [],
           flair: apiPost.flair?.text,

@@ -7,13 +7,20 @@ import { AccessibilityProvider } from '@/contexts/AccessibilityContext';
 import { AccessibilityPanel } from '@/components/accessibility/AccessibilityPanel';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { EmergencyBroadcastBanner } from '@/components/EmergencyBroadcastBanner';
+import { LoadingProvider } from '@/contexts/LoadingContext';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
+import { NavigationWrapper } from '@/components/NavigationWrapper';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
-  title: 'MedThread - Healthcare Platform',
-  description: 'Connect with doctors, manage your health, and access medical resources',
+  title: 'MedThread - Healthcare Platform | Emergency Alerts & Medical Services',
+  description: 'Connect with doctors, manage your health, access medical resources, and stay updated with emergency health alerts',
   manifest: '/manifest.json',
   themeColor: '#2563eb',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=5',
@@ -39,28 +46,32 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ErrorBoundary>
-          <JWTAuthProvider>
-            <AccessibilityProvider>
-              {/* Skip to main content link for screen readers */}
-              <a href="#main-content" className="skip-to-main">
-                Skip to main content
-              </a>
+          <LoadingProvider>
+            <JWTAuthProvider>
+              <AccessibilityProvider>
+                <NavigationWrapper>
+                  {/* Skip to main content link for screen readers */}
+                  <a href="#main-content" className="skip-to-main">
+                    Skip to main content
+                  </a>
 
-              {/* Emergency Broadcasts */}
-              <EmergencyBroadcastBanner />
+                  {/* Offline Indicator */}
+                  <OfflineIndicator />
 
-              {/* Offline Indicator */}
-              <OfflineIndicator />
+                  {/* Main Content */}
+                  <main id="main-content">
+                    {children}
+                  </main>
 
-              {/* Main Content */}
-              <main id="main-content">
-                {children}
-              </main>
+                  {/* Accessibility Panel */}
+                  <AccessibilityPanel />
 
-              {/* Accessibility Panel */}
-              <AccessibilityPanel />
-            </AccessibilityProvider>
-          </JWTAuthProvider>
+                  {/* Global Loading Overlay */}
+                  <LoadingOverlay />
+                </NavigationWrapper>
+              </AccessibilityProvider>
+            </JWTAuthProvider>
+          </LoadingProvider>
         </ErrorBoundary>
 
         {/* Keyboard navigation detection */}

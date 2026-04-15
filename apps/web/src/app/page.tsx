@@ -1,22 +1,48 @@
 'use client'
-import { Navbar } from '@/components/Navbar'
-import { Sidebar } from '@/components/Sidebar'
-import { PostFeed } from '@/components/PostFeed'
-import { RightSidebar } from '@/components/RightSidebar'
+import dynamic from 'next/dynamic'
 import { useJWTAuth } from '@/context/JWTAuthContext'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { Suspense } from 'react'
 import StructuredData, { structuredDataSchemas } from '@/components/StructuredData'
 import IridescenceCSS from '@/components/ui/IridescenceCSS'
-import dynamic from 'next/dynamic'
 import { MedicalDisclaimer, EmergencyBanner } from '@/components/MedicalDisclaimer'
 
-// Lazy-load Kendall so it doesn't affect initial page load
-const KendallChat = dynamic(() => import('@/components/KendallChat'), { ssr: false })
+// Lazy-load heavy components
+const Navbar = dynamic(() => import('@/components/Navbar').then(m => ({ default: m.Navbar })), { 
+  ssr: false,
+  loading: () => <div className="h-16 bg-white/40 backdrop-blur-md" />
+})
+
+const Sidebar = dynamic(() => import('@/components/Sidebar').then(m => ({ default: m.Sidebar })), { 
+  ssr: false,
+  loading: () => <div className="w-[260px] h-screen bg-white/40 backdrop-blur-md rounded-2xl animate-pulse" />
+})
+
+const PostFeed = dynamic(() => import('@/components/PostFeed').then(m => ({ default: m.PostFeed })), { 
+  ssr: false,
+  loading: () => (
+    <div className="space-y-3">
+      {[1, 2, 3].map(i => (
+        <div key={i} className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 p-6 animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-20 bg-gray-200 rounded"></div>
+        </div>
+      ))}
+    </div>
+  )
+})
+
+const RightSidebar = dynamic(() => import('@/components/RightSidebar').then(m => ({ default: m.RightSidebar })), { 
+  ssr: false,
+  loading: () => <div className="w-80 h-screen bg-white/40 backdrop-blur-md rounded-2xl animate-pulse" />
+})
+
+const KendallChat = dynamic(() => import('@/components/KendallChat'), { 
+  ssr: false,
+  loading: () => null
+})
 
 export default function Home() {
   const { user, role, loading } = useJWTAuth()
-  const router = useRouter()
 
   const isPatient = !loading && user && role === 'PATIENT'
 
@@ -38,19 +64,43 @@ export default function Home() {
           />
         </div>
 
-        <Navbar />
-        <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12">
-          <Sidebar />
-          <main className="flex-1 max-w-[640px]">
+        <Suspense fallback={<div className="h-16 bg-white/40 backdrop-blur-md" />}>
+          <Navbar />
+        </Suspense>
+        
+        <div className="max-w-[1400px] mx-auto flex gap-6 pt-6 px-6 pb-12 h-screen overflow-hidden">
+          <Suspense fallback={<div className="w-[260px] h-screen bg-white/40 backdrop-blur-md rounded-2xl animate-pulse" />}>
+            <Sidebar />
+          </Suspense>
+          
+          <main className="flex-1 max-w-[640px] overflow-y-auto h-[calc(100vh-88px)] scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent hover:scrollbar-thumb-gray-400">
             <EmergencyBanner className="mb-6" />
             <MedicalDisclaimer className="mb-6" />
-            <PostFeed />
+            <Suspense fallback={
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="bg-white/40 backdrop-blur-md rounded-2xl border border-white/20 p-6 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div className="h-20 bg-gray-200 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            }>
+              <PostFeed />
+            </Suspense>
           </main>
-          <RightSidebar />
+          
+          <Suspense fallback={<div className="w-80 h-screen bg-white/40 backdrop-blur-md rounded-2xl animate-pulse" />}>
+            <RightSidebar />
+          </Suspense>
         </div>
 
         {/* Kendall AI Assistant — visible only to logged-in patients */}
-        {isPatient && <KendallChat />}
+        {isPatient && (
+          <Suspense fallback={null}>
+            <KendallChat />
+          </Suspense>
+        )}
       </div>
     </>
   )

@@ -158,7 +158,9 @@ export default function AdminAnalyticsPage() {
       setLastUpdated(new Date());
     } catch (err: any) {
       console.error('Failed to fetch analytics:', err);
-      setError(err.message);
+      // Handle both Error objects and API error responses
+      const errorMessage = err?.message || err?.error?.message || 'Failed to load analytics data';
+      setError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setLoading(false);
     }

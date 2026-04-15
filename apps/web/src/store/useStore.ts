@@ -141,7 +141,14 @@ export const useStore = create<AppState>()(
           params.append('sort', sort)
           params.append('limit', limit.toString())
           
-          const response = await axios.get(`${API_URL}/api/v1/posts?${params}`)
+          // Get auth token to include saved status
+          const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+          const headers: Record<string, string> = {}
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+          }
+          
+          const response = await axios.get(`${API_URL}/api/v1/posts?${params}`, { headers })
           // Handle both response formats: {success: true, data: posts} or posts array
           const apiPosts = response.data.data || response.data
           
@@ -162,7 +169,7 @@ export const useStore = create<AppState>()(
             upvotes: post.upvotes || 0,
             downvotes: post.downvotes || 0,
             score: post.score || 0,
-            comments: post.commentCount || 0,
+            comments: post._count?.comments || 0,
             doctorReplies: 0, // TODO: Calculate from comments
             tags: [], // TODO: Add tags support
             flair: post.flair?.text,
@@ -187,7 +194,9 @@ export const useStore = create<AppState>()(
         } catch (error: any) {
           console.error('Failed to fetch posts:', error)
           console.error('Error details:', error.response?.data)
-          set({ error: error.message, loading: false, posts: [] })
+          // Handle both Error objects and API error responses
+          const errorMessage = error?.message || error?.response?.data?.message || error?.error?.message || 'Failed to load posts';
+          set({ error: typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage), loading: false, posts: [] })
         }
       },
       

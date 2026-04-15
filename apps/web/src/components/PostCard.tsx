@@ -53,6 +53,9 @@ interface PostCardProps {
   // Endorsement
   endorsementCount?: number
   userEndorsed?: boolean
+  // Saved page callback
+  onUnsave?: () => void
+  showUnsaveText?: boolean
 }
 
 export function PostCard({
@@ -82,6 +85,8 @@ export function PostCard({
   detectedSymptoms = [],
   endorsementCount = 0,
   userEndorsed = false,
+  onUnsave,
+  showUnsaveText = false,
 }: PostCardProps) {
   const { votePost, savePost, hidePost } = useStore()
   const { user, role } = useJWTAuth()
@@ -95,9 +100,67 @@ export function PostCard({
   const [endorsed, setEndorsed] = useState(userEndorsed)
   const [endorseCount, setEndorseCount] = useState(endorsementCount)
   const [endorsing, setEndorsing] = useState(false)
+  const [isLocked, setIsLocked] = useState(false)
 
   const isAuthor = user?.username === author
   const { triggerSpark, ClickSparkComponent } = useClickSpark()
+
+  const handlePinToggle = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please login')
+        return
+      }
+
+      const endpoint = isPinned ? 'unpin' : 'pin'
+      const response = await axios.post(
+        `${API_URL}/api/v1/posts/${id}/${endpoint}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (response.data.success) {
+        alert(response.data.message)
+        window.location.reload()
+      }
+    } catch (error: any) {
+      console.error('Failed to toggle pin:', error)
+      alert(error.response?.data?.error || 'Failed to toggle pin')
+    }
+  }
+
+  const handleLockToggle = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        alert('Please login')
+        return
+      }
+
+      const endpoint = isLocked ? 'unlock' : 'lock'
+      const response = await axios.post(
+        `${API_URL}/api/v1/posts/${id}/${endpoint}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+
+      if (response.data.success) {
+        alert(response.data.message)
+        setIsLocked(!isLocked)
+        window.location.reload()
+      }
+    } catch (error: any) {
+      console.error('Failed to toggle lock:', error)
+      alert(error.response?.data?.error || 'Failed to toggle lock')
+    }
+  }
 
   const handleEndorse = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -177,6 +240,13 @@ export function PostCard({
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    // If on saved page and unsaving, call the callback
+    if (onUnsave) {
+      onUnsave()
+      return
+    }
+    
     const token = localStorage.getItem('auth_token')
     savePost(id, token || undefined)
     analytics.trackEvent('post_save', 'engagement', { postId: id })
@@ -389,7 +459,7 @@ export function PostCard({
               </div>
 
               {/* Author Actions Menu */}
-              {isAuthor && !isEditing && (
+              {(isAuthor || role === 'ADMIN' || role === 'MODERATOR') && !isEditing && (
                 <div className="relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={(e) => {
@@ -403,37 +473,70 @@ export function PostCard({
                   
                   {showMenu && (
                     <div className="absolute right-0 top-8 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 min-w-[160px]">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIsEditing(true)
-                          setShowMenu(false)
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          handleFixPriority(e)
-                          setShowMenu(false)
-                        }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 text-blue-600 flex items-center gap-2"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Fix Priority
-                      </button>
-                      <button
-                        onClick={handleDelete}
-                        disabled={isDeleting}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 disabled:opacity-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        {isDeleting ? 'Deleting...' : 'Delete'}
-                      </button>
+                      {isAuthor && (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setIsEditing(true)
+                              setShowMenu(false)
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              handleFixPriority(e)
+                              setShowMenu(false)
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-blue-50 text-blue-600 flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Fix Priority
+                          </button>
+                          <button
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2 disabled:opacity-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </>
+                      )}
+                      
+                      {/* Moderator Actions */}
+                      {(role === 'ADMIN' || role === 'MODERATOR') && (
+                        <>
+                          {isAuthor && <div className="border-t border-gray-200 my-1" />}
+                          <button
+                            onClick={(e) => {
+                              handlePinToggle(e)
+                              setShowMenu(false)
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-green-50 text-green-600 flex items-center gap-2"
+                          >
+                            <Pin className="w-4 h-4" />
+                            {isPinned ? 'Unpin Post' : 'Pin Post'}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              handleLockToggle(e)
+                              setShowMenu(false)
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm hover:bg-amber-50 text-amber-600 flex items-center gap-2"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            {isLocked ? 'Unlock Post' : 'Lock Post'}
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -677,7 +780,7 @@ export function PostCard({
                 <svg className="w-4 h-4" fill={isSaved ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
-                <span>{isSaved ? 'Saved' : 'Save'}</span>
+                <span>{showUnsaveText ? 'Unsave' : (isSaved ? 'Saved' : 'Save')}</span>
               </button>
               <button
                 onClick={handleHide}

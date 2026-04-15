@@ -807,3 +807,116 @@ router.get('/debug/conversation/:id', async (req, res) => {
 });
 
 export { router as appointmentRouter };
+
+
+// PUT /api/v1/appointments/:id/reschedule - Reschedule appointment
+router.put('/:id/reschedule', authenticate, async (req, res, next) => {
+  try {
+    const { startTime, endTime, reason } = req.body;
+    const appointmentId = req.params.id;
+    const userId = (req as any).userId;
+
+    if (!startTime || !endTime) {
+      return res.status(400).json({ error: 'Start time and end time are required' });
+    }
+
+    // Get appointment
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId }
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+
+    // Check if user is the patient
+    if (appointment.patientId !== userId) {
+      return res.status(403).json({ error: 'Only the patient can reschedule' });
+    }
+
+    // Update appointment
+    const updated = await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        status: 'PENDING', // Requires doctor re-approval
+        rescheduleReason: reason || null
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            username: true,
+            email: true
+          }
+        },
+        doctor: {
+          select: {
+            id: true,
+            username: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/appointments/:id/cancel - Cancel appointment
+router.post('/:id/cancel', authenticate, async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    const appointmentId = req.params.id;
+    const userId = (req as any).userId;
+
+    // Get appointment
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: appointmentId }
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+
+    // Check if user is patient or doctor
+    if (appointment.patientId !== userId && appointment.doctorId !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Update appointment
+    const updated = await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        status: 'CANCELLED',
+        cancellationReason: reason || null
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            username: true,
+            email: true
+          }
+        },
+        doctor: {
+          select: {
+            id: true,
+            username: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;

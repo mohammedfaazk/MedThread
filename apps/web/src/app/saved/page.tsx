@@ -35,28 +35,47 @@ export default function SavedPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchSavedPosts = async () => {
-      if (!user) {
-        setLoading(false)
-        return
-      }
-
-      try {
-        const token = localStorage.getItem('auth_token')
-        const response = await axios.get(`${API_URL}/api/v1/posts/saved`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setPosts(response.data)
-      } catch (error) {
-        console.error('Failed to fetch saved posts:', error)
-      } finally {
-        setLoading(false)
-      }
+  const fetchSavedPosts = async () => {
+    if (!user) {
+      setLoading(false)
+      return
     }
 
+    try {
+      const token = localStorage.getItem('auth_token')
+      const response = await axios.get(`${API_URL}/api/v1/posts/saved`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setPosts(response.data)
+    } catch (error) {
+      console.error('Failed to fetch saved posts:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchSavedPosts()
   }, [user])
+
+  const handleUnsave = async (postId: string) => {
+    // Optimistically remove from UI
+    setPosts(prev => prev.filter(p => p.id !== postId))
+    
+    // Call API to unsave
+    try {
+      const token = localStorage.getItem('auth_token')
+      await axios.post(
+        `${API_URL}/api/v1/posts/${postId}/save`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+    } catch (error) {
+      console.error('Failed to unsave post:', error)
+      // Refetch on error to restore correct state
+      fetchSavedPosts()
+    }
+  }
 
   const getTimeAgo = (date: string): string => {
     const now = new Date()
@@ -133,6 +152,8 @@ export default function SavedPage() {
                       userVote={post.userVote === 1 ? 1 : post.userVote === -1 ? -1 : null}
                       isSaved={true}
                       editedAt={post.editedAt}
+                      onUnsave={() => handleUnsave(post.id)}
+                      showUnsaveText={true}
                     />
                   ))
                 ) : (

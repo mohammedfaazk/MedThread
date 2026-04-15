@@ -185,7 +185,7 @@
 .doctor-specialty {
   font-size: 14px;
   font-weight: 600;
-  color: #669ae3;
+  color: #1e40af;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 0 0 20px 0;
@@ -228,7 +228,7 @@
 .hover-hint {
   font-size: 11px;
   font-weight: 600;
-  color: rgba(102, 154, 227, 0.6);
+  color: #374151;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   animation: pulse 2s ease-in-out infinite;

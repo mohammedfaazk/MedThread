@@ -72,7 +72,10 @@ export default function ChatList({
       const data = await response.json();
       setConversations(data.data);
     } catch (err: any) {
-      setError(err.message);
+      setConversations([]);
+      // Handle both Error objects and API error responses
+      const errorMessage = err?.message || err?.error?.message || 'Failed to load conversations';
+      setError(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
     } finally {
       setIsLoading(false);
     }

@@ -3,27 +3,15 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@medthread/ui', '@medthread/types', 'lucide-react'],
   experimental: {
-    optimizePackageImports: ['@medthread/ui', 'lucide-react']
+    optimizePackageImports: ['@medthread/ui', 'lucide-react'],
   },
-  // Webpack optimizations to prevent chunk loading errors
-  webpack: (config, { dev, isServer }) => {
-    if (dev && !isServer) {
-      // Improve chunk loading reliability in development
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          ...config.optimization.splitChunks,
-          cacheGroups: {
-            ...config.optimization.splitChunks?.cacheGroups,
-            default: {
-              minChunks: 2,
-              priority: -20,
-              reuseExistingChunk: true,
-            },
-          },
-        },
-      };
-    }
+  // Performance optimizations
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // Webpack optimizations - keep it simple for stability
+  webpack: (config) => {
     return config;
   },
   // PWA Configuration

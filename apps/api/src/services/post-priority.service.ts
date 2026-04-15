@@ -153,9 +153,9 @@ export class PostPriorityService {
 
     // 6. Priority thresholds (chip-based scoring is additive so thresholds are higher)
     let priorityLevel: 'HIGH' | 'MEDIUM' | 'LOW';
-    if (urgencyScore >= 15 || detectedSymptoms.some(s => s.category === 'HIGH')) {
+    if (urgencyScore >= 25 || detectedSymptoms.some(s => s.category === 'HIGH')) {
       priorityLevel = 'HIGH';
-    } else if (urgencyScore >= 6) {
+    } else if (urgencyScore >= 10) {
       priorityLevel = 'MEDIUM';
     } else {
       priorityLevel = 'LOW';
@@ -297,13 +297,17 @@ Respond with ONLY valid JSON, no markdown:
     const { page = 1, limit = 20, priorityFilter = 'ALL', communityId } = options;
     const skip = (page - 1) * limit;
 
-    const where: any = { author: { role: 'PATIENT' } };
+    const where: any = { 
+      author: { role: 'PATIENT' }
+    };
     if (communityId) where.communityId = communityId;
     
-    // Add priority filter to where clause
+    // Add priority filter to where clause - must check if priority exists first
     if (priorityFilter !== 'ALL') {
       where.priority = {
-        priorityLevel: priorityFilter
+        is: {
+          priorityLevel: priorityFilter
+        }
       };
     }
 
