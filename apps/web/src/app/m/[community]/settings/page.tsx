@@ -170,7 +170,7 @@ export default function CommunitySettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen">
         <NavbarEnhanced />
         <div className="flex max-w-[1400px] mx-auto">
           <Sidebar />
@@ -190,7 +190,7 @@ export default function CommunitySettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       <NavbarEnhanced />
       <div className="flex max-w-[1400px] mx-auto">
         <Sidebar />

@@ -150,11 +150,17 @@ authRouter.post('/verify-password', async (req, res) => {
     console.log('\n🔐 PASSWORD VERIFICATION REQUEST');
     console.log('═'.repeat(50));
     
-    // Development bypass option
-    if (process.env.BYPASS_CHAT_PASSWORD === 'true') {
+    // Development bypass option (NEVER allow in production)
+    if (process.env.NODE_ENV === 'development' && process.env.BYPASS_CHAT_PASSWORD === 'true') {
       console.log('⚠️  DEVELOPMENT MODE: Password verification bypassed');
       console.log('═'.repeat(50));
       return res.json({ success: true, message: 'Password verification bypassed (dev mode)' });
+    }
+    
+    // Explicitly block bypass in production
+    if (process.env.NODE_ENV === 'production' && process.env.BYPASS_CHAT_PASSWORD === 'true') {
+      console.error('🚨 SECURITY ALERT: Attempted to bypass password verification in production!');
+      return res.status(403).json({ success: false, error: 'Invalid configuration' });
     }
     
     const token = req.headers.authorization?.split(' ')[1];

@@ -14,7 +14,7 @@ export default function AdminAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<any>({});
-  const [period, setPeriod] = useState('today');
+  const [period, setPeriod] = useState('online'); // Changed from 'today' to 'online' for session-based tracking
   const [liveUpdateCount, setLiveUpdateCount] = useState(0);
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type: AnalyticsEvent['type'] }>>([]);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -210,7 +210,7 @@ export default function AdminAnalyticsPage() {
           <div>
             <h1 className="dashboard-title">Admin Analytics Dashboard</h1>
             <div className="flex items-center gap-3 mt-2">
-              <LiveIndicator isConnected={isConnected} />
+              <LiveIndicator isLive={isConnected} />
               {liveUpdateCount > 0 && (
                 <span className="text-xs px-2 py-1 rounded-full" style={{ 
                   background: 'rgba(102, 154, 227, 0.1)', 

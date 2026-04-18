@@ -403,6 +403,11 @@ export class CronJobsService {
       await this.calculateCommunityActivity();
     });
 
+    // Cleanup old sessions daily at 4 AM
+    cron.schedule('0 4 * * *', async () => {
+      await this.cleanupOldSessions();
+    });
+
     console.log('[CRON] All cron jobs initialized');
   }
 
@@ -508,6 +513,20 @@ export class CronJobsService {
       console.log(`[CRON] Cleaned up ${result.deletedCount} old backups`);
     } catch (error) {
       console.error('[CRON] Error cleaning up backups:', error);
+    }
+  }
+  /**
+   * Cleanup old sessions
+   */
+  async cleanupOldSessions() {
+    console.log('[CRON] Cleaning up old sessions...');
+    
+    try {
+      const { authService } = require('./auth.service');
+      const count = await authService.cleanupOldSessions();
+      console.log(`[CRON] Cleaned up ${count} old sessions`);
+    } catch (error) {
+      console.error('[CRON] Error cleaning up sessions:', error);
     }
   }
 }

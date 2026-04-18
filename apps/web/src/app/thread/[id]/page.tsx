@@ -7,7 +7,7 @@ import { ReplyList } from '@/components/ReplyList'
 
 export default function ThreadPage({ params }: { params: { id: string } }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Header />
       <main className="max-w-5xl mx-auto px-4 py-8">
         <ThreadDetail threadId={params.id} />

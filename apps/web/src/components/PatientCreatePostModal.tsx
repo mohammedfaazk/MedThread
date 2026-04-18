@@ -172,16 +172,16 @@ export function PatientCreatePostModal({ isOpen, onClose }: PatientCreatePostMod
   const stepLabel = ['Basic Info', 'Symptoms', 'Description']
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-elevated border border-white/20">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-hidden shadow-2xl">
 
         {/* Header */}
-        <div className="border-b border-gray-200/50 p-4 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md">
+        <div className="border-b border-gray-100 p-5 flex items-center justify-between bg-gradient-to-r from-cyan-50 to-blue-50">
           <div>
-            <h2 className="text-lg font-semibold text-charcoal">Ask a Question</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Step {step} of 3 — {stepLabel[step - 1]}</p>
+            <h2 className="text-xl font-bold text-gray-900">Ask a Question</h2>
+            <p className="text-sm text-gray-600 mt-1">Step {step} of 3 — {stepLabel[step - 1]}</p>
           </div>
-          <button onClick={handleClose} className="text-gray-500 hover:text-charcoal transition">
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition p-2 hover:bg-white/50 rounded-full">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -189,27 +189,27 @@ export function PatientCreatePostModal({ isOpen, onClose }: PatientCreatePostMod
         </div>
 
         {/* Progress bar */}
-        <div className="flex gap-1 px-4 pt-3">
+        <div className="flex gap-2 px-5 pt-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className={`flex-1 h-1.5 rounded-full transition-all ${i <= step ? 'bg-cyan-500' : 'bg-gray-200'}`} />
+            <div key={i} className={`flex-1 h-2 rounded-full transition-all ${i <= step ? 'bg-gradient-to-r from-cyan-500 to-blue-500' : 'bg-gray-200'}`} />
           ))}
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-5 space-y-5 overflow-y-auto max-h-[calc(90vh-140px)]">
 
           {/* ── STEP 1: Basic Info ── */}
           {step === 1 && (
             <>
               {/* Community */}
               <div>
-                <label className="block text-sm font-medium mb-1 text-charcoal">Community</label>
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Community</label>
                 {isLoadingCommunities ? (
-                  <div className="w-full px-3 py-2 border border-gray-200 rounded-xl text-gray-400 text-sm">Loading…</div>
+                  <div className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-400 text-sm bg-gray-50">Loading…</div>
                 ) : (
                   <select
                     value={communityId}
                     onChange={e => setCommunityId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm font-medium transition-all"
                   >
                     {communities.map(c => (
                       <option key={c.id} value={c.id}>m/{c.name} — {c.displayName}</option>
@@ -218,17 +218,17 @@ export function PatientCreatePostModal({ isOpen, onClose }: PatientCreatePostMod
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-charcoal">Age</label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-900">Age</label>
                   <input type="number" value={age} onChange={e => setAge(e.target.value)}
                     placeholder="e.g. 28"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm" />
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-charcoal">Gender</label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-900">Gender</label>
                   <select value={gender} onChange={e => setGender(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm">
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm font-medium transition-all">
                     <option value="">Select</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -236,21 +236,21 @@ export function PatientCreatePostModal({ isOpen, onClose }: PatientCreatePostMod
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-charcoal">Weight (kg)</label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-900">Weight (kg)</label>
                   <input type="number" value={weight} onChange={e => setWeight(e.target.value)}
                     placeholder="e.g. 65"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm" />
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-charcoal">Height (cm)</label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-900">Height (cm)</label>
                   <input type="number" value={height} onChange={e => setHeight(e.target.value)}
                     placeholder="e.g. 170"
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm" />
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm transition-all" />
                 </div>
               </div>
 
               <button onClick={() => setStep(2)}
-                className="w-full py-2.5 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 transition shadow-sm">
+                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold hover:from-cyan-600 hover:to-blue-600 transition-all shadow-lg shadow-cyan-500/30 text-base">
                 Continue →
               </button>
             </>
@@ -260,14 +260,14 @@ export function PatientCreatePostModal({ isOpen, onClose }: PatientCreatePostMod
           {step === 2 && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-2 text-charcoal">Select your symptoms</label>
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Select your symptoms</label>
                 <div className="flex flex-wrap gap-2">
                   {COMMON_SYMPTOMS.map(s => (
                     <button key={s} type="button" onClick={() => toggleSymptom(s)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+                      className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                         selectedSymptoms.includes(s)
-                          ? 'bg-cyan-500 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/30'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-transparent hover:border-gray-300'
                       }`}>
                       {s}
                     </button>
@@ -276,36 +276,36 @@ export function PatientCreatePostModal({ isOpen, onClose }: PatientCreatePostMod
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-charcoal">Duration</label>
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Duration</label>
                 <select value={duration} onChange={e => setDuration(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm">
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm font-medium transition-all">
                   <option value="">Select duration</option>
                   {DURATION_OPTIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-charcoal">Existing conditions (optional)</label>
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Existing conditions (optional)</label>
                 <input type="text" value={existingConditions} onChange={e => setExistingConditions(e.target.value)}
                   placeholder="e.g. Diabetes, Hypertension"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm" />
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm transition-all" />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-charcoal">Current medications (optional)</label>
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Current medications (optional)</label>
                 <input type="text" value={medications} onChange={e => setMedications(e.target.value)}
                   placeholder="e.g. Metformin, Aspirin"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm" />
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm transition-all" />
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-2">
                 <button onClick={() => setStep(1)}
-                  className="flex-1 py-2.5 border-2 border-gray-200 rounded-full font-semibold text-gray-700 hover:bg-gray-50 transition text-sm">
+                  className="flex-1 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-all text-base">
                   ← Back
                 </button>
                 <button onClick={() => setStep(3)}
                   disabled={selectedSymptoms.length === 0}
-                  className="flex-1 py-2.5 bg-cyan-500 text-white rounded-full font-semibold hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm text-sm">
+                  className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-semibold hover:from-cyan-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-cyan-500/30 text-base">
                   Continue →
                 </button>
               </div>
@@ -316,34 +316,36 @@ export function PatientCreatePostModal({ isOpen, onClose }: PatientCreatePostMod
           {step === 3 && (
             <>
               <div>
-                <label className="block text-sm font-medium mb-1 text-charcoal">Post title <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Post title <span className="text-red-500">*</span></label>
                 <input type="text" value={title} onChange={e => setTitle(e.target.value)}
                   maxLength={300}
                   placeholder="Briefly describe your concern…"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 bg-white/50 text-sm" />
-                <div className="text-xs text-gray-400 mt-0.5 text-right">{title.length}/300</div>
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 bg-white text-sm transition-all" />
+                <div className="text-xs text-gray-500 mt-1 text-right font-medium">{title.length}/300</div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-charcoal">Describe in detail (optional)</label>
+                <label className="block text-sm font-semibold mb-2 text-gray-900">Describe in detail (optional)</label>
                 <textarea value={description} onChange={e => setDescription(e.target.value)}
                   rows={5} placeholder="Provide as much detail as possible — when it started, what makes it better or worse, any other relevant info…"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-cyan-400 resize-none bg-white/50 text-sm" />
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 resize-none bg-white text-sm transition-all" />
               </div>
 
               {/* Privacy toggle */}
-              <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)}
-                    className="w-4 h-4 rounded mt-0.5 accent-blue-600" />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-blue-900">Private Post</span>
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">
+                    className="w-5 h-5 rounded mt-0.5 accent-blue-600 cursor-pointer" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-bold text-blue-900">Private Post</span>
+                      <span className={`px-2.5 py-0.5 text-xs rounded-full font-bold ${
+                        isPrivate ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                      }`}>
                         {isPrivate ? 'PRIVATE' : 'PUBLIC'}
                       </span>
                     </div>
-                    <p className="text-xs text-blue-700 mt-0.5">
+                    <p className="text-xs text-blue-800 leading-relaxed">
                       {isPrivate
                         ? 'Only you and verified doctors can see this post.'
                         : 'Everyone can see this post and all doctor replies.'}
@@ -352,14 +354,14 @@ export function PatientCreatePostModal({ isOpen, onClose }: PatientCreatePostMod
                 </label>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-3 pt-2">
                 <button onClick={() => setStep(2)}
-                  className="flex-1 py-2.5 border-2 border-gray-200 rounded-full font-semibold text-gray-700 hover:bg-gray-50 transition text-sm">
+                  className="flex-1 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-all text-base">
                   ← Back
                 </button>
                 <button onClick={handleSubmit}
                   disabled={!title.trim() || isSubmitting || !communityId}
-                  className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-charcoal-light disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm text-sm">
+                  className="flex-1 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-xl font-semibold hover:from-gray-900 hover:to-black disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg text-base">
                   {isSubmitting ? 'Posting…' : 'Post Question'}
                 </button>
               </div>

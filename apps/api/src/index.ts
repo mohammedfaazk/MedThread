@@ -98,6 +98,8 @@ import notificationEnhancedRoutes from './routes/notification.routes';
 import spamDetectionRoutes from './routes/spam-detection.routes';
 import cacheRoutes from './routes/cache.routes';
 import diseaseTrendsRouter from './routes/disease-trends.routes';
+import { trendsRouter } from './routes/trends.routes';
+import pingRouter from './routes/ping.routes';
 
 import { performanceMonitorService } from './services/performance-monitor.service';
 import {
@@ -119,8 +121,16 @@ const PORT = process.env.PORT || 3001;
 // Socket.io Setup
 const io = new Server(httpServer, {
   cors: {
-    origin: "*", // allow all for now, restrict in production
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: process.env.NODE_ENV === 'production' 
+      ? [process.env.CORS_ORIGIN || 'https://medthread.com'] 
+      : [
+          'http://localhost:3000',
+          'http://localhost:3003',
+          'http://127.0.0.1:3000',
+          'http://127.0.0.1:3003'
+        ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
   }
 });
 
@@ -215,9 +225,12 @@ app.get('/api/csrf-token', getCsrfToken);
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Update user activity on any authenticated request (optional - doesn't require auth)
+import { updateUserActivity } from './middleware/updateActivity';
+app.use('/api', updateUserActivity);
+
 // Routes
 app.use('/api/auth', authRouter);
-app.use('/api/v1/auth', authRouter); // Add v1 alias for consistency
 app.use('/api/upload', uploadRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/reports', reportRouter);
@@ -258,7 +271,6 @@ app.use('/api/file-upload', fileUploadRouter);
 app.use('/api/v1/posts', postsRouterV2);
 app.use('/api/v1/comments', commentsRouter);
 app.use('/api/v1/communities', communitiesRouter);
-app.use('/api/communities', communitiesRouter); // Add non-v1 alias for consistency
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/karma', karmaRouter);
 app.use('/api/v1/awards', awardsRouter);
@@ -339,6 +351,8 @@ app.use('/api/v1/notifications-enhanced', notificationEnhancedRoutes);
 app.use('/api/v1/spam-detection', spamDetectionRoutes);
 app.use('/api/v1/cache', cacheRoutes);
 app.use('/api/v1/disease-trends', diseaseTrendsRouter);
+app.use('/api/v1/trends', trendsRouter);
+app.use('/api/ping', pingRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

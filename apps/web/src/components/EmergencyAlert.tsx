@@ -20,7 +20,7 @@ export function EmergencyAlert({
 }: EmergencyAlertProps) {
   const [userConfirmed, setUserConfirmed] = useState(false);
 
-  const hotlines = {
+  const hotlines: Record<string, { emergency: string; mental: string; ambulance?: string }> = {
     INDIA: { emergency: '112', mental: '9152987821', ambulance: '102' },
     US: { emergency: '911', mental: '988' },
     UK: { emergency: '999', mental: '116123' }

@@ -29,6 +29,9 @@ export default function MedicationList({
 }: MedicationListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Safety check: ensure medications is an array
+  const medicationsList = Array.isArray(medications) ? medications : [];
+
   const getFrequencyDisplay = (frequency: string) => {
     const map: Record<string, string> = {
       'ONCE_DAILY': 'Once daily',
@@ -41,7 +44,7 @@ export default function MedicationList({
     return map[frequency] || frequency;
   };
 
-  if (medications.length === 0) {
+  if (medicationsList.length === 0) {
     return (
       <div className="text-center py-12 bg-white rounded-lg shadow">
         <div className="text-6xl mb-4">💊</div>
@@ -53,7 +56,7 @@ export default function MedicationList({
 
   return (
     <div className="space-y-4">
-      {medications.map((med) => (
+      {medicationsList.map((med) => (
         <div
           key={med.id}
           className="bg-white rounded-lg shadow hover:shadow-md transition"

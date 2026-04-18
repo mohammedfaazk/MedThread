@@ -51,7 +51,7 @@ export default function AlertsHistoryPage() {
       });
     } else {
       navigator.clipboard.writeText(text);
-      alert('Alert details copied to clipboard!');
+      window.alert('Alert details copied to clipboard!');
     }
   };
 
@@ -59,7 +59,7 @@ export default function AlertsHistoryPage() {
     try {
       const token = localStorage.getItem('auth_token');
       if (!token) {
-        alert('Please login to acknowledge alerts');
+        window.alert('Please login to acknowledge alerts');
         return;
       }
 
@@ -69,7 +69,7 @@ export default function AlertsHistoryPage() {
       });
 
       if (response.ok) {
-        alert('Alert marked as read');
+        window.alert('Alert marked as read');
       }
     } catch (error) {
       console.error('Error acknowledging alert:', error);

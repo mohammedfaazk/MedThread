@@ -1,6 +1,6 @@
 'use client';
 
-import { SmartDoctorFinder } from '@/components/unique/SmartDoctorFinder';
+import SmartDoctorFinder from '@/components/unique/SmartDoctorFinder';
 
 export default function FindDoctorPage() {
   return (

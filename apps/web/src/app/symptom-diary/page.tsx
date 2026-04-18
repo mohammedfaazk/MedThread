@@ -21,6 +21,8 @@ export default function SymptomDiaryPage() {
 
   const fetchEntries = async () => {
     try {
+      if (!user?.id) return;
+      
       const params = new URLSearchParams();
       if (filter !== 'all') {
         params.append('isResolved', filter === 'resolved' ? 'true' : 'false');
@@ -38,6 +40,8 @@ export default function SymptomDiaryPage() {
 
   const fetchStats = async () => {
     try {
+      if (!user?.id) return;
+      
       const response = await fetch(`/api/v1/symptom-diary/statistics/${user.id}`);
       const data = await response.json();
       setStats(data.statistics);
@@ -81,7 +85,7 @@ export default function SymptomDiaryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">

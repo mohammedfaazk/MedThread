@@ -125,16 +125,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
-      {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
-      <div className="fixed inset-0 -z-10">
-        <Iridescence 
-          color={iridescenceColor} 
-          mouseReact 
-          amplitude={0.1} 
-          speed={0.8} 
-        />
-      </div>
-
       <div className="bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg hover:shadow-xl transition-all p-8 w-full max-w-md border border-white/20">
         <div className="text-center mb-8">
           <BlurText text="Welcome Back" className="text-3xl font-bold text-gray-900 mb-2" />

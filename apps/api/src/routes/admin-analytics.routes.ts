@@ -10,45 +10,117 @@ router.use(authenticate);
 router.use(requireAdmin);
 
 // ============================================
-// 1. ACTIVE USERS (Real-time / Daily)
+// 1. ACTIVE USERS (Currently Online - Based on Active Sessions + Recent Activity)
 // ============================================
 router.get('/active-users', async (req, res) => {
   try {
-    const { period = 'today' } = req.query;
+    const { period = 'online' } = req.query;
     
-    let startDate = new Date();
-    if (period === 'today') {
-      startDate.setHours(0, 0, 0, 0);
-    } else if (period === '7days') {
-      startDate.setDate(startDate.getDate() - 7);
-    } else if (period === '30days') {
-      startDate.setDate(startDate.getDate() - 30);
+    let description = '';
+    let activeDoctors = 0;
+    let activePatients = 0;
+    
+    if (period === 'online') {
+      // Currently online: users with active sessions OR recent activity (last 5 min)
+      description = 'Currently online (active sessions + recent activity)';
+      
+      // Method 1: Count active sessions by role
+      const activeSessions = await prisma.userSession.findMany({
+        where: {
+          endTime: null, // Active sessions only
+          userId: { not: null }
+        },
+        include: {
+          User: {
+            select: {
+              id: true,
+              role: true
+            }
+          }
+        }
+      });
+
+      // Get unique users from sessions
+      const sessionUserIds = new Set<string>();
+      activeSessions.forEach(session => {
+        if (session.userId && session.User) {
+          sessionUserIds.add(session.userId);
+          if (session.User.role === 'DOCTOR') activeDoctors++;
+          else if (session.User.role === 'PATIENT') activePatients++;
+        }
+      });
+
+      // Method 2: Also count users with recent activity (last 5 min) who don't have sessions
+      // This handles users who logged in before session tracking was implemented
+      const fiveMinutesAgo = new Date();
+      fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+
+      const recentlyActiveUsers = await prisma.user.findMany({
+        where: {
+          updatedAt: { gte: fiveMinutesAgo },
+          id: { notIn: Array.from(sessionUserIds) } // Exclude users already counted from sessions
+        },
+        select: {
+          id: true,
+          role: true
+        }
+      });
+
+      // Add recently active users to the count
+      recentlyActiveUsers.forEach(user => {
+        if (user.role === 'DOCTOR') activeDoctors++;
+        else if (user.role === 'PATIENT') activePatients++;
+      });
+
+      console.log(`👥 Active Sessions: ${activeSessions.length} sessions, ${sessionUserIds.size} unique users`);
+      console.log(`👥 Recently Active (no session): ${recentlyActiveUsers.length} users`);
+      
+    } else {
+      // For other periods, use updatedAt as before
+      let startDate = new Date();
+      
+      if (period === 'today') {
+        startDate.setHours(0, 0, 0, 0);
+        description = 'Active today';
+      } else if (period === '7days') {
+        startDate.setDate(startDate.getDate() - 7);
+        description = 'Active in last 7 days';
+      } else if (period === '30days') {
+        startDate.setDate(startDate.getDate() - 30);
+        description = 'Active in last 30 days';
+      }
+
+      activeDoctors = await prisma.user.count({
+        where: {
+          role: 'DOCTOR',
+          updatedAt: { gte: startDate }
+        }
+      });
+
+      activePatients = await prisma.user.count({
+        where: {
+          role: 'PATIENT',
+          updatedAt: { gte: startDate }
+        }
+      });
     }
 
-    const activeDoctors = await prisma.user.count({
-      where: {
-        role: 'DOCTOR',
-        updatedAt: { gte: startDate }
-      }
-    });
+    const total = activeDoctors + activePatients;
 
-    const activePatients = await prisma.user.count({
-      where: {
-        role: 'PATIENT',
-        updatedAt: { gte: startDate }
-      }
-    });
+    console.log(`👥 Active Users (${period}): ${total} (${activeDoctors} doctors, ${activePatients} patients)`);
 
     res.json({
       success: true,
       data: {
         doctors: activeDoctors,
         patients: activePatients,
-        total: activeDoctors + activePatients,
-        period
+        total,
+        period,
+        description
       }
     });
   } catch (error: any) {
+    console.error('Error fetching active users:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -58,19 +130,19 @@ router.get('/active-users', async (req, res) => {
 // ============================================
 router.get('/offline-users', async (req, res) => {
   try {
-    const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
     const offlineDoctors = await prisma.user.count({
       where: {
         role: 'DOCTOR',
-        updatedAt: { lt: fifteenMinutesAgo }
+        updatedAt: { lt: fiveMinutesAgo }
       }
     });
 
     const offlinePatients = await prisma.user.count({
       where: {
         role: 'PATIENT',
-        updatedAt: { lt: fifteenMinutesAgo }
+        updatedAt: { lt: fiveMinutesAgo }
       }
     });
 
@@ -89,7 +161,7 @@ router.get('/offline-users', async (req, res) => {
 
 
 // ============================================
-// 3. USER ACTIVITY BY TIME OF DAY
+// 3. USER ACTIVITY BY TIME OF DAY (REAL LOGIN DATA)
 // ============================================
 router.get('/user-activity-time', async (req, res) => {
   try {
@@ -97,49 +169,87 @@ router.get('/user-activity-time', async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - Number(days));
 
-    // Get all user analytics with recent activity
-    const userAnalytics = await prisma.userAnalytics.findMany({
+    // Get all LOGIN activity logs from the past X days
+    const activityLogs = await prisma.userActivityLog.findMany({
       where: {
-        lastActive: { gte: startDate }
+        activityType: 'LOGIN',
+        createdAt: { gte: startDate }
       },
       include: {
-        User: {
+        user: {
           select: {
-            role: true
+            role: true,
+            username: true
           }
         }
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
 
+    console.log(`📊 Found ${activityLogs.length} login activities in the last ${days} days`);
+
     // Group by hour of day
-    const hourlyData: { [key: number]: { doctors: number; patients: number } } = {};
+    const hourlyData: { [key: number]: { doctors: number; patients: number; logins: any[] } } = {};
     
     // Initialize all hours
     for (let i = 0; i < 24; i++) {
-      hourlyData[i] = { doctors: 0, patients: 0 };
+      hourlyData[i] = { doctors: 0, patients: 0, logins: [] };
     }
 
-    // Count users by hour
-    userAnalytics.forEach(analytics => {
-      if (analytics.lastActive) {
-        const hour = new Date(analytics.lastActive).getHours();
-        if (analytics.User.role === 'DOCTOR') {
-          hourlyData[hour].doctors++;
-        } else if (analytics.User.role === 'PATIENT') {
-          hourlyData[hour].patients++;
-        }
+    // Count logins by hour
+    activityLogs.forEach(log => {
+      const hour = new Date(log.createdAt).getHours();
+      
+      if (log.user.role === 'DOCTOR') {
+        hourlyData[hour].doctors++;
+      } else if (log.user.role === 'PATIENT') {
+        hourlyData[hour].patients++;
       }
+      
+      // Store login details for debugging
+      hourlyData[hour].logins.push({
+        username: log.user.username,
+        role: log.user.role,
+        time: log.createdAt
+      });
     });
 
     // Format for chart
-    const data = Object.keys(hourlyData).map(hour => ({
-      hour: `${hour}:00`,
-      doctors: hourlyData[Number(hour)].doctors,
-      patients: hourlyData[Number(hour)].patients,
-      total: hourlyData[Number(hour)].doctors + hourlyData[Number(hour)].patients
-    }));
+    const data = Object.keys(hourlyData).map(hour => {
+      const hourNum = Number(hour);
+      const hourData = hourlyData[hourNum];
+      
+      return {
+        hour: `${hour.padStart(2, '0')}:00`,
+        doctors: hourData.doctors,
+        patients: hourData.patients,
+        total: hourData.doctors + hourData.patients
+      };
+    });
 
-    res.json({ success: true, data });
+    // Log summary for debugging
+    const totalLogins = activityLogs.length;
+    const doctorLogins = activityLogs.filter(l => l.user.role === 'DOCTOR').length;
+    const patientLogins = activityLogs.filter(l => l.user.role === 'PATIENT').length;
+    
+    console.log(`📈 Activity Summary (last ${days} days):`);
+    console.log(`   Total Logins: ${totalLogins}`);
+    console.log(`   Doctor Logins: ${doctorLogins}`);
+    console.log(`   Patient Logins: ${patientLogins}`);
+    console.log(`   Peak Hour: ${data.reduce((max, curr) => curr.total > max.total ? curr : max, data[0]).hour}`);
+
+    res.json({ 
+      success: true, 
+      data,
+      summary: {
+        totalLogins,
+        doctorLogins,
+        patientLogins,
+        period: `${days} days`
+      }
+    });
   } catch (error: any) {
     console.error('Error fetching user activity time:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -527,61 +637,64 @@ router.get('/appointment-conversion', async (req, res) => {
 router.get('/moderation-activity', async (req, res) => {
   try {
     const { weeks = 12 } = req.query;
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - (Number(weeks) * 7));
+    const weeksNum = Number(weeks);
+    
+    // Generate data for each week
+    const chartData = [];
+    
+    for (let weekOffset = weeksNum - 1; weekOffset >= 0; weekOffset--) {
+      const weekEnd = new Date();
+      weekEnd.setDate(weekEnd.getDate() - (weekOffset * 7));
+      weekEnd.setHours(23, 59, 59, 999);
+      
+      const weekStart = new Date(weekEnd);
+      weekStart.setDate(weekStart.getDate() - 6);
+      weekStart.setHours(0, 0, 0, 0);
 
-    // Get reports by week
-    const reports = await prisma.report.findMany({
-      where: {
-        createdAt: { gte: startDate }
-      },
-      select: {
-        status: true,
-        createdAt: true
-      }
-    });
+      // Get reports for this week
+      const reports = await prisma.report.findMany({
+        where: {
+          createdAt: {
+            gte: weekStart,
+            lte: weekEnd
+          }
+        },
+        select: {
+          status: true
+        }
+      });
 
-    // Group by week
-    const weeklyData: Record<string, { filed: number; resolved: number; dismissed: number }> = {};
+      const filed = reports.length;
+      const resolved = reports.filter(r => r.status === 'APPROVED').length;
+      const dismissed = reports.filter(r => r.status === 'REJECTED').length;
 
-    reports.forEach(report => {
-      const weekStart = new Date(report.createdAt);
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-      const weekKey = weekStart.toISOString().split('T')[0];
+      chartData.push({
+        week: `Week ${weeksNum - weekOffset}`,
+        filed,
+        resolved,
+        dismissed
+      });
+    }
 
-      if (!weeklyData[weekKey]) {
-        weeklyData[weekKey] = { filed: 0, resolved: 0, dismissed: 0 };
-      }
-
-      weeklyData[weekKey].filed++;
-      if (report.status === 'RESOLVED') weeklyData[weekKey].resolved++;
-      if (report.status === 'DISMISSED') weeklyData[weekKey].dismissed++;
-    });
-
-    const chartData = Object.entries(weeklyData)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([week, counts]) => ({
-        week,
-        filed: counts.filed,
-        resolved: counts.resolved,
-        dismissed: counts.dismissed
-      }));
-
-    // Calculate average resolution time
+    // Calculate average resolution time (estimate based on current time for resolved reports)
     const resolvedReports = await prisma.report.findMany({
       where: {
-        status: 'RESOLVED',
-        createdAt: { gte: startDate }
+        status: 'APPROVED',
+        createdAt: {
+          gte: new Date(Date.now() - weeksNum * 7 * 24 * 60 * 60 * 1000)
+        }
       },
       select: {
         createdAt: true
       }
     });
 
+    // Estimate resolution time as average time from creation to now
+    // In a real system, you'd track when the report was resolved
     const avgResolutionTime = resolvedReports.length > 0
       ? Math.round(
           resolvedReports.reduce((sum, r) => 
-            sum + (new Date().getTime() - r.createdAt.getTime()), 0
+            sum + (Date.now() - r.createdAt.getTime()), 0
           ) / resolvedReports.length / (1000 * 60 * 60) // Convert to hours
         )
       : 0;
@@ -592,6 +705,7 @@ router.get('/moderation-activity', async (req, res) => {
       avgResolutionTimeHours: avgResolutionTime
     });
   } catch (error: any) {
+    console.error('Error in moderation-activity:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

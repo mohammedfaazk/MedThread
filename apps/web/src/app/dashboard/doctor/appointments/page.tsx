@@ -102,7 +102,14 @@ export default function DoctorAppointmentsPage() {
         setFetching(true)
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            const res = await axios.get(`${API_URL}/api/appointments/appointments?userId=${effectiveUserId}&role=doctor`)
+            const token = localStorage.getItem('auth_token')
+            const res = await axios.get(`${API_URL}/api/appointments/appointments?userId=${effectiveUserId}&role=doctor`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            
+            console.log('[Doctor Appointments] Loaded appointments:', res.data)
             
             // Sort appointments by date (newest first)
             const sortedAppointments = res.data.sort((a: Appointment, b: Appointment) => 

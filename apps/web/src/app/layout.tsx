@@ -10,6 +10,13 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoadingProvider } from '@/contexts/LoadingContext';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { NavigationWrapper } from '@/components/NavigationWrapper';
+import { ActivityHeartbeat } from '@/components/ActivityHeartbeat';
+import dynamic from 'next/dynamic';
+
+// Dynamically import Iridescence to avoid SSR issues
+const Iridescence = dynamic(() => import('@/components/ui/Iridescence'), {
+  ssr: false,
+});
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -28,6 +35,9 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'MedThread'
+  },
+  other: {
+    'mobile-web-app-capable': 'yes'
   }
 };
 
@@ -45,10 +55,23 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={inter.className}>
+        {/* Global Iridescent Background - Blue to Purple Gradient */}
+        <div style={{ position: 'fixed', inset: 0, zIndex: -1 }}>
+          <Iridescence 
+            color={[0.4, 0.7, 0.9]} 
+            mouseReact 
+            amplitude={0.1} 
+            speed={0.8} 
+          />
+        </div>
+
         <ErrorBoundary>
           <LoadingProvider>
             <JWTAuthProvider>
               <AccessibilityProvider>
+                {/* Activity Heartbeat - keeps user active in analytics */}
+                <ActivityHeartbeat />
+                
                 <NavigationWrapper>
                   {/* Skip to main content link for screen readers */}
                   <a href="#main-content" className="skip-to-main">

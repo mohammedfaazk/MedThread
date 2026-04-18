@@ -8,7 +8,7 @@ import VoiceMessagePlayer from '@/components/features/VoiceMessagePlayer';
 import ImageAnnotation from '@/components/features/ImageAnnotation';
 import MessageTranslator from '@/components/features/MessageTranslator';
 import UrgentMessageFlag, { UrgentBadge } from '@/components/features/UrgentMessageFlag';
-import { EnhancedMessageInput } from '@/components/chat/EnhancedMessageInput';
+import { EnhancedMessageInput } from '@/components/Chat/EnhancedMessageInput';
 import { VoiceInput } from '@/components/VoiceInput';
 
 interface Message {

@@ -93,7 +93,13 @@ export default function DoctorDashboard() {
         setFetching(true)
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            const res = await axios.get(`${API_URL}/api/appointments/appointments?userId=${effectiveUserId}&role=doctor`)
+            const token = localStorage.getItem('auth_token')
+            const res = await axios.get(`${API_URL}/api/appointments/appointments?userId=${effectiveUserId}&role=doctor`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            console.log('[Doctor Dashboard] Loaded appointments:', res.data)
             setAppointments(res.data)
             
             // Calculate stats
@@ -109,9 +115,19 @@ export default function DoctorDashboard() {
     const loadAvailabilitySlots = async () => {
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            const res = await axios.get(`${API_URL}/api/appointments/doctors/${effectiveUserId}/availability`)
-            const userSlots = res.data.filter((slot: any) => !slot.id.startsWith('default-'))
-            setSlots(userSlots)
+            const token = localStorage.getItem('auth_token')
+            const res = await axios.get(`${API_URL}/api/appointments/doctors/${effectiveUserId}/availability`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            console.log('[Doctor Dashboard] Loaded availability slots:', res.data)
+            // Show all slots - don't filter out any
+            // Only filter out default slots if you want to show only custom ones
+            const allSlots = res.data || []
+            const customSlots = allSlots.filter((slot: any) => !slot.id.startsWith('default-'))
+            console.log('[Doctor Dashboard] Custom slots:', customSlots.length, 'Total slots:', allSlots.length)
+            setSlots(customSlots)
         } catch (error) {
             console.error('Failed to load availability slots:', error)
         }
@@ -204,6 +220,8 @@ export default function DoctorDashboard() {
         setAddingSlot(true)
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const token = localStorage.getItem('auth_token')
+            
             const slot = {
                 doctorId: effectiveUserId,
                 dayOfWeek: selectedDay,
@@ -211,14 +229,43 @@ export default function DoctorDashboard() {
                 endTime: `2024-01-01T${endTime}:00Z`
             }
 
-            const response = await axios.post(`${API_URL}/api/appointments/availability`, slot)
+            const response = await axios.post(`${API_URL}/api/appointments/availability`, slot, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
             setSlots([...slots, response.data])
             alert('Availability added successfully!')
+            loadAvailabilitySlots()
         } catch (error: any) {
             console.error('Failed to add availability:', error)
             alert(`Failed to add availability: ${error.response?.data?.error || error.message}`)
         } finally {
             setAddingSlot(false)
+        }
+    }
+
+    const deleteSlot = async (slotId: string) => {
+        if (!confirm('Are you sure you want to delete this availability slot?')) {
+            return
+        }
+
+        try {
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+            const token = localStorage.getItem('auth_token')
+            
+            await axios.delete(`${API_URL}/api/appointments/availability/${slotId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            
+            setSlots(slots.filter(slot => (slot as any).id !== slotId))
+            alert('Availability slot deleted successfully!')
+        } catch (error: any) {
+            console.error('Failed to delete availability:', error)
+            alert(`Failed to delete availability: ${error.response?.data?.error || error.message}`)
         }
     }
 
@@ -230,15 +277,6 @@ export default function DoctorDashboard() {
 
     return (
         <div className="min-h-screen relative">
-            {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
-            <div className="fixed inset-0 -z-10">
-                <Iridescence 
-                    color={[0.4, 0.7, 0.9]} 
-                    mouseReact 
-                    amplitude={0.1} 
-                    speed={0.8} 
-                />
-            </div>
             <NavbarEnhanced />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">
@@ -474,6 +512,7 @@ export default function DoctorDashboard() {
                                         </div>
                                         <div className="space-y-2">
                                             {slots.map((slot, idx) => {
+                                                const slotWithId = slot as any;
                                                 const startTimeStr = typeof slot.startTime === 'string' 
                                                     ? slot.startTime.slice(11, 16) 
                                                     : new Date(slot.startTime).toISOString().slice(11, 16);
@@ -482,7 +521,7 @@ export default function DoctorDashboard() {
                                                     : new Date(slot.endTime).toISOString().slice(11, 16);
                                                 
                                                 return (
-                                                    <div key={idx} className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                                    <div key={idx} className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100 group hover:bg-blue-100 transition">
                                                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                                         <span className="font-semibold text-gray-900 text-sm flex-1">
                                                             {DAYS[slot.dayOfWeek]}
@@ -490,6 +529,17 @@ export default function DoctorDashboard() {
                                                         <span className="text-sm text-gray-600">
                                                             {startTimeStr} - {endTimeStr}
                                                         </span>
+                                                        {slotWithId.id && (
+                                                            <button
+                                                                onClick={() => deleteSlot(slotWithId.id)}
+                                                                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded text-red-600"
+                                                                title="Delete slot"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 );
                                             })}

@@ -7,19 +7,27 @@ export interface AuthRequest extends Request {
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const token = req.headers.authorization?.split(' ')[1];
+  const authHeader = req.headers.authorization;
+  console.log('[AUTH] Authorization header:', authHeader ? 'Present' : 'Missing');
+  
+  const token = authHeader?.split(' ')[1];
   
   if (!token) {
+    console.log('[AUTH] No token found in request');
     return res.status(401).json({ error: 'Authentication required' });
   }
   
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+    const secret = process.env.JWT_SECRET || 'secret';
+    console.log('[AUTH] Verifying token with secret length:', secret.length);
+    const decoded = jwt.verify(token, secret) as any;
+    console.log('[AUTH] Token verified successfully for user:', decoded.userId);
     req.userId = decoded.userId;
     req.userRole = decoded.role;
     next();
-  } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+  } catch (error: any) {
+    console.log('[AUTH] Token verification failed:', error.message);
+    res.status(401).json({ error: 'Invalid token', details: error.message });
   }
 };
 

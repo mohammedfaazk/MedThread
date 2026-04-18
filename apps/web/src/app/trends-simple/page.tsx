@@ -1,8 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+interface SymptomData {
+  regionName: string;
+  symptomTag: string;
+  caseCount: number;
+}
+
 export default function TrendsSimplePage() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<SymptomData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 

@@ -5,6 +5,9 @@ import { Trophy, Target, Users, Calendar, Award, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useJWTAuth } from '@/context/JWTAuthContext';
 import PageLoader from '@/components/PageLoader';
+import { NavbarEnhanced } from '@/components/NavbarEnhanced';
+import { Sidebar } from '@/components/Sidebar';
+import IridescenceLayout from '@/components/IridescenceLayout';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -42,6 +45,13 @@ export default function HealthChallengesPage() {
   const fetchChallenges = async () => {
     try {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        console.log('No auth token found');
+        setChallenges([]);
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch(`${API_URL}/api/v1/health-challenges`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -55,6 +65,9 @@ export default function HealthChallengesPage() {
         } else {
           setChallenges([]);
         }
+      } else {
+        console.error('Failed to fetch challenges:', response.status);
+        setChallenges([]);
       }
     } catch (error) {
       console.error('Error fetching challenges:', error);
@@ -67,6 +80,11 @@ export default function HealthChallengesPage() {
   const fetchMyChallenges = async () => {
     try {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setMyChallenges([]);
+        return;
+      }
+
       const response = await fetch(`${API_URL}/api/v1/health-challenges/user/my-challenges`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -76,9 +94,12 @@ export default function HealthChallengesPage() {
       if (response.ok) {
         const data = await response.json();
         setMyChallenges(data.data || []);
+      } else {
+        setMyChallenges([]);
       }
     } catch (error) {
       console.error('Error fetching my challenges:', error);
+      setMyChallenges([]);
     }
   };
 
@@ -171,15 +192,17 @@ export default function HealthChallengesPage() {
   };
 
   const getDifficultyColor = (difficulty: string) => {
+    if (!difficulty) return 'bg-gray-100 text-gray-700';
     switch (difficulty.toLowerCase()) {
-      case 'beginner': return 'green';
-      case 'intermediate': return 'yellow';
-      case 'advanced': return 'red';
-      default: return 'gray';
+      case 'beginner': return 'bg-green-100 text-green-700';
+      case 'intermediate': return 'bg-yellow-100 text-yellow-700';
+      case 'advanced': return 'bg-red-100 text-red-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
   const getCategoryIcon = (category: string) => {
+    if (!category) return '🎯';
     switch (category.toLowerCase()) {
       case 'fitness': return '🏃';
       case 'nutrition': return '🥗';
@@ -191,31 +214,29 @@ export default function HealthChallengesPage() {
   };
 
   const getRiskBadge = (riskLevel: string) => {
+    if (!riskLevel) return 'bg-gray-100 text-gray-700 border-gray-300';
     return riskLevel === 'HIGH' 
       ? 'bg-red-100 text-red-700 border-red-300'
       : 'bg-green-100 text-green-700 border-green-300';
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading challenges...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader message="Loading challenges..." />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-8 mb-8 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <Trophy className="h-12 w-12" />
-              <div>
+    <IridescenceLayout>
+      <NavbarEnhanced />
+      <div className="max-w-[1440px] mx-auto flex">
+        <Sidebar />
+        
+        <main className="flex-1 p-8 overflow-y-auto">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg p-8 mb-8 text-white">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <Trophy className="h-12 w-12" />
+                <div>
                 <h1 className="text-3xl font-bold">Health Challenges</h1>
                 <p className="text-blue-100 mt-1">Join challenges, compete with others, and improve your health</p>
               </div>
@@ -277,13 +298,14 @@ export default function HealthChallengesPage() {
         {/* Challenges Grid */}
         {activeTab === 'all' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {challenges.map((challenge) => (
+            {challenges && challenges.length > 0 ? (
+              challenges.map((challenge) => (
               <div key={challenge.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition">
                 <div className="flex items-start justify-between mb-4">
                   <div className="text-3xl">{getCategoryIcon(challenge.category)}</div>
                   <div className="flex flex-col gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold bg-${getDifficultyColor(challenge.difficulty)}-100 text-${getDifficultyColor(challenge.difficulty)}-700`}>
-                      {challenge.difficulty}
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getDifficultyColor(challenge.difficulty)}`}>
+                      {challenge.difficulty || 'BEGINNER'}
                     </span>
                     {challenge.riskLevel && (
                       <span className={`px-3 py-1 text-xs font-semibold rounded-full border ${getRiskBadge(challenge.riskLevel)}`}>
@@ -361,7 +383,22 @@ export default function HealthChallengesPage() {
                   )
                 )}
               </div>
-            ))}
+            ))
+            ) : (
+              <div className="col-span-full text-center py-12 bg-white rounded-xl">
+                <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600">No challenges available yet</p>
+                {canCreateChallenge && (
+                  <Link
+                    href="/admin/health-challenges"
+                    className="mt-4 inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Create Challenge
+                  </Link>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -407,7 +444,8 @@ export default function HealthChallengesPage() {
             )}
           </div>
         )}
+        </main>
       </div>
-    </div>
+    </IridescenceLayout>
   );
 }

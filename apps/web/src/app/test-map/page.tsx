@@ -1,89 +1,79 @@
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useEffect, useState } from 'react';
 
 export default function TestMapPage() {
-  const [mapLoaded, setMapLoaded] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const testLeaflet = async () => {
-      try {
-        console.log('Testing Leaflet import...');
-        const L = await import('leaflet');
-        console.log('Leaflet imported successfully:', !!L);
-        
-        // Test if we can create a basic map
-        const mapDiv = document.createElement('div');
-        mapDiv.style.height = '200px';
-        mapDiv.style.width = '200px';
-        document.body.appendChild(mapDiv);
-        
-        const testMap = L.map(mapDiv, {
-          center: [20, 78],
-          zoom: 4
-        });
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(testMap);
-        
-        console.log('Test map created successfully');
-        setMapLoaded(true);
-        
-        // Clean up
-        setTimeout(() => {
-          testMap.remove();
-          document.body.removeChild(mapDiv);
-        }, 1000);
-        
-      } catch (err) {
-        console.error('Leaflet test failed:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      }
-    };
-
-    testLeaflet();
+    fetch('http://localhost:3001/api/v1/trends/geographic-data?disease=tuberculosis')
+      .then(res => res.json())
+      .then(result => {
+        setData(result);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        setLoading(false);
+      });
   }, []);
 
-  return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Map Test Page</h1>
-      
-      <div className="bg-white p-4 rounded border mb-4">
-        <h2 className="text-lg font-semibold mb-2">Leaflet Test Results</h2>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className={mapLoaded ? 'text-green-600' : 'text-gray-400'}>
-              {mapLoaded ? '✅' : '⏳'}
-            </span>
-            <span>Leaflet Map Creation</span>
-          </div>
-          
-          {error && (
-            <div className="text-red-600 text-sm">
-              Error: {error}
-            </div>
-          )}
-        </div>
+  if (loading) {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-4">Loading...</h1>
       </div>
+    );
+  }
 
-      <div className="bg-white p-4 rounded border">
-        <h2 className="text-lg font-semibold mb-2">API Test</h2>
-        <button 
-          onClick={async () => {
-            try {
-              const response = await fetch('http://localhost:3001/api/analytics/symptom-heatmap?region_type=state&days=30');
-              const data = await response.json();
-              console.log('API Response:', data);
-              alert(`API working! Got ${data.data?.length || 0} records`);
-            } catch (err) {
-              console.error('API test failed:', err);
-              alert('API test failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
-            }
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Test API
-        </button>
-      </div>
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4">API Test - Tuberculosis Data</h1>
+      
+      {data && data.success ? (
+        <div>
+          <p className="text-green-600 font-semibold mb-4">
+            ✅ API is working! Received {data.count} countries
+          </p>
+          
+          <div className="bg-white rounded-lg border p-4">
+            <h2 className="font-bold mb-2">Sample Data:</h2>
+            <pre className="text-xs overflow-auto">
+              {JSON.stringify(data.data.slice(0, 3), null, 2)}
+            </pre>
+          </div>
+
+          <div className="mt-4 p-4 bg-blue-50 rounded">
+            <h3 className="font-bold mb-2">Countries with data:</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {data.data.map((country: any) => (
+                <div key={country.country} className="text-sm">
+                  {country.country} - <span className={`font-bold ${
+                    country.riskLevel === 'critical' ? 'text-red-600' :
+                    country.riskLevel === 'high' ? 'text-orange-600' :
+                    country.riskLevel === 'medium' ? 'text-yellow-600' :
+                    'text-green-600'
+                  }`}>{country.riskLevel}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <a 
+              href="/trends" 
+              className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Go to Trends Page →
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div className="text-red-600">
+          ❌ API Error: {JSON.stringify(data)}
+        </div>
+      )}
     </div>
   );
 }

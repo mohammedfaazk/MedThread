@@ -43,13 +43,14 @@ export function MobileNav() {
   ]
 
   return (
-    <motion.nav 
-      initial={{ y: 100 }}
-      animate={{ y: isVisible ? 0 : 100 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 z-50"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-    >
+    <>
+      <motion.nav 
+        initial={{ y: 100 }}
+        animate={{ y: isVisible ? 0 : 100 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 z-50"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map(({ href, icon: Icon, label, onClick }, index) => {
           const isActive = pathname === href
@@ -133,5 +134,6 @@ export function MobileNav() {
       isOpen={isCreateModalOpen}
       onClose={() => setIsCreateModalOpen(false)}
     />
+    </>
   )
 }

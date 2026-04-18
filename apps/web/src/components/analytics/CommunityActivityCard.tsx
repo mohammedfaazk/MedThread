@@ -133,11 +133,11 @@ export default function CommunityActivityCard({ onLiveUpdate }: CommunityActivit
   return (
     <div className="glass-card p-6">
       {/* Header with Chart Type Toggle */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
         <h3 className="text-lg font-semibold" style={{ color: '#f3f6fa' }}>Community Activity Analytics</h3>
         
         {/* Chart Type Toggle */}
-        <div className="chart-toggle-group">
+        <div className="chart-toggle-group flex-shrink-0">
           {chartTypes.map(type => (
             <button
               key={type.key}
@@ -151,7 +151,7 @@ export default function CommunityActivityCard({ onLiveUpdate }: CommunityActivit
       </div>
 
       {/* Metric Selector Pills */}
-      <div className="filter-group mb-6">
+      <div className="filter-group mb-6 flex-wrap">
         {metrics.map(metric => (
           <button
             key={metric.key}
@@ -164,20 +164,20 @@ export default function CommunityActivityCard({ onLiveUpdate }: CommunityActivit
       </div>
 
       {/* Chart */}
-      <div className="mb-6 relative" style={{ height: '300px', minHeight: '300px' }}>
+      <div className="mb-6" style={{ height: '320px', minHeight: '320px', position: 'relative' }}>
         <MultiTypeChart
           data={chartData}
           chartType={chartType}
           dataKey="value"
           xAxisKey="name"
           title=""
-          height={300}
+          height={320}
           showLegend={false}
         />
       </div>
 
-      {/* KPI Badges */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* KPI Badges - Positioned below chart with clear separation */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-4" style={{ borderTop: '1px solid rgba(136, 153, 180, 0.15)' }}>
         {data.map(item => (
           <div
             key={item.section}
@@ -187,8 +187,8 @@ export default function CommunityActivityCard({ onLiveUpdate }: CommunityActivit
               background: 'rgba(102, 154, 227, 0.08)'
             } : {}}
           >
-            <div className="kpi-label">{item.label}</div>
-            <div className="kpi-value text-lg">{item.value}</div>
+            <div className="kpi-label text-xs uppercase tracking-wide mb-1">{item.label}</div>
+            <div className="kpi-value text-2xl font-bold mb-1">{item.value.toLocaleString()}</div>
             <div className="text-xs" style={{ color: '#8899b4' }}>{item.percentageOfTotal}% of total</div>
           </div>
         ))}

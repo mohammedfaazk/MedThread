@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@medthread/database';
 import { config } from '../config';
 import { ConflictError, UnauthorizedError } from '../utils/errors';
+import { getSocketInstance } from '../socket';
 
 interface RegisterInput {
   email: string;
@@ -163,6 +164,70 @@ export class AuthService {
       throw new UnauthorizedError('Invalid email or password');
     }
 
+    // Update user's updatedAt timestamp to track active users
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { updatedAt: new Date() }
+    });
+    console.log('✅ Updated user activity timestamp for:', user.username);
+
+    // Create or update user session
+    try {
+      const sessionId = `session_${user.id}_${Date.now()}`;
+      await prisma.userSession.create({
+        data: {
+          id: sessionId,
+          userId: user.id,
+          startTime: new Date(),
+          endTime: null, // Active session
+          ipAddress: null,
+          userAgent: null
+        }
+      });
+      console.log('✅ Created active session for:', user.username);
+    } catch (error) {
+      console.error('⚠️ Failed to create session:', error);
+    }
+
+    // Create activity log for analytics
+    try {
+      await prisma.userActivityLog.create({
+        data: {
+          userId: user.id,
+          activityType: 'LOGIN',
+          hourOfDay: new Date().getHours(),
+          dayOfWeek: new Date().getDay(),
+          metadata: { 
+            role: user.role,
+            email: user.email,
+            username: user.username
+          }
+        }
+      });
+      console.log('✅ Created activity log for:', user.username);
+    } catch (error) {
+      console.error('⚠️ Failed to create activity log:', error);
+      // Don't fail login if activity log fails
+    }
+
+    // Emit real-time analytics event for admin dashboard
+    try {
+      const io = getSocketInstance();
+      io.to('analytics:admin').emit('analytics:user:active', {
+        type: 'user:active',
+        data: {
+          userId: user.id,
+          username: user.username,
+          role: user.role,
+          timestamp: new Date().toISOString()
+        }
+      });
+      console.log('✅ Emitted real-time analytics event for:', user.username);
+    } catch (error) {
+      console.error('⚠️ Failed to emit analytics event:', error);
+      // Don't fail login if socket emission fails
+    }
+
     // Generate token
     const token = this.generateToken(user.id, user.role);
 
@@ -220,6 +285,56 @@ export class AuthService {
     }
 
     return await bcrypt.compare(password, user.passwordHash);
+  }
+
+  async logout(userId: string): Promise<void> {
+    try {
+      // Delete all active sessions for this user
+      await prisma.userSession.deleteMany({
+        where: {
+          userId,
+          endTime: null // Only delete active sessions
+        }
+      });
+      console.log('✅ Deleted active sessions for user:', userId);
+
+      // Create activity log for logout
+      await prisma.userActivityLog.create({
+        data: {
+          userId,
+          activityType: 'LOGOUT',
+          hourOfDay: new Date().getHours(),
+          dayOfWeek: new Date().getDay(),
+          metadata: { timestamp: new Date().toISOString() }
+        }
+      });
+      console.log('✅ Created logout activity log for user:', userId);
+    } catch (error) {
+      console.error('⚠️ Failed to cleanup sessions on logout:', error);
+      // Don't throw error - logout should succeed even if cleanup fails
+    }
+  }
+
+  async cleanupOldSessions(): Promise<number> {
+    try {
+      // Delete sessions older than 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const result = await prisma.userSession.deleteMany({
+        where: {
+          startTime: {
+            lt: thirtyDaysAgo
+          }
+        }
+      });
+
+      console.log(`✅ Cleaned up ${result.count} old sessions`);
+      return result.count;
+    } catch (error) {
+      console.error('⚠️ Failed to cleanup old sessions:', error);
+      return 0;
+    }
   }
 
   private generateToken(userId: string, role: string): string {

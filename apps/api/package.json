@@ -7,6 +7,10 @@
     "start": "node dist/index.js",
     "seed:admin": "tsx src/scripts/seed-admin.ts",
     "create:admin": "tsx src/scripts/create-admin.ts",
+    "seed:reports": "tsx seed-realistic-reports-moderation.ts",
+    "cleanup:sessions": "tsx cleanup-old-sessions.ts",
+    "check:sessions": "tsx check-sessions.ts",
+    "check:activity": "tsx check-user-activity.ts",
     "test:password": "tsx test-user-password.ts",
     "lint": "echo 'Lint check passed for @medthread/api'"
   },

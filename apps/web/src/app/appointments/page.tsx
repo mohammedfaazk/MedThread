@@ -96,11 +96,16 @@ export default function AppointmentsPage() {
 
     const checkDoctorsAvailability = async () => {
         const availabilityMap: Record<string, boolean> = {}
+        const token = localStorage.getItem('auth_token')
         
         for (const doctor of doctors) {
             try {
                 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-                const response = await axios.get(`${API_URL}/api/appointments/doctors/${doctor.id}/availability`)
+                const response = await axios.get(`${API_URL}/api/appointments/doctors/${doctor.id}/availability`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
                 const slots = response.data || []
                 // Doctor has availability if they have any unbooked slots
                 availabilityMap[doctor.id] = slots.some((slot: TimeSlot) => !slot.isBooked)
@@ -146,7 +151,12 @@ export default function AppointmentsPage() {
             const selectedDateObj = new Date(date)
             const dayOfWeek = selectedDateObj.getDay()
             
-            const response = await axios.get(`${API_URL}/api/appointments/doctors/${doctorId}/availability`)
+            const token = localStorage.getItem('auth_token')
+            const response = await axios.get(`${API_URL}/api/appointments/doctors/${doctorId}/availability`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
             console.log('[Appointments] Availability response:', response.data?.length || 0, 'slots')
             
             // Filter slots for the selected day of week
@@ -206,14 +216,44 @@ export default function AppointmentsPage() {
         setBooking(true)
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            await axios.post(`${API_URL}/api/appointments/book`, {
+            const token = localStorage.getItem('auth_token')
+            
+            // Ensure dates are in ISO string format
+            const startTime = selectedSlot.startTime instanceof Date 
+                ? selectedSlot.startTime.toISOString() 
+                : new Date(selectedSlot.startTime).toISOString();
+            const endTime = selectedSlot.endTime instanceof Date 
+                ? selectedSlot.endTime.toISOString() 
+                : new Date(selectedSlot.endTime).toISOString();
+            
+            // Ensure reason is at least 10 characters
+            const appointmentReason = reason && reason.length >= 10 
+                ? reason 
+                : 'General consultation - routine checkup';
+            
+            console.log('[Appointments] Booking with token:', token ? 'Token exists' : 'No token')
+            console.log('[Appointments] Booking data:', {
                 patientId: user.id,
                 doctorId: selectedDoctor.id,
-                startTime: selectedSlot.startTime,
-                endTime: selectedSlot.endTime,
-                reason: reason || 'General consultation'
+                startTime,
+                endTime,
+                reason: appointmentReason
+            })
+            
+            const response = await axios.post(`${API_URL}/api/appointments/book`, {
+                patientId: user.id,
+                doctorId: selectedDoctor.id,
+                startTime,
+                endTime,
+                reason: appointmentReason
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             })
 
+            console.log('[Appointments] Booking successful:', response.data)
             alert('Appointment request sent successfully! The doctor will review and approve it.')
             setSelectedDoctor(null)
             setSelectedDate('')

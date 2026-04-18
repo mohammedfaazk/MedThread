@@ -3,7 +3,6 @@ import dynamic from 'next/dynamic'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { Suspense } from 'react'
 import StructuredData, { structuredDataSchemas } from '@/components/StructuredData'
-import IridescenceCSS from '@/components/ui/IridescenceCSS'
 import { MedicalDisclaimer, EmergencyBanner } from '@/components/MedicalDisclaimer'
 
 // Lazy-load heavy components
@@ -54,16 +53,6 @@ export default function Home() {
       <StructuredData data={structuredDataSchemas.medicalOrganization()} />
       
       <div className="min-h-screen relative">
-        {/* Iridescent Background - MedThread brand colors (cyan/blue/purple tones) */}
-        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
-          <IridescenceCSS 
-            color={[0.3, 0.6, 0.95]} 
-            mouseReact 
-            amplitude={0.3} 
-            speed={0.6} 
-          />
-        </div>
-
         <Suspense fallback={<div className="h-16 bg-white/40 backdrop-blur-md" />}>
           <Navbar />
         </Suspense>

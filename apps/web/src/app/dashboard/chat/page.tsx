@@ -73,6 +73,7 @@ export default function DashboardChatPage() {
               conversationId={selectedConversationId}
               currentUserId={user.id}
               token={localStorage.getItem('token') || ''}
+              username={user.username || user.email || 'User'}
             />
           </div>
         ) : (

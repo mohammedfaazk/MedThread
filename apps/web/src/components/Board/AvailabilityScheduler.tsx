@@ -30,6 +30,9 @@ export const AvailabilityScheduler: React.FC<AvailabilitySchedulerProps> = ({ do
         
         setLoading(true);
         try {
+            const token = localStorage.getItem('auth_token');
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+            
             const slot = {
                 doctorId,
                 dayOfWeek: selectedDay,
@@ -37,7 +40,12 @@ export const AvailabilityScheduler: React.FC<AvailabilitySchedulerProps> = ({ do
                 endTime: `2024-01-01T${endTime}:00Z`
             };
 
-            await axios.post('/api/appointments/availability', slot);
+            await axios.post(`${API_URL}/api/appointments/availability`, slot, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
             setSlots([...slots, slot]);
             alert('Availability added successfully!');
         } catch (error) {

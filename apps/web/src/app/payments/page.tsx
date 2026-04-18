@@ -97,7 +97,7 @@ export default function PaymentsPage() {
       
       const stripe = await stripePromise;
       if (stripe) {
-        const { error } = await stripe.redirectToCheckout({ sessionId });
+        const { error } = await (stripe as any).redirectToCheckout({ sessionId });
         
         if (error) {
           console.error('Stripe error:', error);
@@ -113,7 +113,7 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
+    <div className="min-h-screen py-12">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">

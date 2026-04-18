@@ -103,6 +103,70 @@ export class AuthController {
     // Clear httpOnly cookies
     clearAuthCookies(res);
 
+    // Track logout activity and close session
+    if (req.userId) {
+      const { prisma } = require('@medthread/database');
+      const { getSocketInstance } = require('../socket');
+      
+      try {
+        // Get user info for logging
+        const user = await prisma.user.findUnique({
+          where: { id: req.userId },
+          select: { username: true, role: true, email: true }
+        });
+
+        if (user) {
+          // Close all active sessions for this user
+          await prisma.userSession.updateMany({
+            where: {
+              userId: req.userId,
+              endTime: null // Only update active sessions
+            },
+            data: {
+              endTime: new Date()
+            }
+          });
+          console.log('✅ Closed active sessions for:', user.username);
+
+          // Create LOGOUT activity log
+          await prisma.userActivityLog.create({
+            data: {
+              userId: req.userId,
+              activityType: 'LOGOUT',
+              hourOfDay: new Date().getHours(),
+              dayOfWeek: new Date().getDay(),
+              metadata: { 
+                role: user.role,
+                email: user.email,
+                username: user.username
+              }
+            }
+          });
+          console.log('✅ Created logout activity log for:', user.username);
+
+          // Emit real-time analytics event
+          try {
+            const io = getSocketInstance();
+            io.to('analytics:admin').emit('analytics:user:inactive', {
+              type: 'user:inactive',
+              data: {
+                userId: req.userId,
+                username: user.username,
+                role: user.role,
+                timestamp: new Date().toISOString()
+              }
+            });
+            console.log('✅ Emitted user inactive event for:', user.username);
+          } catch (error) {
+            console.error('⚠️ Failed to emit inactive event:', error);
+          }
+        }
+      } catch (error) {
+        console.error('⚠️ Failed to track logout:', error);
+        // Don't fail logout if tracking fails
+      }
+    }
+
     // Log admin logout
     if (req.userId && req.userRole === 'ADMIN') {
       const { auditLogService } = require('../services/audit-log.service');

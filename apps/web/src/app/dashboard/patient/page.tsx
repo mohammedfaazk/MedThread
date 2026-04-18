@@ -87,7 +87,13 @@ export default function PatientDashboard() {
         setFetching(true)
         try {
             const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
-            const res = await axios.get(`${API_URL}/api/appointments/appointments?userId=${effectiveUserId}&role=patient`)
+            const token = localStorage.getItem('auth_token')
+            const res = await axios.get(`${API_URL}/api/appointments/appointments?userId=${effectiveUserId}&role=patient`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            console.log('[Patient Dashboard] Loaded appointments:', res.data)
             setAppointments(res.data)
         } catch (error) {
             console.error('Failed to load appointments:', error)
@@ -193,15 +199,6 @@ export default function PatientDashboard() {
 
     return (
         <div className="min-h-screen relative">
-            {/* Iridescent Background - MedThread brand colors (cyan/blue tones) */}
-            <div className="fixed inset-0 -z-10">
-                <Iridescence 
-                    color={[0.4, 0.7, 0.9]} 
-                    mouseReact 
-                    amplitude={0.1} 
-                    speed={0.8} 
-                />
-            </div>
             <NavbarEnhanced />
 
             <div className="max-w-[1440px] mx-auto flex gap-0">

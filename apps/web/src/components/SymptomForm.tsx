@@ -52,7 +52,6 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
 
       {step === 1 && (
         <div className="space-y-6">
-        >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Basic Information</h2>
 
           <div className="grid grid-cols-2 gap-4">
@@ -103,7 +102,6 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
 
       {step === 2 && (
         <div className="space-y-6">
-        >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Symptoms</h2>
 
           <div>
@@ -159,7 +157,6 @@ export function SymptomForm({ onDataChange, onAnalysisReceived }: SymptomFormPro
 
       {step === 3 && (
         <div className="space-y-6">
-        >
           <h2 className="text-2xl font-bold mb-6 text-charcoal">Additional Details</h2>
 
           <div>

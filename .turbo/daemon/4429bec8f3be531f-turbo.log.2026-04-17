@@ -1,0 +1,366 @@
+2026-04-17T10:01:53.935381Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon"), AnchoredSystemPathBuf(".turbo"), AnchoredSystemPathBuf(".turbo\\cookies\\1.cookie"), AnchoredSystemPathBuf(".turbo\\cookies")}
+2026-04-17T10:01:53.935449Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:01:54.030020Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo"), AnchoredSystemPathBuf(".turbo\\cookies"), AnchoredSystemPathBuf(".turbo\\cookies\\.turbo-cookie")}
+2026-04-17T10:01:54.030374Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:01:54.125177Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-04-17T10:01:54.838841Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T10:01:54.838872Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:01:56.231543Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies")}
+2026-04-17T10:01:56.231585Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:02:00.743555Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\types\\dist\\index.d.ts"), AnchoredSystemPathBuf("packages\\types\\dist\\index.js")}
+2026-04-17T10:02:00.743608Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/types"), path: AnchoredSystemPathBuf("packages\\types") }}))
+2026-04-17T10:02:02.137907Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\index.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\index.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.d.ts")}
+2026-04-17T10:02:02.137990Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T10:02:02.826832Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\database\\dist\\index.js")}
+2026-04-17T10:02:02.826864Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }}))
+2026-04-17T10:02:03.146117Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\database\\dist\\index.d.ts"), AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:02:03.146151Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }, WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }}))
+2026-04-17T10:02:03.424357Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:02:03.827834Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:02:03.827870Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:02:04.394981Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:02:04.395008Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:02:04.395248Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:06:38.824589Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\next.config.js")}
+2026-04-17T10:06:38.824640Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:06:43.230317Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:06:43.230355Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:06:44.025377Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:06:44.025409Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:07:41.083710Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies"), AnchoredSystemPathBuf(".turbo\\cookies\\.turbo-cookie"), AnchoredSystemPathBuf(".turbo"), AnchoredSystemPathBuf(".turbo\\cookies\\1.cookie")}
+2026-04-17T10:07:41.083789Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:07:41.177303Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-04-17T10:07:41.878019Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T10:07:41.878058Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:07:47.684719Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\types\\dist\\index.js"), AnchoredSystemPathBuf("packages\\types\\dist\\index.d.ts")}
+2026-04-17T10:07:47.684756Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/types"), path: AnchoredSystemPathBuf("packages\\types") }}))
+2026-04-17T10:07:48.980398Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.d.ts")}
+2026-04-17T10:07:48.980455Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T10:07:49.270192Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\theme.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\index.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\index.js")}
+2026-04-17T10:07:49.270217Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T10:07:49.270259Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:07:49.579505Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\database\\dist\\index.js")}
+2026-04-17T10:07:49.579551Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }}))
+2026-04-17T10:07:49.830553Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\database\\dist\\index.d.ts")}
+2026-04-17T10:07:49.830593Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }}))
+2026-04-17T10:07:49.830743Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:07:49.830898Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:07:49.830913Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:07:50.263643Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next"), AnchoredSystemPathBuf("apps\\web")}
+2026-04-17T10:07:50.263668Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:07:50.263948Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:07:50.678311Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:07:50.678347Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:07:51.264056Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:07:51.264081Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:07:51.264291Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:07:53.081338Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:07:53.081376Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:08:21.185322Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("WEBPACK_TIMEOUT_FIX.md")}
+2026-04-17T10:08:21.185363Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:08:21.792993Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-04-17T10:08:21.793036Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-04-17T10:08:39.591895Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("WEBPACK_TIMEOUT_FIX.md")}
+2026-04-17T10:08:39.591929Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:11:10.577584Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\DiseaseMapWithBoundaries.tsx")}
+2026-04-17T10:11:10.577614Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:11:20.892328Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\DiseaseMapWithBoundaries.tsx")}
+2026-04-17T10:11:20.892369Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:11:29.180469Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\DiseaseMapWithBoundaries.tsx")}
+2026-04-17T10:11:29.180505Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:11:39.484737Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\CovidMapWithBoundaries.tsx")}
+2026-04-17T10:11:39.484765Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:11:49.080409Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\CovidMapWithBoundaries.tsx")}
+2026-04-17T10:11:49.080457Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:11:56.780173Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\CovidMapWithBoundaries.tsx")}
+2026-04-17T10:11:56.780214Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:12:15.689693Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo"), AnchoredSystemPathBuf(".turbo\\cookies"), AnchoredSystemPathBuf(".turbo\\cookies\\1.cookie")}
+2026-04-17T10:12:15.689759Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:12:15.785769Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies\\.turbo-cookie")}
+2026-04-17T10:12:15.785812Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:12:15.847144Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-04-17T10:12:16.881638Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T10:12:16.881669Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:12:17.277411Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo")}
+2026-04-17T10:12:17.277460Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:12:17.481684Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies")}
+2026-04-17T10:12:17.481726Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:12:22.577101Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\types\\dist\\index.js")}
+2026-04-17T10:12:22.577134Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/types"), path: AnchoredSystemPathBuf("packages\\types") }}))
+2026-04-17T10:12:22.840924Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\types\\dist\\index.d.ts")}
+2026-04-17T10:12:22.840958Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/types"), path: AnchoredSystemPathBuf("packages\\types") }}))
+2026-04-17T10:12:22.841000Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:12:23.978432Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.js")}
+2026-04-17T10:12:23.978480Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T10:12:24.185128Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\index.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\index.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.d.ts")}
+2026-04-17T10:12:24.185152Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T10:12:24.185188Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:12:24.480892Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\database\\dist\\index.js")}
+2026-04-17T10:12:24.481035Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }}))
+2026-04-17T10:12:24.691028Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\database\\dist\\index.d.ts")}
+2026-04-17T10:12:24.691062Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }}))
+2026-04-17T10:12:24.691177Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:12:24.784970Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:12:24.785000Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:12:26.777511Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:12:26.777551Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:12:29.520485Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:12:29.520517Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:12:29.520885Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:14:44.685696Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T10:14:44.685741Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:15:50.380012Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("BROWSER_FIX_INSTRUCTIONS.md")}
+2026-04-17T10:15:50.380048Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:15:50.985424Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-04-17T10:15:50.985472Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-04-17T10:16:03.081479Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("BROWSER_FIX_INSTRUCTIONS.md")}
+2026-04-17T10:16:03.081516Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:16:21.683351Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\test-map\\page.tsx")}
+2026-04-17T10:16:21.683392Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:20:05.579920Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\trends\\page.tsx")}
+2026-04-17T10:20:05.579965Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:20:14.188808Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\trends\\page.tsx")}
+2026-04-17T10:20:14.188885Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:20:27.182652Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\trends\\page.tsx")}
+2026-04-17T10:20:27.182690Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:20:41.581099Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\trends\\page.tsx")}
+2026-04-17T10:20:41.581133Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:21:49.874851Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies"), AnchoredSystemPathBuf(".turbo\\cookies\\1.cookie")}
+2026-04-17T10:21:49.874920Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:21:49.972960Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies"), AnchoredSystemPathBuf(".turbo\\cookies\\1.cookie"), AnchoredSystemPathBuf(".turbo\\cookies\\.turbo-cookie"), AnchoredSystemPathBuf(".turbo")}
+2026-04-17T10:21:49.973004Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:21:50.028279Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-04-17T10:21:50.675098Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T10:21:50.675240Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:21:52.161977Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies")}
+2026-04-17T10:21:52.162072Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:21:56.561273Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\types\\dist\\index.d.ts"), AnchoredSystemPathBuf("packages\\types\\dist\\index.js")}
+2026-04-17T10:21:56.561402Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/types"), path: AnchoredSystemPathBuf("packages\\types") }}))
+2026-04-17T10:21:58.062154Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.js")}
+2026-04-17T10:21:58.062196Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T10:21:58.348084Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\index.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\index.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.js")}
+2026-04-17T10:21:58.348111Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T10:21:58.348149Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:21:58.767456Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\database\\dist\\index.js")}
+2026-04-17T10:21:58.767519Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }}))
+2026-04-17T10:21:59.022078Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web"), AnchoredSystemPathBuf("packages\\database\\dist\\index.d.ts"), AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:21:59.022107Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }, WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:21:59.022167Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:21:59.287934Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:21:59.287963Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:21:59.288260Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:21:59.659954Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:21:59.659987Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:22:00.255681Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:22:00.255710Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:22:00.255942Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:22:02.070239Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T10:22:02.070276Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:28:26.264804Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\controllers\\trends.controller.ts")}
+2026-04-17T10:28:26.264842Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T10:29:44.361646Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T10:29:44.361677Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:29:53.659554Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\services\\tavily.service.ts")}
+2026-04-17T10:29:53.659591Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T10:29:54.127681Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\services\\tavily.service.ts")}
+2026-04-17T10:29:54.127758Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T10:29:54.128498Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T10:30:02.066044Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\services\\tavily.service.ts")}
+2026-04-17T10:30:02.066079Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T10:30:20.163985Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\trends\\page.tsx")}
+2026-04-17T10:30:20.164015Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:30:29.671823Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\trends\\page.tsx")}
+2026-04-17T10:30:29.671947Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:30:47.065280Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\trends\\page.tsx")}
+2026-04-17T10:30:47.065574Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:30:55.673783Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\trends\\page.tsx")}
+2026-04-17T10:30:55.673834Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T10:31:07.159598Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("TRENDS_PAGE_TAVILY_INTEGRATION_COMPLETE.md")}
+2026-04-17T10:31:07.159649Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:31:07.674138Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-04-17T10:31:07.674194Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-04-17T10:31:34.573663Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("TRENDS_PAGE_TAVILY_INTEGRATION_COMPLETE.md")}
+2026-04-17T10:31:34.573693Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:35:15.970348Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\services\\tavily.service.ts")}
+2026-04-17T10:35:15.970398Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T10:35:34.459986Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\controllers\\trends.controller.ts")}
+2026-04-17T10:35:34.460025Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T10:36:19.573451Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\controllers\\trends.controller.ts")}
+2026-04-17T10:36:19.573493Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T10:37:59.672596Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("COVID_2026_DATA_FIX.md")}
+2026-04-17T10:37:59.672635Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T10:38:00.264084Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-04-17T10:38:00.264114Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-04-17T10:38:24.064118Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("COVID_2026_DATA_FIX.md")}
+2026-04-17T10:38:24.064224Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T13:58:00.630355Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies"), AnchoredSystemPathBuf(".turbo\\cookies\\1.cookie"), AnchoredSystemPathBuf(".turbo")}
+2026-04-17T13:58:00.630955Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T13:58:00.710836Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies\\.turbo-cookie")}
+2026-04-17T13:58:00.710905Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T13:58:00.788351Z  WARN daemon_server: turborepo_lib::commands::daemon: daemon already running
+2026-04-17T13:58:02.115670Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\cookies")}
+2026-04-17T13:58:02.115715Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T13:58:03.020825Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T13:58:03.020849Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T13:58:08.119944Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\types\\dist\\index.js"), AnchoredSystemPathBuf("packages\\types\\dist\\index.d.ts")}
+2026-04-17T13:58:08.119989Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/types"), path: AnchoredSystemPathBuf("packages\\types") }}))
+2026-04-17T13:58:09.110815Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\ThreadReply.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\PostCard.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\SymptomTag.js")}
+2026-04-17T13:58:09.110852Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T13:58:09.284893Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\ui\\dist\\theme.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\index.d.ts"), AnchoredSystemPathBuf("packages\\ui\\dist\\index.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\theme.js"), AnchoredSystemPathBuf("packages\\ui\\dist\\components\\DoctorBadge.d.ts")}
+2026-04-17T13:58:09.284920Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/ui"), path: AnchoredSystemPathBuf("packages\\ui") }}))
+2026-04-17T13:58:09.284995Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T13:58:09.516395Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages\\database\\dist\\index.js"), AnchoredSystemPathBuf("packages\\database\\dist\\index.d.ts")}
+2026-04-17T13:58:09.516428Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/database"), path: AnchoredSystemPathBuf("packages\\database") }}))
+2026-04-17T13:58:10.116468Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T13:58:10.116503Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T13:58:10.702106Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T13:58:10.702133Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T13:58:10.702381Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T13:58:12.111221Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T13:58:12.111256Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T13:58:14.086165Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T13:58:14.086182Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T13:58:14.086307Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T14:08:43.415014Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T14:08:43.415042Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:19:24.223346Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T14:19:24.223395Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:21:20.415247Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\scripts\\seed-community-features.ts")}
+2026-04-17T14:21:20.415279Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T14:21:20.672219Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\scripts")}
+2026-04-17T14:21:20.672243Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T14:21:20.672556Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T14:22:32.625924Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\scripts\\seed-community-features.ts")}
+2026-04-17T14:22:32.625953Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T14:22:39.520534Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\scripts\\seed-community-features.ts")}
+2026-04-17T14:22:39.520571Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T14:23:42.618521Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T14:23:42.618548Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:24:06.622078Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\admin\\health-challenges\\page.tsx")}
+2026-04-17T14:24:06.622103Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:24:11.721007Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\admin\\health-challenges\\page.tsx")}
+2026-04-17T14:24:11.721038Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:24:17.115201Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("COMMUNITY_FEATURES_FIXED.md")}
+2026-04-17T14:24:17.115230Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:24:17.221046Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-04-17T14:24:17.221079Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-04-17T14:24:47.217656Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("COMMUNITY_FEATURES_FIXED.md")}
+2026-04-17T14:24:47.217704Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:24:52.225814Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("HOW_TO_USE_COMMUNITY_FEATURES.md")}
+2026-04-17T14:24:52.225854Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:24:52.821101Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-04-17T14:24:52.821125Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-04-17T14:25:17.721287Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("HOW_TO_USE_COMMUNITY_FEATURES.md")}
+2026-04-17T14:25:17.721312Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:25:32.314772Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("COMMUNITY_FEATURES_SUMMARY.md")}
+2026-04-17T14:25:32.314799Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:25:32.713939Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2026-04-17T14:25:32.713964Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2026-04-17T14:25:58.612649Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("COMMUNITY_FEATURES_SUMMARY.md")}
+2026-04-17T14:25:58.612673Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:29:07.220554Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:29:07.220595Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:29:17.026224Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:29:17.026256Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:29:19.711788Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\.next")}
+2026-04-17T14:29:19.711816Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:29:48.819172Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:29:48.819209Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:30:57.813106Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:30:57.813138Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:31:12.119157Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:31:12.119219Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:32:10.512982Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:32:10.513012Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:32:21.523001Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:32:21.523036Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:32:45.925964Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:32:45.926014Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:33:07.513287Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:33:07.513323Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:38:42.716816Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T14:38:42.716847Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:42:53.122469Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:42:53.122502Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:43:22.312854Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:43:22.312883Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:55:29.455636Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T14:55:29.455707Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T14:59:42.548951Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:59:42.548987Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T14:59:45.541872Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\health-challenges\\page.tsx")}
+2026-04-17T14:59:45.541935Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:08:11.848055Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\map\\HospitalMap.tsx")}
+2026-04-17T15:08:11.848091Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:08:13.741045Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\TrendsMap.tsx")}
+2026-04-17T15:08:13.741070Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:08:17.535434Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\DiseaseMap.tsx"), AnchoredSystemPathBuf("apps\\web\\src\\components\\TrendsMap.tsx")}
+2026-04-17T15:08:17.535453Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:08:17.535614Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T15:08:27.646572Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\DiseaseMapWithBoundaries.tsx")}
+2026-04-17T15:08:27.646605Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:08:29.438295Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\CovidMapWithBoundaries.tsx")}
+2026-04-17T15:08:29.438320Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:09:24.350565Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\map\\HospitalMap.tsx")}
+2026-04-17T15:09:24.350598Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:09:27.140104Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\TrendsMap.tsx")}
+2026-04-17T15:09:27.140133Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:09:29.143252Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\DiseaseMap.tsx")}
+2026-04-17T15:09:29.143283Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:09:32.020376Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\DiseaseMapWithBoundaries.tsx")}
+2026-04-17T15:09:32.020419Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:09:32.021093Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T15:09:33.252627Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\CovidMapWithBoundaries.tsx")}
+2026-04-17T15:09:33.252657Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:10:28.650876Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T15:10:28.650896Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T15:12:10.445930Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\TrendsMap.tsx")}
+2026-04-17T15:12:10.445982Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:21:05.950558Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\doctor\\page.tsx")}
+2026-04-17T15:21:05.950596Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:21:24.247799Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\components\\Board\\AvailabilityScheduler.tsx")}
+2026-04-17T15:21:24.247825Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:24:31.644258Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\routes\\appointments.ts")}
+2026-04-17T15:24:31.644291Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T15:25:03.338195Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\doctor\\page.tsx")}
+2026-04-17T15:25:03.338229Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:25:28.636642Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T15:25:28.636669Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2026-04-17T15:25:46.247602Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\doctor\\page.tsx")}
+2026-04-17T15:25:46.247634Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:25:47.158953Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\doctor\\page.tsx")}
+2026-04-17T15:25:47.158991Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:25:47.159406Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T15:26:44.543226Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\appointments\\page.tsx")}
+2026-04-17T15:26:44.543260Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:26:55.036781Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\appointments\\page.tsx")}
+2026-04-17T15:26:55.036829Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:26:55.779742Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\appointments\\page.tsx")}
+2026-04-17T15:26:55.779770Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:26:55.779979Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2026-04-17T15:28:19.351031Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\doctor\\page.tsx")}
+2026-04-17T15:28:19.351057Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:29:07.245498Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\routes\\appointments.ts")}
+2026-04-17T15:29:07.245532Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T15:29:19.543674Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\doctor\\page.tsx")}
+2026-04-17T15:29:19.543703Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:31:34.448580Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\routes\\appointments.ts")}
+2026-04-17T15:31:34.448616Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T15:31:54.943582Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\routes\\appointments.ts")}
+2026-04-17T15:31:54.943620Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T15:33:17.951508Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\appointments\\page.tsx")}
+2026-04-17T15:33:17.951545Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:35:45.548685Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\appointments\\page.tsx")}
+2026-04-17T15:35:45.548726Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:36:37.850608Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\api\\src\\middleware\\auth.ts")}
+2026-04-17T15:36:37.850639Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/api"), path: AnchoredSystemPathBuf("apps\\api") }}))
+2026-04-17T15:37:43.443871Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\appointments\\page.tsx")}
+2026-04-17T15:37:43.443908Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:39:35.141908Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\patient\\page.tsx")}
+2026-04-17T15:39:35.141941Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:39:51.252197Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\doctor\\page.tsx")}
+2026-04-17T15:39:51.252244Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:40:08.847365Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps\\web\\src\\app\\dashboard\\doctor\\appointments\\page.tsx")}
+2026-04-17T15:40:08.847436Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@medthread/web"), path: AnchoredSystemPathBuf("apps\\web") }}))
+2026-04-17T15:40:28.449296Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf(".turbo\\daemon\\4429bec8f3be531f-turbo.log.2026-04-17")}
+2026-04-17T15:40:28.449324Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))

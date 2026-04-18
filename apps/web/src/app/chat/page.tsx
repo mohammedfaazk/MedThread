@@ -413,6 +413,7 @@ export default function ChatPage() {
                 conversationId={selectedConversationId}
                 currentUserId={currentUserId}
                 token={token}
+                username={username}
                 onAccessDenied={handleAccessDenied}
               />
             ) : (

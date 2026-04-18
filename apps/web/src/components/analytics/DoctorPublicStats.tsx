@@ -120,7 +120,7 @@ export function DoctorPublicStats({ doctorId }: { doctorId: string }) {
             <span className="text-xs font-medium">Portfolio Score</span>
           </div>
           <p className="text-2xl font-bold text-blue-600">
-            <CountUp from={0} to={stats.portfolioScore} duration={1.5} decimals={0} />
+            <CountUp from={0} to={stats.portfolioScore} duration={1.5} />
           </p>
         </div>
       </div>

@@ -387,9 +387,9 @@ model Message {
   createdAt      DateTime      @default(now())
   isUrgent       Boolean       @default(false)
   urgencyLevel   String?
-  conversation   Conversation? @relation(fields: [conversationId], references: [id])
-  receiver       User          @relation("Receiver", fields: [receiverId], references: [id])
-  sender         User          @relation("Sender", fields: [senderId], references: [id])
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  receiver       User          @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender         User          @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([senderId])
   @@index([receiverId])
@@ -817,8 +817,8 @@ model SymptomReport {
   metadata         Json?
   reportedAt       DateTime @default(now())
   createdAt        DateTime @default(now())
-  post             Post?    @relation(fields: [postId], references: [id])
-  user             User?    @relation(fields: [userId], references: [id])
+  post             Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([sessionId])
@@ -1154,7 +1154,7 @@ model HealthProfile {
   heightRange           String?
   activityLevel         String?
   medicalConditions     Json?
-  currentMedications    String?
+  currentMedications    Json?
   foodAllergies         Json?
   dietType              String?
   religiousRestrictions String?

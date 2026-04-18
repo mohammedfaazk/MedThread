@@ -181,10 +181,15 @@ export default function TrendsMap({
         ref={mapRef}
         scrollWheelZoom={true}
         zoomControl={true}
+        maxBounds={[[-90, -180], [90, 180]]}
+        maxBoundsViscosity={1.0}
+        minZoom={2}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          noWrap={true}
+          bounds={[[-90, -180], [90, 180]]}
         />
 
         <MapController 
@@ -214,6 +219,18 @@ export default function TrendsMap({
                 weight: 2,
                 opacity: 0.8,
                 fillOpacity: 0.6,
+              }}
+              eventHandlers={{
+                click: (e) => {
+                  e.originalEvent.stopPropagation();
+                  console.log(`Selected state: ${state.state}`);
+                },
+                mouseover: (e) => {
+                  e.target.setStyle({ fillOpacity: 0.9, weight: 3 });
+                },
+                mouseout: (e) => {
+                  e.target.setStyle({ fillOpacity: 0.6, weight: 2 });
+                }
               }}
             >
               <Popup>
@@ -280,9 +297,17 @@ export default function TrendsMap({
                 fillOpacity: 0.6,
               }}
               eventHandlers={{
-                click: () => {
+                click: (e) => {
+                  e.originalEvent.stopPropagation();
                   onCountrySelect(country.country);
+                  console.log(`Selected country: ${country.country}`);
                 },
+                mouseover: (e) => {
+                  e.target.setStyle({ fillOpacity: 0.9, weight: 3 });
+                },
+                mouseout: (e) => {
+                  e.target.setStyle({ fillOpacity: 0.6, weight: 2 });
+                }
               }}
             >
               <Popup>
@@ -343,13 +368,6 @@ export default function TrendsMap({
                       </div>
                     )}
                   </div>
-
-                  <button
-                    onClick={() => onCountrySelect(country.country)}
-                    className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
-                  >
-                    View Detailed Stats
-                  </button>
                 </div>
               </Popup>
             </CircleMarker>

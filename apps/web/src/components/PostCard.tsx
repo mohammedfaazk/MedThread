@@ -459,7 +459,7 @@ export function PostCard({
               </div>
 
               {/* Author Actions Menu */}
-              {(isAuthor || role === 'ADMIN' || role === 'MODERATOR') && !isEditing && (
+              {(isAuthor || role === 'ADMIN' || (role as any) === 'MODERATOR') && !isEditing && (
                 <div className="relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={(e) => {

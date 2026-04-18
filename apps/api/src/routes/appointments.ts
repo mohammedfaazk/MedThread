@@ -5,13 +5,21 @@ import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { notificationService } from '../services/notification.service';
 import { NotificationType, ContentType } from '@prisma/client';
 import { analyticsEvents } from '../services/analytics-events.service';
+import { 
+  bookAppointmentSchema, 
+  setAvailabilitySchema, 
+  updateAppointmentStatusSchema,
+  cancelAppointmentSchema,
+  rescheduleAppointmentSchema
+} from '../validators/appointment.validator';
+import { z } from 'zod';
 
 const router = Router();
 
 import { appointmentsStore, availabilityStore, createMockConversation, saveStore } from '../lib/mockStore';
 
-// Get doctor's availability
-router.get('/doctors/:doctorId/availability', async (req, res) => {
+// Get doctor's availability (requires authentication)
+router.get('/doctors/:doctorId/availability', authenticate, async (req, res) => {
     try {
         const { doctorId } = req.params;
         console.log(`[API] Fetching availability for doctorId: ${doctorId}`);
@@ -25,7 +33,10 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
                 where: { doctorId, isBooked: false },
                 orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }]
             });
-            console.log(`[API] Found ${availability.length} slots in DB`);
+            console.log(`[API] Found ${availability.length} slots in DB for doctor ${doctorId}`);
+            if (availability.length > 0) {
+                console.log('[API] Sample slot from DB:', JSON.stringify(availability[0]));
+            }
 
             // Get all booked appointments for this doctor
             const bookedAppointments = await prisma.appointment.findMany({
@@ -41,18 +52,64 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
             bookedSlots = bookedAppointments;
             console.log(`[API] Found ${bookedSlots.length} booked appointments`);
         } catch (dbError) {
-            console.error('[API] DB availability fetch failed, falling back to defaults:', dbError);
+            console.error('[API] DB availability fetch failed:', dbError);
         }
 
         // Check in-memory store
         const mockAvailability = (availabilityStore || []).filter((a: any) => a.doctorId === doctorId && !a.isBooked);
         console.log(`[API] Found ${mockAvailability.length} slots in Mock Store`);
 
-        // Merge results
+        // Merge results - prioritize DB slots
         availability = [...availability, ...mockAvailability];
+        console.log(`[API] Total slots after merge: ${availability.length}`);
+
+        // Split each availability slot into 30-minute intervals
+        const splitSlots: any[] = [];
+        availability.forEach((slot) => {
+            const startTime = new Date(slot.startTime);
+            const endTime = new Date(slot.endTime);
+            const dayOfWeek = slot.dayOfWeek;
+            
+            // Generate 30-minute slots
+            let currentStart = new Date(startTime);
+            while (currentStart < endTime) {
+                const currentEnd = new Date(currentStart);
+                currentEnd.setMinutes(currentEnd.getMinutes() + 30);
+                
+                // Don't create a slot that goes beyond the original end time
+                if (currentEnd <= endTime) {
+                    // Check if this 30-min slot is booked
+                    const isBooked = bookedSlots.some((booked: any) => {
+                        const bookedStart = new Date(booked.startTime);
+                        const bookedEnd = new Date(booked.endTime);
+                        return (currentStart >= bookedStart && currentStart < bookedEnd) ||
+                            (currentEnd > bookedStart && currentEnd <= bookedEnd);
+                    });
+                    
+                    if (!isBooked) {
+                        splitSlots.push({
+                            id: slot.id.startsWith('default-') 
+                                ? `${slot.id}-${currentStart.getHours()}-${currentStart.getMinutes()}`
+                                : `${slot.id}-split-${currentStart.getTime()}`,
+                            doctorId: slot.doctorId,
+                            dayOfWeek: dayOfWeek,
+                            startTime: new Date(currentStart),
+                            endTime: new Date(currentEnd),
+                            isBooked: false
+                        });
+                    }
+                }
+                
+                currentStart.setMinutes(currentStart.getMinutes() + 30);
+            }
+        });
+        
+        availability = splitSlots;
+        console.log(`[API] After splitting into 30-min slots: ${availability.length} slots`);
 
         // If no availability set, provide default slots
         if (availability.length === 0) {
+            console.log('[API] No custom slots found, generating defaults');
             const today = new Date();
             const defaultSlots = [];
 
@@ -62,65 +119,81 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
                 date.setDate(today.getDate() + i);
                 const dayOfWeek = date.getDay();
 
-                // Monday-Friday: 4pm (16:00) to 9pm (21:00) - 1 hour slots
+                // Monday-Friday: 4pm (16:00) to 9pm (21:00) - 30 minute slots
                 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                     for (let hour = 16; hour < 21; hour++) {
-                        const start = new Date(date);
-                        start.setHours(hour, 0, 0, 0);
-                        const end = new Date(date);
-                        end.setHours(hour + 1, 0, 0, 0);
+                        for (let minute = 0; minute < 60; minute += 30) {
+                            const start = new Date(date);
+                            start.setHours(hour, minute, 0, 0);
+                            const end = new Date(date);
+                            end.setHours(hour, minute + 30, 0, 0);
 
-                        // Check if this slot is already booked
-                        const isBooked = bookedSlots.some((booked: any) => {
-                            const bookedStart = new Date(booked.startTime);
-                            const bookedEnd = new Date(booked.endTime);
-                            return (start >= bookedStart && start < bookedEnd) ||
-                                (end > bookedStart && end <= bookedEnd);
-                        });
+                            // Don't create slots past 9pm
+                            if (end.getHours() > 21 || (end.getHours() === 21 && end.getMinutes() > 0)) {
+                                continue;
+                            }
 
-                        if (!isBooked) {
-                            defaultSlots.push({
-                                id: `default-${doctorId}-${dayOfWeek}-${hour}-${i}`,
-                                doctorId,
-                                dayOfWeek,
-                                startTime: start,
-                                endTime: end,
-                                isBooked: false
+                            // Check if this slot is already booked
+                            const isBooked = bookedSlots.some((booked: any) => {
+                                const bookedStart = new Date(booked.startTime);
+                                const bookedEnd = new Date(booked.endTime);
+                                return (start >= bookedStart && start < bookedEnd) ||
+                                    (end > bookedStart && end <= bookedEnd);
                             });
+
+                            if (!isBooked) {
+                                defaultSlots.push({
+                                    id: `default-${doctorId}-${dayOfWeek}-${hour}-${minute}-${i}`,
+                                    doctorId,
+                                    dayOfWeek,
+                                    startTime: start,
+                                    endTime: end,
+                                    isBooked: false
+                                });
+                            }
                         }
                     }
                 }
-                // Saturday-Sunday: 7am (07:00) to 9pm (21:00) - 1 hour slots
+                // Saturday-Sunday: 7am (07:00) to 9pm (21:00) - 30 minute slots
                 else if (dayOfWeek === 0 || dayOfWeek === 6) {
                     for (let hour = 7; hour < 21; hour++) {
-                        const start = new Date(date);
-                        start.setHours(hour, 0, 0, 0);
-                        const end = new Date(date);
-                        end.setHours(hour + 1, 0, 0, 0);
+                        for (let minute = 0; minute < 60; minute += 30) {
+                            const start = new Date(date);
+                            start.setHours(hour, minute, 0, 0);
+                            const end = new Date(date);
+                            end.setHours(hour, minute + 30, 0, 0);
 
-                        // Check if this slot is already booked
-                        const isBooked = bookedSlots.some((booked: any) => {
-                            const bookedStart = new Date(booked.startTime);
-                            const bookedEnd = new Date(booked.endTime);
-                            return (start >= bookedStart && start < bookedEnd) ||
-                                (end > bookedStart && end <= bookedEnd);
-                        });
+                            // Don't create slots past 9pm
+                            if (end.getHours() > 21 || (end.getHours() === 21 && end.getMinutes() > 0)) {
+                                continue;
+                            }
 
-                        if (!isBooked) {
-                            defaultSlots.push({
-                                id: `default-${doctorId}-${dayOfWeek}-${hour}-${i}`,
-                                doctorId,
-                                dayOfWeek,
-                                startTime: start,
-                                endTime: end,
-                                isBooked: false
+                            // Check if this slot is already booked
+                            const isBooked = bookedSlots.some((booked: any) => {
+                                const bookedStart = new Date(booked.startTime);
+                                const bookedEnd = new Date(booked.endTime);
+                                return (start >= bookedStart && start < bookedEnd) ||
+                                    (end > bookedStart && end <= bookedEnd);
                             });
+
+                            if (!isBooked) {
+                                defaultSlots.push({
+                                    id: `default-${doctorId}-${dayOfWeek}-${hour}-${minute}-${i}`,
+                                    doctorId,
+                                    dayOfWeek,
+                                    startTime: start,
+                                    endTime: end,
+                                    isBooked: false
+                                });
+                            }
                         }
                     }
                 }
             }
             availability = defaultSlots as any;
-            console.log(`[API] Returning ${availability.length} default slots for doctor ${doctorId} (filtered out ${bookedSlots.length} booked)`);
+            console.log(`[API] Returning ${availability.length} default 30-min slots for doctor ${doctorId} (filtered out ${bookedSlots.length} booked)`);
+        } else {
+            console.log(`[API] Returning ${availability.length} custom slots for doctor ${doctorId}`);
         }
 
         res.json(availability);
@@ -130,10 +203,12 @@ router.get('/doctors/:doctorId/availability', async (req, res) => {
     }
 });
 
-// Doctor sets availability
-router.post('/availability', async (req, res) => {
+// Doctor sets availability (requires authentication and verified doctor)
+router.post('/availability', authenticate, requireVerifiedDoctor, async (req, res) => {
     try {
-        const { doctorId, dayOfWeek, startTime, endTime } = req.body;
+        // Validate input
+        const validatedData = setAvailabilitySchema.parse(req.body);
+        const { doctorId, dayOfWeek, startTime, endTime } = validatedData;
         console.log('[API] Creating availability:', { doctorId, dayOfWeek, startTime, endTime });
 
         if (!doctorId || dayOfWeek === undefined || !startTime || !endTime) {
@@ -172,15 +247,20 @@ router.post('/availability', async (req, res) => {
 
         res.json(availability);
     } catch (error: any) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
         console.error('[API] Failed to create availability:', error);
         res.status(500).json({ error: 'Failed to create availability', details: error.message });
     }
 });
 
-// Patient books an appointment
-router.post('/book', async (req, res) => {
+// Patient books an appointment (requires authentication)
+router.post('/book', authenticate, async (req, res) => {
     try {
-        const { patientId, doctorId, startTime, endTime, reason } = req.body;
+        // Validate input
+        const validatedData = bookAppointmentSchema.parse(req.body);
+        const { patientId, doctorId, startTime, endTime, reason } = validatedData;
         console.log(`[API] Booking attempt: patient=${patientId}, doctor=${doctorId}`);
 
         let appointment;
@@ -277,16 +357,21 @@ router.post('/book', async (req, res) => {
 
         res.json(appointment);
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
         console.error('[API] Book error:', error);
         res.status(500).json({ error: 'Failed to book appointment' });
     }
 });
 
-// Cancel appointment
-router.post('/appointments/:id/cancel', async (req, res) => {
+// Cancel appointment (requires authentication)
+router.post('/appointments/:id/cancel', authenticate, async (req, res) => {
     try {
+        // Validate input
+        const validatedData = cancelAppointmentSchema.parse(req.body);
         const { id } = req.params;
-        const { userId, reason } = req.body;
+        const { userId, reason } = validatedData;
         console.log(`[API] Cancel appointment: id=${id}, userId=${userId}`);
 
         const appointment = await prisma.appointment.findUnique({
@@ -347,16 +432,21 @@ router.post('/appointments/:id/cancel', async (req, res) => {
 
         res.json(updated);
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
         console.error('[API] Cancel error:', error);
         res.status(500).json({ error: 'Failed to cancel appointment' });
     }
 });
 
-// Reschedule appointment
-router.post('/appointments/:id/reschedule', async (req, res) => {
+// Reschedule appointment (requires authentication)
+router.post('/appointments/:id/reschedule', authenticate, async (req, res) => {
     try {
+        // Validate input
+        const validatedData = rescheduleAppointmentSchema.parse(req.body);
         const { id } = req.params;
-        const { userId, newStartTime, newEndTime, reason } = req.body;
+        const { userId, newStartTime, newEndTime, reason } = validatedData;
         console.log(`[API] Reschedule appointment: id=${id}`);
 
         const appointment = await prisma.appointment.findUnique({
@@ -420,6 +510,9 @@ router.post('/appointments/:id/reschedule', async (req, res) => {
 
         res.json(updated);
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
         console.error('[API] Reschedule error:', error);
         res.status(500).json({ error: 'Failed to reschedule appointment' });
     }
@@ -428,8 +521,10 @@ router.post('/appointments/:id/reschedule', async (req, res) => {
 // Doctor approves/rejects appointment - requires verified doctor
 router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req, res) => {
     try {
+        // Validate input
+        const validatedData = updateAppointmentStatusSchema.parse(req.body);
         const { id } = req.params;
-        const { status, doctorId } = req.body; // APPROVED or REJECTED
+        const { status, doctorId } = validatedData; // APPROVED or REJECTED
         console.log(`[API] Update status: id=${id}, status=${status}`);
 
         try {
@@ -586,13 +681,16 @@ router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req,
             doctor: { username: 'Doctor' }
         });
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ error: 'Validation failed', details: error.errors });
+        }
         console.error('[API] Update error:', error);
         res.status(500).json({ error: 'Failed to update appointment' });
     }
 });
 
-// Get user's appointments
-router.get('/appointments', async (req, res) => {
+// Get user's appointments (requires authentication)
+router.get('/appointments', authenticate, async (req, res) => {
     try {
         const { userId, role } = req.query;
         console.log(`[API] Fetching appointments for userId: ${userId}, role: ${role}`);
@@ -655,17 +753,19 @@ router.get('/appointments', async (req, res) => {
     }
 });
 
-// Debug route to see what's in memory
-router.get('/debug', (req, res) => {
+// Debug route to see what's in memory (DEVELOPMENT ONLY)
+if (process.env.NODE_ENV === 'development') {
+  router.get('/debug', (req, res) => {
     res.json({
-        appointments: appointmentsStore,
-        // conversations: conversationsStore, // Need to import if we want to see it here
-        // messages: messagesStore
+      appointments: appointmentsStore,
+      // conversations: conversationsStore, // Need to import if we want to see it here
+      // messages: messagesStore
     });
-});
+  });
+}
 
-// Mark appointment as completed
-router.post('/appointments/:id/complete', async (req, res) => {
+// Mark appointment as completed (requires authentication)
+router.post('/appointments/:id/complete', authenticate, async (req, res) => {
     try {
         const { id } = req.params;
         const { userId } = req.body;
@@ -782,11 +882,12 @@ router.post('/appointments/:id/complete', async (req, res) => {
     }
 });
 
-// Debug route to check conversation and appointment details
-router.get('/debug/conversation/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const conversation = await prisma.conversation.findUnique({
+// Debug route to check conversation and appointment details (DEVELOPMENT ONLY)
+if (process.env.NODE_ENV === 'development') {
+  router.get('/debug/conversation/:id', async (req, res) => {
+      try {
+          const { id } = req.params;
+          const conversation = await prisma.conversation.findUnique({
             where: { id },
             include: {
                 appointment: {
@@ -804,7 +905,8 @@ router.get('/debug/conversation/:id', async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch conversation details' });
     }
-});
+  });
+}
 
 export { router as appointmentRouter };
 
@@ -920,3 +1022,81 @@ router.post('/:id/cancel', authenticate, async (req, res, next) => {
 });
 
 export default router;
+
+// Doctor updates availability slot (requires authentication and verified doctor)
+router.put('/availability/:id', authenticate, requireVerifiedDoctor, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { dayOfWeek, startTime, endTime } = req.body;
+
+        console.log('[API] Updating availability:', { id, dayOfWeek, startTime, endTime });
+
+        let availability;
+        try {
+            availability = await prisma.availability.update({
+                where: { id },
+                data: {
+                    dayOfWeek,
+                    startTime: new Date(startTime),
+                    endTime: new Date(endTime),
+                }
+            });
+            console.log('[API] Availability updated successfully in DB');
+        } catch (dbError: any) {
+            console.error('[API] DB Update failed, using In-Memory persistence:', dbError.message);
+            // Fallback to in-memory store
+            const index = availabilityStore.findIndex((a: any) => a.id === id);
+            if (index !== -1) {
+                availabilityStore[index] = {
+                    ...availabilityStore[index],
+                    dayOfWeek,
+                    startTime: new Date(startTime).toISOString(),
+                    endTime: new Date(endTime).toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                saveStore();
+                availability = availabilityStore[index];
+                console.log('[API] Availability updated in Mock Store');
+            } else {
+                return res.status(404).json({ error: 'Availability slot not found' });
+            }
+        }
+
+        res.json(availability);
+    } catch (error: any) {
+        console.error('[API] Failed to update availability:', error);
+        res.status(500).json({ error: 'Failed to update availability', details: error.message });
+    }
+});
+
+// Doctor deletes availability slot (requires authentication and verified doctor)
+router.delete('/availability/:id', authenticate, requireVerifiedDoctor, async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log('[API] Deleting availability:', id);
+
+        try {
+            await prisma.availability.delete({
+                where: { id }
+            });
+            console.log('[API] Availability deleted successfully from DB');
+        } catch (dbError: any) {
+            console.error('[API] DB Delete failed, using In-Memory persistence:', dbError.message);
+            // Fallback to in-memory store
+            const index = availabilityStore.findIndex((a: any) => a.id === id);
+            if (index !== -1) {
+                availabilityStore.splice(index, 1);
+                saveStore();
+                console.log('[API] Availability deleted from Mock Store');
+            } else {
+                return res.status(404).json({ error: 'Availability slot not found' });
+            }
+        }
+
+        res.json({ success: true, message: 'Availability slot deleted' });
+    } catch (error: any) {
+        console.error('[API] Failed to delete availability:', error);
+        res.status(500).json({ error: 'Failed to delete availability', details: error.message });
+    }
+});
+

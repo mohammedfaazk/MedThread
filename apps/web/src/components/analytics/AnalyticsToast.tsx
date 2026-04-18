@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 
 interface AnalyticsToastProps {
   message: string;
-  type: 'user:registered' | 'user:active' | 'user:inactive' | 'post:created' | 'appointment:booked' | 'report:filed';
+  type: 'user:registered' | 'user:active' | 'user:inactive' | 'post:created' | 'appointment:booked' | 'report:filed' | 'community:activity';
   onClose: () => void;
   duration?: number;
 }
@@ -39,6 +39,8 @@ export default function AnalyticsToast({
         return '📅';
       case 'report:filed':
         return '⚠️';
+      case 'community:activity':
+        return '💬';
       default:
         return '📊';
     }
@@ -72,6 +74,8 @@ export default function AnalyticsToast({
         return 'Appointment Booked';
       case 'report:filed':
         return 'Report Filed';
+      case 'community:activity':
+        return 'Community Activity';
       default:
         return 'Update';
     }

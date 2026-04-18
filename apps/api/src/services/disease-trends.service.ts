@@ -30,6 +30,12 @@ export class DiseaseTrendsService {
     const searchQuery = `${disease} outbreak ${location} ${year} ${currentMonth} latest cases statistics recent data`;
 
     try {
+      // Check if Tavily API key is available
+      if (!process.env.TAVILY_API_KEY) {
+        console.warn('⚠️ TAVILY_API_KEY not configured - using disease.sh fallback');
+        throw new Error('Tavily API key not configured');
+      }
+
       // Search using Tavily
       const searchResults = await TavilySearchService.searchDiseaseInfo(searchQuery);
       
@@ -61,15 +67,16 @@ export class DiseaseTrendsService {
     } catch (error: any) {
       console.error('Error fetching disease trends:', error);
       
-      // Return fallback data
+      // Return fallback data indicating to use disease.sh
       return {
         disease,
         location,
         year,
         dataAvailable: false,
-        error: 'Unable to fetch current data',
-        message: 'Data from WHO API - Implementation in progress',
-        cached: false
+        error: 'Using disease.sh API for real-time data',
+        message: 'Real-time data from disease.sh API',
+        cached: false,
+        useFallback: true
       };
     }
   }

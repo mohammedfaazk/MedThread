@@ -1,8 +1,8 @@
 {
-  "/saved/page": "app/saved/page.js",
+  "/doctor-feed/page": "app/doctor-feed/page.js",
   "/page": "app/page.js",
-  "/post/[id]/page": "app/post/[id]/page.js",
-  "/chat/page": "app/chat/page.js",
+  "/dashboard/patient/page": "app/dashboard/patient/page.js",
+  "/diet/page": "app/diet/page.js",
   "/dashboard/doctor/page": "app/dashboard/doctor/page.js",
-  "/admin/posts/page": "app/admin/posts/page.js"
+  "/admin/analytics/page": "app/admin/analytics/page.js"
 }
