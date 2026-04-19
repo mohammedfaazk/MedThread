@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useJWTAuth } from '@/context/JWTAuthContext';
 import { useRouter, useParams } from 'next/navigation';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 interface Post {
   id: string;
   title: string;
@@ -25,6 +27,7 @@ export default function SupportGroupDetailPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPostModal, setShowPostModal] = useState(false);
+  const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
     if (groupId) {
@@ -33,9 +36,16 @@ export default function SupportGroupDetailPage() {
     }
   }, [groupId]);
 
+  useEffect(() => {
+    if (group && user) {
+      const members = Array.isArray(group.members) ? group.members : [];
+      setIsMember(members.some((m: any) => m.userId === user.id));
+    }
+  }, [group, user]);
+
   const fetchGroup = async () => {
     try {
-      const response = await fetch(`/api/v1/support-groups/${groupId}`);
+      const response = await fetch(`${API_URL}/api/v1/support-groups/${groupId}`);
       const data = await response.json();
       setGroup(data.group);
     } catch (error) {
@@ -47,7 +57,7 @@ export default function SupportGroupDetailPage() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch(`/api/v1/support-groups/${groupId}/posts`);
+      const response = await fetch(`${API_URL}/api/v1/support-groups/${groupId}/posts`);
       const data = await response.json();
       setPosts(data.posts || []);
     } catch (error) {
@@ -55,21 +65,54 @@ export default function SupportGroupDetailPage() {
     }
   };
 
+  const handleJoinGroup = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_URL}/api/v1/support-groups/${groupId}/join`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isAnonymous: false })
+      });
+
+      if (response.ok) {
+        await fetchGroup();
+        alert('Successfully joined the group!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to join group');
+      }
+    } catch (error) {
+      console.error('Error joining group:', error);
+      alert('Failed to join group. Please try again.');
+    }
+  };
+
   const handleLeaveGroup = async () => {
     if (!confirm('Are you sure you want to leave this group?')) return;
     
     try {
-      const response = await fetch(`/api/v1/support-groups/${groupId}/leave`, {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_URL}/api/v1/support-groups/${groupId}/leave`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ userId: user?.id })
       });
 
       if (response.ok) {
         router.push('/support-groups');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to leave group');
       }
     } catch (error) {
       console.error('Error leaving group:', error);
+      alert('Failed to leave group. Please try again.');
     }
   };
 
@@ -93,12 +136,21 @@ export default function SupportGroupDetailPage() {
                 {group.condition}
               </span>
             </div>
-            <button
-              onClick={handleLeaveGroup}
-              className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50"
-            >
-              Leave Group
-            </button>
+            {isMember ? (
+              <button
+                onClick={handleLeaveGroup}
+                className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50"
+              >
+                Leave Group
+              </button>
+            ) : (
+              <button
+                onClick={handleJoinGroup}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Join Group
+              </button>
+            )}
           </div>
 
           <p className="text-gray-600 mb-4">{group.description}</p>
@@ -109,15 +161,26 @@ export default function SupportGroupDetailPage() {
           </div>
         </div>
 
-        {/* Create Post Button */}
-        <div className="mb-6">
-          <button
-            onClick={() => setShowPostModal(true)}
-            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Share Your Experience
-          </button>
-        </div>
+        {/* Create Post Button - Only show if member */}
+        {isMember && (
+          <div className="mb-6">
+            <button
+              onClick={() => setShowPostModal(true)}
+              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Share Your Experience
+            </button>
+          </div>
+        )}
+
+        {/* Not a member message */}
+        {!isMember && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+            <p className="text-yellow-800">
+              Join this group to share your experiences and connect with others
+            </p>
+          </div>
+        )}
 
         {/* Posts */}
         <div className="space-y-4">
@@ -184,17 +247,25 @@ function CreatePostModal({ groupId, userId, onClose, onSuccess }: any) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`/api/v1/support-groups/${groupId}/posts`, {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${API_URL}/api/v1/support-groups/${groupId}/posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ ...formData, authorId: userId })
       });
 
       if (response.ok) {
         onSuccess();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to create post');
       }
     } catch (error) {
       console.error('Error creating post:', error);
+      alert('Failed to create post. Please try again.');
     }
   };
 

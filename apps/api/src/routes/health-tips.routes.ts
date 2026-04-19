@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.refactored';
 import { healthTipsService } from '../services/health-tips.service';
+import { parseIntSafe, validateRequiredString } from '../utils/validation';
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router.get('/daily', authenticate, async (req, res) => {
 router.get('/personalized', authenticate, async (req, res) => {
   try {
     const userId = (req as any).userId;
-    const count = parseInt(req.query.count as string) || 3;
+    const count = parseIntSafe(req.query.count, 3, { min: 1, max: 10, fieldName: 'count' });
     
     const tips = await healthTipsService.getPersonalizedTips(userId, count);
     
@@ -47,7 +48,7 @@ router.get('/medication-reminders', authenticate, async (req, res) => {
     const userId = (req as any).userId;
     const reminders = await healthTipsService.getMedicationReminders(userId);
     
-    res.json({ success: true, data: reminders });
+    res.json({ success: false, data: reminders });
   } catch (error: any) {
     console.error('Error getting medication reminders:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -60,7 +61,7 @@ router.get('/medication-reminders', authenticate, async (req, res) => {
  */
 router.get('/category/:category', authenticate, async (req, res) => {
   try {
-    const { category } = req.params;
+    const category = validateRequiredString(req.params.category, 'category', { maxLength: 100 });
     const tips = healthTipsService.getTipsByCategory(category);
     
     res.json({ success: true, data: tips });
@@ -76,18 +77,17 @@ router.get('/category/:category', authenticate, async (req, res) => {
  */
 router.get('/search', authenticate, async (req, res) => {
   try {
-    const keyword = req.query.q as string;
-    
-    if (!keyword) {
-      return res.status(400).json({ success: false, error: 'Search keyword required' });
-    }
+    const keyword = validateRequiredString(req.query.q, 'search keyword', { 
+      minLength: 2, 
+      maxLength: 200 
+    });
     
     const tips = healthTipsService.searchTips(keyword);
     
     res.json({ success: true, data: tips });
   } catch (error: any) {
     console.error('Error searching tips:', error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 

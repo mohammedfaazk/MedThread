@@ -2,17 +2,22 @@ import { Router } from 'express';
 import { authenticate as auth } from '../middleware/auth';
 import { requireVerifiedDoctor } from '../middleware/requireVerifiedDoctor';
 import { communityService } from '../services/community.service';
+import { parseIntSafe, validateEnum } from '../utils/validation';
 
 const router = Router();
 
 // Get all communities
 router.get('/', async (req, res, next) => {
   try {
+    const page = parseIntSafe(req.query.page, 1, { min: 1, max: 1000, fieldName: 'page' });
+    const limit = parseIntSafe(req.query.limit, 100, { min: 1, max: 100, fieldName: 'limit' });
+    const sortBy = validateEnum(req.query.sortBy, ['members', 'new', 'active'] as const, 'sortBy', 'members');
+
     const result = await communityService.getCommunities({
       search: req.query.search as string,
-      sortBy: req.query.sortBy as 'members' | 'new' | 'active',
-      page: parseInt(req.query.page as string) || 1,
-      limit: parseInt(req.query.limit as string) || 100,
+      sortBy,
+      page,
+      limit,
     });
 
     // Return just the communities array for simplicity

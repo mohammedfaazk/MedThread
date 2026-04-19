@@ -180,9 +180,7 @@ authRouter.post('/verify-password', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Password required' });
     }
     
-    console.log('📝 Password received (length):', password.length);
-    console.log('📝 Password first 3 chars:', password.substring(0, 3));
-    console.log('📝 Full password (for debugging):', password);
+    console.log('📝 Verifying password for user...');
     
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -204,25 +202,8 @@ authRouter.post('/verify-password', async (req, res) => {
       username: user.username,
       email: user.email,
       role: user.role,
-      hasPasswordHash: !!user.passwordHash,
-      passwordHashLength: user.passwordHash?.length || 0,
-      passwordHashPrefix: user.passwordHash?.substring(0, 10) || 'none'
+      hasPasswordHash: !!user.passwordHash
     });
-    
-    // Show expected passwords for common doctor accounts (development only)
-    const expectedPasswords: Record<string, string> = {
-      'watson@gmail.com': 'Watson@123456',
-      'dr.mitchell@medthread.com': 'Mitchell@123456',
-      'rifa@gmail.com': 'Rifa@123456',
-      'test.doctor.1773995866829@example.com': 'TestDoc@123456',
-      'login.test.doctor.1773995919045@example.com': 'LoginTest@123456'
-    };
-    
-    if (expectedPasswords[user.email]) {
-      console.log('💡 Expected password for this account:', expectedPasswords[user.email]);
-      console.log('📝 Received password:', password);
-      console.log('🔍 Passwords match?', password === expectedPasswords[user.email]);
-    }
     
     console.log('🔍 Comparing password with hash...');
     const isValid = await bcrypt.compare(password, user.passwordHash);
@@ -230,9 +211,6 @@ authRouter.post('/verify-password', async (req, res) => {
     
     if (!isValid) {
       console.log('❌ Password verification FAILED for:', user.email);
-      if (expectedPasswords[user.email]) {
-        console.log('💡 HINT: The correct password for this account is:', expectedPasswords[user.email]);
-      }
       console.log('═'.repeat(50));
       return res.status(401).json({ success: false, error: 'Invalid password' });
     }

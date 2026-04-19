@@ -52,7 +52,7 @@ const AUTHORITIES = [
 // API Base URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
-import { Stethoscope, UserRound } from 'lucide-react'
+import { Stethoscope } from 'lucide-react'
 
 export default function SignupPage() {
   const router = useRouter()

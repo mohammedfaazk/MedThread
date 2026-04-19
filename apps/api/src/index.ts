@@ -1,3 +1,6 @@
+// Load environment variables FIRST before any other imports
+import './config/env';
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';

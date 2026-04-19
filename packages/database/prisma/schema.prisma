@@ -566,7 +566,7 @@ model ConsultationFee {
   status                               PaymentStatus @default(PENDING)
   paidAt                               DateTime?
   createdAt                            DateTime      @default(now())
-  updatedAt                            DateTime      @default(now())
+  updatedAt                            DateTime      @updatedAt
   User_ConsultationFee_doctorIdToUser  User          @relation("ConsultationFee_doctorIdToUser", fields: [doctorId], references: [id], onDelete: Cascade)
   User_ConsultationFee_patientIdToUser User          @relation("ConsultationFee_patientIdToUser", fields: [patientId], references: [id], onDelete: Cascade)
   Payment                              Payment?      @relation(fields: [paymentId], references: [id])
@@ -620,7 +620,7 @@ model Payment {
   description           String?
   metadata              Json?
   createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
   ConsultationFee       ConsultationFee[]
   User                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   PaymentHistory        PaymentHistory[]
@@ -677,7 +677,7 @@ model Refund {
   processedBy    String?
   adminNotes     String?
   createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   Payment        Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
   User           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -699,7 +699,7 @@ model Subscription {
   cancelAtPeriodEnd    Boolean            @default(false)
   metadata             Json?
   createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
   User                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([status])

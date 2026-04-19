@@ -9,10 +9,8 @@ const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3002;
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
-// Symptom analysis endpoint
 app.post('/api/analyze-symptoms', async (req, res) => {
     const { symptoms, description, severity } = req.body;
-    // Mock AI analysis
     const analysis = {
         possibleConditions: [
             'Common Cold',
