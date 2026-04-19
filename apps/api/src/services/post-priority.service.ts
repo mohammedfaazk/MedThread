@@ -1,5 +1,7 @@
 import { prisma } from '@medthread/database';
-import Groq from 'groq-sdk';// ---------------------------------------------------------------------------
+import Groq from 'groq-sdk';
+import { enhancedTriageService } from './medical-triage/enhanced-triage.service';
+import { SYMPTOM_ONTOLOGY } from './medical-triage/symptom-ontology';// ---------------------------------------------------------------------------
 // Symptom chip weights — used when structured chip data is available
 // ---------------------------------------------------------------------------
 const CHIP_WEIGHTS: Record<string, number> = {
@@ -114,52 +116,50 @@ export class PostPriorityService {
 
   // ── PUBLIC: analyze from structured chip data (PatientCreatePostModal) ──
   async analyzeFromChips(postId: string, input: StructuredSymptomInput): Promise<PriorityResult> {
-    const detectedSymptoms: Array<{ symptom: string; weight: number; category: string }> = [];
-    let chipScore = 0;
-
-    // 1. Score each selected chip
-    for (const chip of input.symptoms) {
-      const key = chip.toLowerCase();
-      const weight = CHIP_WEIGHTS[key] ?? 3; // default 3 for unknown chips
-      const category = weight >= 8 ? 'HIGH' : weight >= 4 ? 'MEDIUM' : 'LOW';
-      detectedSymptoms.push({ symptom: chip, weight, category });
-      chipScore += weight;
-    }
-
-    // 2. Duration multiplier
-    const durationMult = DURATION_MULTIPLIERS[input.duration ?? ''] ?? 1.0;
-    chipScore = Math.round(chipScore * durationMult);
-
-    // 3. Context boost
-    let contextBoost = 0;
-    if (input.age && (input.age >= 60 || input.age <= 5)) contextBoost += 2;
-    const highRiskConditions = ['diabetes', 'heart', 'kidney', 'asthma', 'hypertension', 'cancer', 'copd'];
-    if (input.existingConditions) {
-      const lower = input.existingConditions.toLowerCase();
-      if (highRiskConditions.some(c => lower.includes(c))) contextBoost += 2;
-    }
-
-    // 4. Optional LLM boost on free-text description
-    let llmScore = 0;
-    let llmReasoning: string | undefined;
-    if (input.description && input.description.trim().length > 20) {
-      const llmResult = await this.scoreFreeText(input.description, input.symptoms);
-      llmScore = llmResult.score;
-      llmReasoning = llmResult.reasoning;
-    }
-
-    // 5. Final score — cap at 100
-    const urgencyScore = Math.min(100, chipScore + contextBoost + llmScore);
-
-    // 6. Priority thresholds (chip-based scoring is additive so thresholds are higher)
-    let priorityLevel: 'HIGH' | 'MEDIUM' | 'LOW';
-    if (urgencyScore >= 25 || detectedSymptoms.some(s => s.category === 'HIGH')) {
-      priorityLevel = 'HIGH';
-    } else if (urgencyScore >= 10) {
-      priorityLevel = 'MEDIUM';
-    } else {
-      priorityLevel = 'LOW';
-    }
+    // Build text from structured input
+    const textParts = [
+      ...input.symptoms,
+      input.description || '',
+      input.existingConditions || ''
+    ];
+    const combinedText = textParts.filter(Boolean).join('. ');
+    
+    // Use enhanced triage service
+    const triageResult = await enhancedTriageService.analyzeTriage({
+      text: combinedText,
+      age: input.age || undefined,
+      gender: input.gender || undefined,
+      existingConditions: input.existingConditions,
+      duration: input.duration
+    });
+    
+    // Convert to priority result format
+    const detectedSymptoms = triageResult.detectedSymptoms.map(s => ({
+      symptom: s.canonical,
+      weight: s.weight,
+      category: s.category
+    }));
+    
+    // Add dangerous combinations
+    triageResult.dangerousCombinations.forEach(combo => {
+      detectedSymptoms.push({
+        symptom: `⚠️ ${combo.condition}`,
+        weight: combo.urgency,
+        category: combo.category
+      });
+    });
+    
+    const urgencyScore = triageResult.urgencyScore;
+    const priorityLevel = triageResult.priorityLevel;
+    
+    // Build reasoning
+    const llmReasoning = [
+      triageResult.clinicalReasoning,
+      triageResult.recommendedAction,
+      triageResult.redFlags.length > 0 ? `Red flags: ${triageResult.redFlags.join(', ')}` : '',
+      `ESI Level: ${triageResult.esiLevel}`,
+      `Confidence: ${Math.round(triageResult.confidence * 100)}%`
+    ].filter(Boolean).join(' | ');
 
     detectedSymptoms.sort((a, b) => b.weight - a.weight);
     await this.upsertPriority(postId, priorityLevel, urgencyScore, detectedSymptoms);
@@ -169,54 +169,52 @@ export class PostPriorityService {
 
   // ── PUBLIC: analyze from raw post text (legacy / bulk backfill) ──
   async analyzePostPriority(postId: string, title: string, content: string): Promise<PriorityResult> {
-    const combinedText = `${title} ${content}`.toLowerCase();
-    const detectedSymptoms: Array<{ symptom: string; weight: number; category: string }> = [];
-    let maxScore = 0;
-
-    for (const [symptom, weight] of Object.entries(TEXT_KEYWORDS.HIGH)) {
-      if (combinedText.includes(symptom)) {
-        maxScore = Math.max(maxScore, weight);
-        detectedSymptoms.push({ symptom, weight, category: 'HIGH' });
-      }
-    }
-    for (const [symptom, weight] of Object.entries(TEXT_KEYWORDS.MEDIUM)) {
-      if (combinedText.includes(symptom)) {
-        maxScore = Math.max(maxScore, weight);
-        detectedSymptoms.push({ symptom, weight, category: 'MEDIUM' });
-      }
-    }
-    for (const [symptom, weight] of Object.entries(TEXT_KEYWORDS.LOW)) {
-      if (combinedText.includes(symptom)) {
-        maxScore = Math.max(maxScore, weight);
-        detectedSymptoms.push({ symptom, weight, category: 'LOW' });
-      }
-    }
-
-    // LLM boost on full text
-    let llmScore = 0;
-    let llmReasoning: string | undefined;
-    const textToScore = `${title}. ${content}`.slice(0, 500);
-    if (textToScore.trim().length > 20) {
-      const llmResult = await this.scoreFreeText(textToScore, []);
-      llmScore = llmResult.score;
-      llmReasoning = llmResult.reasoning;
-    }
-
-    const urgencyScore = Math.min(100, maxScore + llmScore);
-
-    let priorityLevel: 'HIGH' | 'MEDIUM' | 'LOW';
-    if (urgencyScore >= 8 || detectedSymptoms.some(s => s.category === 'HIGH')) {
-      priorityLevel = 'HIGH';
-    } else if (urgencyScore >= 4) {
-      priorityLevel = 'MEDIUM';
-    } else {
-      priorityLevel = 'LOW';
-    }
+    const combinedText = `${title} ${content}`;
+    
+    // Use enhanced triage service for analysis
+    const triageResult = await enhancedTriageService.analyzeTriage({
+      text: combinedText
+    });
+    
+    // Convert triage result to priority result format
+    const detectedSymptoms = triageResult.detectedSymptoms.map(s => ({
+      symptom: s.canonical,
+      weight: s.weight,
+      category: s.category
+    }));
+    
+    // Add dangerous combinations to detected symptoms
+    triageResult.dangerousCombinations.forEach(combo => {
+      detectedSymptoms.push({
+        symptom: `⚠️ ${combo.condition}`,
+        weight: combo.urgency,
+        category: combo.category
+      });
+    });
+    
+    const urgencyScore = triageResult.urgencyScore;
+    const priorityLevel = triageResult.priorityLevel;
+    
+    // Build reasoning
+    const llmReasoning = [
+      triageResult.clinicalReasoning,
+      triageResult.recommendedAction,
+      triageResult.redFlags.length > 0 ? `Red flags: ${triageResult.redFlags.join(', ')}` : '',
+      `Confidence: ${Math.round(triageResult.confidence * 100)}%`,
+      `Analysis: Ontology=${triageResult.analysisBreakdown.ontologyScore}, Combinations=${triageResult.analysisBreakdown.combinationScore}, LLM=${triageResult.analysisBreakdown.llmScore}, Context=${triageResult.analysisBreakdown.contextScore}`
+    ].filter(Boolean).join(' | ');
 
     detectedSymptoms.sort((a, b) => b.weight - a.weight);
     await this.upsertPriority(postId, priorityLevel, urgencyScore, detectedSymptoms);
 
-    return { postId, priorityLevel, urgencyScore, detectedSymptoms, llmReasoning, badge: this.getPriorityBadge(priorityLevel) };
+    return { 
+      postId, 
+      priorityLevel, 
+      urgencyScore, 
+      detectedSymptoms, 
+      llmReasoning, 
+      badge: this.getPriorityBadge(priorityLevel) 
+    };
   }
 
   // ── PRIVATE: call Groq to score free-text description ──

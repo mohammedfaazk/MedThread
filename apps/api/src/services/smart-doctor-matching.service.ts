@@ -298,6 +298,7 @@ export class SmartDoctorMatchingService {
 
   /**
    * Calculate patient satisfaction score
+   * Now includes sentiment analysis from patient reviews
    */
   private calculateSatisfactionScore(doctor: any): { score: number; reason?: string } {
     const performance = doctor.doctorPerformance;
@@ -306,11 +307,13 @@ export class SmartDoctorMatchingService {
       return { score: 5 };
     }
 
+    // helpfulnessScore now includes sentiment analysis (0-5 scale)
+    // This is the combined score: 70% star rating + 30% sentiment
     const score = (performance.helpfulnessScore / 5) * 15;
     
     return {
       score,
-      reason: `${performance.helpfulnessScore.toFixed(1)}/5 patient rating (${performance.totalRatings} reviews)`
+      reason: `${performance.helpfulnessScore.toFixed(1)}/5 rating with sentiment analysis (${performance.totalRatings} reviews)`
     };
   }
 

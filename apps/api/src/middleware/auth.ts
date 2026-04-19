@@ -4,6 +4,10 @@ import jwt from 'jsonwebtoken';
 export interface AuthRequest extends Request {
   userId?: string;
   userRole?: string;
+  user?: {
+    id: string;
+    role: string;
+  };
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -24,6 +28,11 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     console.log('[AUTH] Token verified successfully for user:', decoded.userId);
     req.userId = decoded.userId;
     req.userRole = decoded.role;
+    // Also set req.user for compatibility with route handlers
+    req.user = {
+      id: decoded.userId,
+      role: decoded.role
+    };
     next();
   } catch (error: any) {
     console.log('[AUTH] Token verification failed:', error.message);

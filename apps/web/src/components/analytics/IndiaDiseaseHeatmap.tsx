@@ -9,6 +9,7 @@ import {
   getTopDiseasesInIndia,
   type StateDiseaseData 
 } from '@/data/india-disease-data';
+import { IndiaMapSVG } from './IndiaMapSVG';
 
 interface IndiaDiseaseHeatmapProps {
   className?: string;
@@ -84,31 +85,8 @@ export function IndiaDiseaseHeatmap({ className = '' }: IndiaDiseaseHeatmapProps
                 Interactive India Map
               </h3>
               
-              {/* Simplified India Map Representation */}
-              <div className="grid grid-cols-4 gap-2">
-                {INDIA_DISEASE_DATA.map((state) => (
-                  <button
-                    key={state.stateCode}
-                    onClick={() => setSelectedState(state)}
-                    onMouseEnter={() => setHoveredState(state.state)}
-                    onMouseLeave={() => setHoveredState(null)}
-                    className="relative p-3 rounded-lg transition-all transform hover:scale-105 hover:shadow-lg"
-                    style={{ 
-                      backgroundColor: getStateColor(state.stateCode),
-                      opacity: hoveredState === state.state ? 1 : 0.9
-                    }}
-                  >
-                    <div className="text-white text-xs font-bold text-center">
-                      {state.stateCode}
-                    </div>
-                    {hoveredState === state.state && (
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-10">
-                        {state.state}
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
+              {/* India SVG Map */}
+              <IndiaMapSVG onStateClick={setSelectedState} />
 
               <div className="mt-4 p-3 bg-white rounded-lg">
                 <div className="flex items-start gap-2 text-sm text-gray-600">

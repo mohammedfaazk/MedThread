@@ -434,6 +434,73 @@ export class ContentModerationService {
       throw error;
     }
   }
+
+  /**
+   * Analyze sentiment of text (for reviews, feedback, etc.)
+   */
+  async analyzeSentiment(text: string): Promise<{
+    score: number;
+    category: string;
+    confidence: number;
+  }> {
+    try {
+      if (!openai) {
+        return this.basicSentimentAnalysis(text);
+      }
+
+      const response = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'Analyze the sentiment of the following text. Respond with JSON: {score: <-1 to 1>, category: "POSITIVE"|"NEUTRAL"|"NEGATIVE", confidence: <0 to 1>}'
+          },
+          {
+            role: 'user',
+            content: text
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 100
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{"score":0,"category":"NEUTRAL","confidence":0.5}');
+      return result;
+    } catch (error) {
+      console.error('[ContentModeration] Sentiment analysis error:', error);
+      return this.basicSentimentAnalysis(text);
+    }
+  }
+
+  /**
+   * Basic sentiment analysis fallback
+   */
+  private basicSentimentAnalysis(text: string): { score: number; category: string; confidence: number } {
+    // Simple keyword-based sentiment analysis
+    const positiveWords = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love', 'best'];
+    const negativeWords = ['bad', 'terrible', 'awful', 'horrible', 'worst', 'hate', 'poor', 'disappointing'];
+    
+    const lowerText = text.toLowerCase();
+    let score = 0;
+    
+    positiveWords.forEach(word => {
+      if (lowerText.includes(word)) score += 0.2;
+    });
+    
+    negativeWords.forEach(word => {
+      if (lowerText.includes(word)) score -= 0.2;
+    });
+    
+    score = Math.max(-1, Math.min(1, score));
+    
+    const category = score > 0.2 ? 'POSITIVE' : score < -0.2 ? 'NEGATIVE' : 'NEUTRAL';
+    
+    return {
+      score,
+      category,
+      confidence: 0.6
+    };
+  }
 }
 
 export const contentModerationService = new ContentModerationService();

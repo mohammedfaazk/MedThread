@@ -198,6 +198,14 @@ export class DoctorAnalyticsService {
       broadcastDoctorRating(io, rating);
     }
 
+    // 🎯 Trigger sentiment analysis if feedback text exists (non-blocking)
+    if (data.feedback && data.feedback.trim().length > 0) {
+      const { onDoctorRatingCreated } = await import('../hooks/review-sentiment-hook');
+      onDoctorRatingCreated(data.doctorId, data.feedback, data.rating).catch(error => {
+        console.error('[DoctorAnalytics] Failed to update sentiment score:', error);
+      });
+    }
+
     return rating;
   }
 

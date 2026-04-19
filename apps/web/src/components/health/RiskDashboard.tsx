@@ -51,7 +51,13 @@ export default function RiskDashboard({ userId }: RiskDashboardProps) {
 
   const fetchRiskPredictions = async () => {
     try {
-      const response = await fetch(`/api/v1/health-risk/predictions/${userId}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${apiUrl}/api/v1/health-risk/predictions/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setPredictions(data.predictions || []);
     } catch (error) {

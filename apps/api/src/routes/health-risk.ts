@@ -1,6 +1,6 @@
 import express from 'express';
 import { authenticate } from '../middleware/auth';
-import { healthRiskPredictorService } from '../services/health-risk-predictor.service';
+import healthRiskPredictorService from '../services/health-risk-predictor.service';
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.get('/predictions/:userId', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    const predictions = await healthRiskPredictorService.getPredictions(userId);
+    const predictions = await healthRiskPredictorService.getUserRiskPredictions(userId);
     
     res.json({
       success: true,
@@ -26,8 +26,35 @@ router.get('/predictions/:userId', authenticate, async (req, res) => {
   }
 });
 
-// Generate new risk assessment
-router.post('/assess/:userId', authenticate, async (req, res) => {
+// Submit health assessment data and generate risk predictions
+router.post('/assess', authenticate, async (req, res) => {
+  try {
+    const { userId, ...assessmentData } = req.body;
+    
+    // Verify user can access this data
+    if (req.user.id !== userId && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Save assessment data to health profile
+    await healthRiskPredictorService.saveHealthAssessment(userId, assessmentData);
+    
+    // Generate risk predictions
+    const predictions = await healthRiskPredictorService.predictHealthRisks(userId);
+    
+    res.json({
+      success: true,
+      message: 'Health assessment completed successfully',
+      predictions
+    });
+  } catch (error) {
+    console.error('Error processing health assessment:', error);
+    res.status(500).json({ error: 'Failed to process health assessment' });
+  }
+});
+
+// Get existing assessment data
+router.get('/assessment/:userId', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     
@@ -36,15 +63,15 @@ router.post('/assess/:userId', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    const assessment = await healthRiskPredictorService.generateAssessment(userId);
+    const assessment = await healthRiskPredictorService.getHealthAssessment(userId);
     
     res.json({
       success: true,
       assessment
     });
   } catch (error) {
-    console.error('Error generating risk assessment:', error);
-    res.status(500).json({ error: 'Failed to generate risk assessment' });
+    console.error('Error fetching health assessment:', error);
+    res.status(500).json({ error: 'Failed to fetch health assessment' });
   }
 });
 

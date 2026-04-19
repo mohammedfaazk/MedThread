@@ -5,6 +5,8 @@ import { useJWTAuth } from '@/context/JWTAuthContext';
 import { useRouter } from 'next/navigation';
 import RiskDashboard from '@/components/health/RiskDashboard';
 
+import ComprehensiveHealthAssessment from '@/components/health/ComprehensiveHealthAssessment';
+
 export default function HealthRiskPage() {
   const { user } = useJWTAuth();
   const router = useRouter();
@@ -20,7 +22,13 @@ export default function HealthRiskPage() {
 
   const fetchRiskData = async () => {
     try {
-      const response = await fetch(`/api/v1/health-risk/assessment/${user?.id}`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(`${apiUrl}/api/v1/health-risk/assessment/${user?.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       setRiskData(data);
     } catch (error) {
@@ -103,7 +111,7 @@ export default function HealthRiskPage() {
         )}
 
         {showAssessment && (
-          <HealthAssessmentModal
+          <ComprehensiveHealthAssessment
             userId={user.id}
             onClose={() => setShowAssessment(false)}
             onComplete={() => {
@@ -112,179 +120,6 @@ export default function HealthRiskPage() {
             }}
           />
         )}
-      </div>
-    </div>
-  );
-}
-
-function HealthAssessmentModal({ userId, onClose, onComplete }: any) {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    age: '',
-    gender: '',
-    height: '',
-    weight: '',
-    smoking: false,
-    alcohol: false,
-    exercise: '',
-    familyHistory: [] as string[],
-    medications: [] as string[],
-    conditions: [] as string[]
-  });
-
-  const handleSubmit = async () => {
-    try {
-      const response = await fetch('/api/v1/health-risk/assess', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, ...formData })
-      });
-
-      if (response.ok) {
-        onComplete();
-      }
-    } catch (error) {
-      console.error('Error submitting assessment:', error);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-6">Health Risk Assessment</h2>
-
-        {step === 1 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Age</label>
-                <input
-                  type="number"
-                  value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg"
-                  placeholder="Enter your age"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Gender</label>
-                <select
-                  value={formData.gender}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg"
-                >
-                  <option value="">Select gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Height (cm)</label>
-                  <input
-                    type="number"
-                    value={formData.height}
-                    onChange={(e) => setFormData({ ...formData, height: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Weight (kg)</label>
-                  <input
-                    type="number"
-                    value={formData.weight}
-                    onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
-                    className="w-full px-4 py-2 border rounded-lg"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Lifestyle Factors</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.smoking}
-                    onChange={(e) => setFormData({ ...formData, smoking: e.target.checked })}
-                    className="mr-2"
-                  />
-                  <span>I smoke or use tobacco products</span>
-                </label>
-              </div>
-
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.alcohol}
-                    onChange={(e) => setFormData({ ...formData, alcohol: e.target.checked })}
-                    className="mr-2"
-                  />
-                  <span>I consume alcohol regularly</span>
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Exercise Frequency</label>
-                <select
-                  value={formData.exercise}
-                  onChange={(e) => setFormData({ ...formData, exercise: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg"
-                >
-                  <option value="">Select frequency</option>
-                  <option value="none">None</option>
-                  <option value="1-2">1-2 times per week</option>
-                  <option value="3-4">3-4 times per week</option>
-                  <option value="5+">5+ times per week</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          {step > 1 && (
-            <button
-              onClick={() => setStep(step - 1)}
-              className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
-            >
-              Back
-            </button>
-          )}
-          {step < 2 ? (
-            <button
-              onClick={() => setStep(step + 1)}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Complete Assessment
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );

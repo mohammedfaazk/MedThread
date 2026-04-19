@@ -6,10 +6,19 @@ import { useEffect, useRef } from 'react';
  * Hook that sends periodic heartbeat pings to keep user activity fresh
  * This ensures the user shows as "active" in admin analytics
  */
-export function useActivityHeartbeat() {
+export function useActivityHeartbeat(user: any) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Only run if user is logged in
+    if (!user) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
     const sendHeartbeat = async () => {
       try {
         const token = localStorage.getItem('auth_token');
@@ -58,5 +67,5 @@ export function useActivityHeartbeat() {
         clearInterval(intervalRef.current);
       }
     };
-  }, []);
+  }, [user]);
 }

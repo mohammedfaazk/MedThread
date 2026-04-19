@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '@medthread/database';
 import { authenticate } from '../middleware/auth.refactored';
+import { onPatientFeedbackCreated } from '../hooks/review-sentiment-hook';
 
 const router = Router();
 
@@ -63,6 +64,12 @@ router.post('/', authenticate, async (req, res) => {
     // Update doctor's average rating
     await updateDoctorRating(doctorId);
 
+    // 🎯 Trigger sentiment analysis (non-blocking)
+    onPatientFeedbackCreated(doctorId, reviewText, overallRating).catch(error => {
+      console.error('[Reviews] Failed to update sentiment score:', error);
+      // Don't fail the request if sentiment analysis fails
+    });
+
     res.json({ success: true, data: review });
   } catch (error: any) {
     console.error('Error creating review:', error);
@@ -108,7 +115,12 @@ router.get('/doctor/:doctorId', async (req, res) => {
       })
     ]);
 
-    // Calculate stats
+    // Calculate stats - Use enhanced score from DoctorPerformance if available
+    const doctorPerformance = await prisma.doctorPerformance.findUnique({
+      where: { doctorId },
+      select: { helpfulnessScore: true }
+    });
+
     const allReviews = await prisma.patientFeedback.findMany({
       where: { 
         doctorId,
@@ -117,9 +129,12 @@ router.get('/doctor/:doctorId', async (req, res) => {
       select: { rating: true }
     });
 
-    const averageRating = allReviews.length > 0
-      ? allReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / allReviews.length
-      : 0;
+    // Use enhanced score if available, otherwise calculate simple average
+    const averageRating = doctorPerformance?.helpfulnessScore 
+      ? doctorPerformance.helpfulnessScore
+      : (allReviews.length > 0
+          ? allReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / allReviews.length
+          : 0);
 
     const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     allReviews.forEach(r => {
@@ -213,6 +228,12 @@ router.put('/:id', authenticate, async (req, res) => {
     });
 
     await updateDoctorRating(review.doctorId);
+
+    // 🎯 Trigger sentiment analysis for updated review (non-blocking)
+    onPatientFeedbackCreated(review.doctorId, reviewText, overallRating).catch(error => {
+      console.error('[Reviews] Failed to update sentiment score:', error);
+    });
+
     res.json({ success: true, data: updated });
   } catch (error: any) {
     console.error('Error updating review:', error);

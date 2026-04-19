@@ -10,10 +10,8 @@ import { useJWTAuth } from '@/context/JWTAuthContext';
 export function ActivityHeartbeat() {
   const { user } = useJWTAuth();
   
-  // Only send heartbeats if user is logged in
-  if (user) {
-    useActivityHeartbeat();
-  }
+  // Always call the hook, but it will handle the user check internally
+  useActivityHeartbeat(user);
   
   return null; // This component doesn't render anything
 }
