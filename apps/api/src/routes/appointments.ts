@@ -594,12 +594,32 @@ router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req,
                     createMockConversation(updated);
 
                     try {
-                        // Check if conversation already exists for this appointment
-                        const existingConversation = await prisma.conversation.findUnique({
-                            where: { appointmentId: id }
+                        // First, check if a conversation already exists between this patient and doctor
+                        const existingConversation = await prisma.conversation.findFirst({
+                            where: {
+                                participants: {
+                                    every: {
+                                        id: {
+                                            in: [appointment.patientId, appointment.doctorId]
+                                        }
+                                    }
+                                }
+                            },
+                            include: {
+                                participants: true
+                            }
                         });
 
-                        if (!existingConversation) {
+                        // Check if the found conversation has exactly these two participants
+                        const conversationBetweenThem = existingConversation?.participants.length === 2 &&
+                            existingConversation.participants.some(p => p.id === appointment.patientId) &&
+                            existingConversation.participants.some(p => p.id === appointment.doctorId);
+
+                        if (conversationBetweenThem) {
+                            console.log('[API] Conversation already exists between patient and doctor, reusing:', existingConversation.id);
+                            // Don't create a new conversation, the existing one will be used
+                        } else {
+                            // No existing conversation between these two users, create new one
                             await prisma.conversation.create({
                                 data: {
                                     appointmentId: id,
@@ -611,9 +631,7 @@ router.put('/appointments/:id', authenticate, requireVerifiedDoctor, async (req,
                                     }
                                 }
                             });
-                            console.log('[API] Conversation created for appointment:', id);
-                        } else {
-                            console.log('[API] Conversation already exists for appointment:', id);
+                            console.log('[API] New conversation created for appointment:', id);
                         }
                     } catch (pError) {
                         console.error('[API] DB Conversation create failed:', pError);

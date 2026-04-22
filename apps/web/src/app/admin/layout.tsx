@@ -66,6 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: Shield },
     { href: '/admin/users', label: 'Users', icon: Users },
+    { href: '/admin/doctor-performance', label: 'Doctor Performance', icon: Trophy },
     { href: '/admin/posts', label: 'Posts', icon: FileText },
     { href: '/admin/comments', label: 'Comments', icon: MessageSquare },
     { href: '/admin/reports', label: 'Reports', icon: Flag },

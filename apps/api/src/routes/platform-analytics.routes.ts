@@ -20,6 +20,20 @@ router.get('/peak-usage', authenticate, requireRole('ADMIN'), asyncHandler(async
 }));
 
 /**
+ * GET /api/platform-analytics/peak-usage/public
+ * Get peak usage analytics (public access)
+ */
+router.get('/peak-usage/public', asyncHandler(async (req, res) => {
+  const { days = 30 } = req.query;
+
+  const peakUsage = await platformAnalyticsService.getPeakUsageAnalytics(
+    parseInt(days as string)
+  );
+
+  res.json({ success: true, data: peakUsage });
+}));
+
+/**
  * GET /api/platform-analytics/response-times
  * Get platform response time metrics
  */
@@ -34,6 +48,16 @@ router.get('/response-times', authenticate, requireRole('ADMIN'), asyncHandler(a
  * Detect platform bottlenecks
  */
 router.get('/bottlenecks', authenticate, requireRole('ADMIN'), asyncHandler(async (req, res) => {
+  const bottlenecks = await platformAnalyticsService.detectBottlenecks();
+
+  res.json({ success: true, data: bottlenecks });
+}));
+
+/**
+ * GET /api/platform-analytics/bottlenecks/public
+ * Detect platform bottlenecks (public access)
+ */
+router.get('/bottlenecks/public', asyncHandler(async (req, res) => {
   const bottlenecks = await platformAnalyticsService.detectBottlenecks();
 
   res.json({ success: true, data: bottlenecks });

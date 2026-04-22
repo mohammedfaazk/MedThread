@@ -399,7 +399,7 @@ export default function AdminDashboard() {
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Uploaded Documents</h3>
                 <div className="space-y-4">
-                  {selectedDoctor.kycDocuments.idProof && (
+                  {selectedDoctor.kycDocuments?.idProof && (
                     <div className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -407,7 +407,7 @@ export default function AdminDashboard() {
                           <span className="font-semibold text-gray-900">Profile Photo</span>
                         </div>
                         <button
-                          onClick={() => setViewingDocument(selectedDoctor.kycDocuments.idProof)}
+                          onClick={() => setViewingDocument(selectedDoctor.kycDocuments?.idProof || '')}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold"
                         >
                           <Eye className="w-4 h-4 inline mr-2" />
@@ -415,15 +415,15 @@ export default function AdminDashboard() {
                         </button>
                       </div>
                       <img
-                        src={selectedDoctor.kycDocuments.idProof}
+                        src={selectedDoctor.kycDocuments?.idProof || ''}
                         alt="Profile Photo"
                         className="w-full h-48 object-contain bg-gray-100 rounded cursor-pointer hover:opacity-80 transition"
-                        onClick={() => setViewingDocument(selectedDoctor.kycDocuments.idProof)}
+                        onClick={() => setViewingDocument(selectedDoctor.kycDocuments?.idProof || '')}
                       />
                     </div>
                   )}
 
-                  {selectedDoctor.kycDocuments.licenseDocument && (
+                  {selectedDoctor.kycDocuments?.licenseDocument && (
                     <div className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
@@ -431,7 +431,7 @@ export default function AdminDashboard() {
                           <span className="font-semibold text-gray-900">Medical License Document</span>
                         </div>
                         <button
-                          onClick={() => setViewingDocument(selectedDoctor.kycDocuments.licenseDocument)}
+                          onClick={() => setViewingDocument(selectedDoctor.kycDocuments?.licenseDocument || '')}
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold"
                         >
                           <Eye className="w-4 h-4 inline mr-2" />
@@ -439,10 +439,10 @@ export default function AdminDashboard() {
                         </button>
                       </div>
                       <img
-                        src={selectedDoctor.kycDocuments.licenseDocument}
+                        src={selectedDoctor.kycDocuments?.licenseDocument || ''}
                         alt="License Document"
                         className="w-full h-48 object-contain bg-gray-100 rounded cursor-pointer hover:opacity-80 transition"
-                        onClick={() => setViewingDocument(selectedDoctor.kycDocuments.licenseDocument)}
+                        onClick={() => setViewingDocument(selectedDoctor.kycDocuments?.licenseDocument || '')}
                       />
                     </div>
                   )}

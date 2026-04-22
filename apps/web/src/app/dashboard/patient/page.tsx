@@ -217,7 +217,7 @@ export default function PatientDashboard() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Diet Planner Card */}
                                 <AnimatedCard delay={0.1}>
-                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all relative overflow-hidden"
+                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all relative overflow-hidden h-[380px] flex flex-col"
                                 >
                                     <div className="flex items-start justify-between mb-4">
                                         <GlassIcon icon={Utensils} color="green" label="Diet" size={24} />
@@ -236,6 +236,7 @@ export default function PatientDashboard() {
                                         <NutrientInfo label="Carbs" value="120g" color="orange" />
                                         <NutrientInfo label="Fats" value="38g" color="purple" />
                                     </div>
+                                    <div className="flex-1"></div>
                                     <button
                                         onClick={() => router.push('/diet')}
                                         className="w-full py-3 bg-[#00BCD4] text-white rounded-xl font-semibold hover:bg-[#00ACC1] transition shadow-lg"
@@ -247,7 +248,7 @@ export default function PatientDashboard() {
 
                                 {/* AI Detective Card */}
                                 <AnimatedCard delay={0.2}>
-                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col"
+                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all h-[380px] flex flex-col"
                                 >
                                     <div className="flex items-start justify-between mb-4">
                                         <GlassIcon icon={Search} color="orange" label="AI Detective" size={24} />
@@ -256,7 +257,7 @@ export default function PatientDashboard() {
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">AI Detective</h3>
-                                    <p className="text-gray-500 text-sm mb-4 flex-1">
+                                    <p className="text-gray-500 text-sm mb-4">
                                         Describe symptoms and get AI insights.
                                     </p>
                                     <div className="flex flex-wrap gap-2 mb-4">
@@ -266,6 +267,7 @@ export default function PatientDashboard() {
                                             </span>
                                         ))}
                                     </div>
+                                    <div className="flex-1"></div>
                                     <button
                                         onClick={() => router.push('/ai-detective')}
                                         className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition"
@@ -277,7 +279,7 @@ export default function PatientDashboard() {
 
                                 {/* Symptom Trends Card */}
                                 <AnimatedCard delay={0.25}>
-                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all flex flex-col">
+                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all h-[380px] flex flex-col">
                                     <div className="flex items-start justify-between mb-4">
                                         <GlassIcon icon={TrendingUp} color="red" label="Trends" size={24} />
                                         <span className="bg-rose-50 text-rose-700 px-2 py-1 rounded text-[10px] font-semibold uppercase">
@@ -285,14 +287,38 @@ export default function PatientDashboard() {
                                         </span>
                                     </div>
                                     <h3 className="text-lg font-bold text-gray-900 mb-2">Symptom Trends</h3>
-                                    <p className="text-gray-500 text-sm mb-4 flex-1">
+                                    <p className="text-gray-500 text-sm mb-4">
                                         See what symptoms are trending in your area, city, state, and across India.
                                     </p>
+                                    <div className="flex-1"></div>
                                     <button
                                         onClick={() => router.push('/trends')}
                                         className="w-full py-3 bg-rose-500 text-white rounded-xl font-semibold hover:bg-rose-600 transition"
                                     >
                                         View Trends
+                                    </button>
+                                </SpotlightCard>
+                                </AnimatedCard>
+
+                                {/* Health Risk Assessment Card */}
+                                <AnimatedCard delay={0.3}>
+                                <SpotlightCard className="bg-white/40 backdrop-blur-xl p-6 rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transition-all h-[380px] flex flex-col">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <GlassIcon icon={Activity} color="purple" label="Risk" size={24} />
+                                        <span className="bg-purple-50 text-purple-700 px-2 py-1 rounded text-[10px] font-semibold uppercase">
+                                            AI Powered
+                                        </span>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900 mb-2">Health Risk Assessment</h3>
+                                    <p className="text-gray-500 text-sm mb-4">
+                                        Get AI-powered predictions for diabetes, heart disease, and more based on your health profile.
+                                    </p>
+                                    <div className="flex-1"></div>
+                                    <button
+                                        onClick={() => router.push('/health-risk')}
+                                        className="w-full py-3 bg-purple-500 text-white rounded-xl font-semibold hover:bg-purple-600 transition"
+                                    >
+                                        View Risk Assessment
                                     </button>
                                 </SpotlightCard>
                                 </AnimatedCard>

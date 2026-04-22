@@ -311,6 +311,7 @@ app.use('/api/v1/conversations', conversationSearchRouter);
 app.use('/api/v1/health-challenges', healthChallengesRouterNew);
 app.use('/api/v1/support-groups', supportGroupsRouter);
 app.use('/api/v1/health-risk', healthRiskRouter);
+app.use('/api/health-risk', healthRiskRouter); // Also register without v1 prefix
 
 // New Features
 app.use('/api/v1/health-tips', healthTipsRouter);

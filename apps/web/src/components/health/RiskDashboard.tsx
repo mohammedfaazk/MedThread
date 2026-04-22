@@ -38,9 +38,10 @@ interface RiskPrediction {
 
 interface RiskDashboardProps {
   userId: string;
+  onStartAssessment?: () => void;
 }
 
-export default function RiskDashboard({ userId }: RiskDashboardProps) {
+export default function RiskDashboard({ userId, onStartAssessment }: RiskDashboardProps) {
   const [predictions, setPredictions] = useState<RiskPrediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRisk, setSelectedRisk] = useState<RiskPrediction | null>(null);
@@ -53,15 +54,44 @@ export default function RiskDashboard({ userId }: RiskDashboardProps) {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${apiUrl}/api/v1/health-risk/predictions/${userId}`, {
+      
+      console.log('[RiskDashboard] Fetching predictions for user:', userId);
+      
+      const response = await fetch(`${apiUrl}/api/health-risk/predictions/${userId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch predictions: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setPredictions(data.predictions || []);
+      console.log('[RiskDashboard] Predictions data:', data);
+      
+      // Add riskLevel if missing (for backward compatibility with old data)
+      const predictionsWithRiskLevel = (data.predictions || []).map((p: any) => {
+        if (!p.riskLevel && p.riskScore !== undefined) {
+          // Calculate risk level from score
+          if (p.riskScore < 10) {
+            p.riskLevel = 'LOW';
+          } else if (p.riskScore < 20) {
+            p.riskLevel = 'MODERATE';
+          } else if (p.riskScore < 30) {
+            p.riskLevel = 'HIGH';
+          } else {
+            p.riskLevel = 'CRITICAL';
+          }
+        }
+        return p;
+      });
+      
+      console.log('[RiskDashboard] Risk levels:', predictionsWithRiskLevel.map((p: any) => ({ disease: p.disease, riskLevel: p.riskLevel, riskScore: p.riskScore })));
+      setPredictions(predictionsWithRiskLevel);
     } catch (error) {
       console.error('Failed to fetch risk predictions:', error);
+      setPredictions([]);
     } finally {
       setLoading(false);
     }
@@ -93,12 +123,12 @@ export default function RiskDashboard({ userId }: RiskDashboardProps) {
     datasets: predictions.slice(0, 3).map((pred, index) => ({
       label: pred.disease,
       data: [
-        pred.probability,
-        pred.probability * 1.1,
-        pred.probability * 1.2,
-        pred.probability * 1.3,
-        pred.probability * 1.4,
-        pred.probability * 1.5
+        pred.riskPercentage || pred.riskScore,
+        (pred.riskPercentage || pred.riskScore) * 1.1,
+        (pred.riskPercentage || pred.riskScore) * 1.2,
+        (pred.riskPercentage || pred.riskScore) * 1.3,
+        (pred.riskPercentage || pred.riskScore) * 1.4,
+        (pred.riskPercentage || pred.riskScore) * 1.5
       ],
       borderColor: index === 0 ? 'rgb(239, 68, 68)' : index === 1 ? 'rgb(249, 115, 22)' : 'rgb(234, 179, 8)',
       backgroundColor: index === 0 ? 'rgba(239, 68, 68, 0.1)' : index === 1 ? 'rgba(249, 115, 22, 0.1)' : 'rgba(234, 179, 8, 0.1)',
@@ -153,26 +183,36 @@ export default function RiskDashboard({ userId }: RiskDashboardProps) {
           <div className="text-sm text-gray-600 mb-1">Overall Risk</div>
           <div className="text-3xl font-bold text-orange-600">
             {predictions.length > 0 
-              ? Math.round(predictions.reduce((acc, p) => acc + p.probability, 0) / predictions.length)
+              ? Math.round(predictions.reduce((acc, p) => acc + (p.riskPercentage || p.riskScore), 0) / predictions.length)
               : 0}%
           </div>
+          <div className="text-xs text-gray-500 mt-1">{predictions.length} predictions</div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-sm text-gray-600 mb-1">High Risk Conditions</div>
           <div className="text-3xl font-bold text-red-600">
-            {predictions.filter(p => p.riskLevel === 'HIGH' || p.riskLevel === 'CRITICAL').length}
+            {predictions.filter(p => {
+              const level = p.riskLevel?.toUpperCase();
+              return level === 'HIGH' || level === 'CRITICAL' || level === 'SEVERE';
+            }).length}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-sm text-gray-600 mb-1">Medium Risk</div>
           <div className="text-3xl font-bold text-yellow-600">
-            {predictions.filter(p => p.riskLevel === 'MEDIUM').length}
+            {predictions.filter(p => {
+              const level = p.riskLevel?.toUpperCase();
+              return level === 'MODERATE' || level === 'MEDIUM' || level === 'MED';
+            }).length}
           </div>
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <div className="text-sm text-gray-600 mb-1">Low Risk</div>
           <div className="text-3xl font-bold text-green-600">
-            {predictions.filter(p => p.riskLevel === 'LOW').length}
+            {predictions.filter(p => {
+              const level = p.riskLevel?.toUpperCase();
+              return level === 'LOW' || level === 'MINIMAL';
+            }).length}
           </div>
         </div>
       </div>
@@ -204,17 +244,17 @@ export default function RiskDashboard({ userId }: RiskDashboardProps) {
               <div className="mb-3">
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-gray-600">Risk Probability</span>
-                  <span className="font-semibold">{prediction.probability}%</span>
+                  <span className="font-semibold">{prediction.riskPercentage || prediction.riskScore}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full ${
                       prediction.riskLevel === 'CRITICAL' ? 'bg-red-600' :
                       prediction.riskLevel === 'HIGH' ? 'bg-orange-600' :
-                      prediction.riskLevel === 'MEDIUM' ? 'bg-yellow-600' :
+                      prediction.riskLevel === 'MODERATE' || prediction.riskLevel === 'MEDIUM' ? 'bg-yellow-600' :
                       'bg-green-600'
                     }`}
-                    style={{ width: `${prediction.probability}%` }}
+                    style={{ width: `${prediction.riskPercentage || prediction.riskScore}%` }}
                   ></div>
                 </div>
               </div>
@@ -222,10 +262,10 @@ export default function RiskDashboard({ userId }: RiskDashboardProps) {
               <div className="text-sm">
                 <div className="font-semibold text-gray-700 mb-1">Top Prevention Tips:</div>
                 <ul className="space-y-1">
-                  {prediction.preventionTips.slice(0, 2).map((tip, i) => (
+                  {(prediction.preventionPlan || prediction.preventionTips || []).slice(0, 2).map((item: any, i: number) => (
                     <li key={i} className="text-gray-600 flex items-start">
                       <span className="mr-2">•</span>
-                      <span>{tip}</span>
+                      <span>{typeof item === 'string' ? item : item.action}</span>
                     </li>
                   ))}
                 </ul>
@@ -246,7 +286,10 @@ export default function RiskDashboard({ userId }: RiskDashboardProps) {
           <p className="text-gray-600 mb-4">
             Complete your health profile to get personalized risk assessments
           </p>
-          <button className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
+          <button 
+            onClick={onStartAssessment}
+            className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+          >
             Complete Health Profile
           </button>
         </div>
@@ -255,42 +298,45 @@ export default function RiskDashboard({ userId }: RiskDashboardProps) {
       {/* Detail Modal */}
       {selectedRisk && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+            {/* Close Button - Top Right Corner */}
+            <button
+              onClick={() => setSelectedRisk(null)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors z-10"
+              aria-label="Close"
+            >
+              <span className="text-xl font-bold">×</span>
+            </button>
+
             <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4 pr-8">
                 <h2 className="text-2xl font-bold text-gray-900">{selectedRisk.disease}</h2>
-                <button
-                  onClick={() => setSelectedRisk(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
               </div>
 
               <div className={`p-4 rounded-lg mb-6 ${getRiskColor(selectedRisk.riskLevel)}`}>
                 <div className="font-semibold mb-2">Risk Level: {selectedRisk.riskLevel}</div>
-                <div className="text-2xl font-bold">{selectedRisk.probability}% Probability</div>
+                <div className="text-2xl font-bold">{selectedRisk.riskPercentage || selectedRisk.riskScore}% Probability</div>
                 <div className="text-sm mt-1">Timeframe: {selectedRisk.timeframe}</div>
               </div>
 
               <div className="mb-6">
                 <h3 className="font-bold text-gray-900 mb-3">Prevention Strategies</h3>
                 <ul className="space-y-2">
-                  {selectedRisk.preventionTips.map((tip, i) => (
+                  {(selectedRisk.preventionPlan || selectedRisk.preventionTips || []).map((item: any, i: number) => (
                     <li key={i} className="flex items-start">
                       <span className="text-green-600 mr-2">✓</span>
-                      <span className="text-gray-700">{tip}</span>
+                      <span className="text-gray-700">{typeof item === 'string' ? item : item.action}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               <div className="mb-6">
-                <h3 className="font-bold text-gray-900 mb-3">Based On</h3>
+                <h3 className="font-bold text-gray-900 mb-3">Risk Factors</h3>
                 <div className="flex flex-wrap gap-2">
-                  {selectedRisk.basedOn.map((factor, i) => (
+                  {(selectedRisk.factors || selectedRisk.basedOn || []).map((item: any, i: number) => (
                     <span key={i} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                      {factor}
+                      {typeof item === 'string' ? item : item.factor}
                     </span>
                   ))}
                 </div>

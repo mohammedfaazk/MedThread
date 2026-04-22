@@ -115,6 +115,8 @@ export class DoctorVerificationService {
           yearsOfExperience: true,
           hospitalAffiliation: true,
           clinicAddress: true,
+          medicalUniversity: true,
+          graduationYear: true,
           kycDocuments: true,
           createdAt: true,
           updatedAt: true,

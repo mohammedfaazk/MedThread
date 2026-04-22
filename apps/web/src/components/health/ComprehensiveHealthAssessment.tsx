@@ -65,7 +65,7 @@ export default function ComprehensiveHealthAssessment({ userId, onClose, onCompl
       const payload = { userId, ...formData };
       console.log('[Health Assessment] Payload:', payload);
 
-      const response = await fetch(`${apiUrl}/api/v1/health-risk/assess`, {
+      const response = await fetch(`${apiUrl}/api/health-risk/assess`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -84,6 +84,12 @@ export default function ComprehensiveHealthAssessment({ userId, onClose, onCompl
 
       const data = await response.json();
       console.log('[Health Assessment] Success:', data);
+      
+      // Show success message with prediction count
+      if (data.predictions && data.predictions.length > 0) {
+        alert(`✅ Assessment Complete!\n\n${data.predictions.length} risk predictions generated.\n\nClick OK to view your results.`);
+      }
+      
       onComplete();
     } catch (error: any) {
       console.error('[Health Assessment] Error:', error);

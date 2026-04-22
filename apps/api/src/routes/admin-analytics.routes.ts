@@ -775,4 +775,126 @@ router.get('/revenue', async (req, res) => {
   }
 });
 
+// ============================================
+// 13. DOCTOR LEADERBOARD (Top Performing Doctors)
+// ============================================
+router.get('/doctor-leaderboard', async (req, res) => {
+  try {
+    const { period = '30days', limit = 10 } = req.query;
+    
+    let startDate = new Date();
+    if (period === '7days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === '30days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (period === '90days') {
+      startDate.setDate(startDate.getDate() - 90);
+    } else if (period === 'all') {
+      startDate = new Date('2020-01-01');
+    }
+
+    // Get all doctors with their performance metrics
+    const doctors = await prisma.user.findMany({
+      where: {
+        role: 'DOCTOR',
+        doctorVerificationStatus: 'APPROVED'
+      },
+      select: {
+        id: true,
+        username: true,
+        specialty: true,
+        posts: {
+          where: { createdAt: { gte: startDate } },
+          select: { id: true }
+        },
+        comments: {
+          where: { createdAt: { gte: startDate } },
+          select: { id: true }
+        },
+        appointmentsAsDoctor: {
+          where: { createdAt: { gte: startDate } },
+          select: { 
+            id: true,
+            status: true
+          }
+        },
+        patientFeedbacks: {
+          select: {
+            rating: true,
+            treatmentOutcome: true
+          }
+        }
+      }
+    });
+
+    // Calculate performance metrics for each doctor
+    const doctorPerformance = doctors.map((doctor, index) => {
+      const totalPosts = doctor.posts.length;
+      const totalComments = doctor.comments.length;
+      const totalAppointments = doctor.appointmentsAsDoctor.length;
+      const completedAppointments = doctor.appointmentsAsDoctor.filter(a => a.status === 'COMPLETED').length;
+      
+      // Calculate treatment success rate
+      const treatmentOutcomes = doctor.patientFeedbacks.map(f => f.treatmentOutcome).filter(Boolean);
+      const successfulTreatments = treatmentOutcomes.filter(o => o === 'CURED' || o === 'IMPROVED').length;
+      const treatmentSuccessRate = treatmentOutcomes.length > 0 
+        ? Math.round((successfulTreatments / treatmentOutcomes.length) * 100)
+        : 0;
+
+      // Calculate average rating
+      const ratings = doctor.patientFeedbacks.map(f => f.rating).filter(Boolean);
+      const avgRating = ratings.length > 0
+        ? (ratings.reduce((sum, r) => sum + r, 0) / ratings.length).toFixed(1)
+        : 0;
+
+      // Calculate conversion rate (appointments / posts+comments)
+      const conversionRate = (totalPosts + totalComments) > 0
+        ? Math.round((totalAppointments / (totalPosts + totalComments)) * 100)
+        : 0;
+
+      // Calculate portfolio score (weighted average)
+      const portfolioScore = Math.round(
+        (treatmentSuccessRate * 0.4) + // 40% weight on treatment success
+        (Number(avgRating) * 20 * 0.3) + // 30% weight on rating (scaled to 100)
+        (Math.min(conversionRate, 100) * 0.2) + // 20% weight on conversion
+        (Math.min((totalPosts + totalComments) / 10, 10) * 0.1) // 10% weight on activity
+      );
+
+      return {
+        id: doctor.id,
+        username: doctor.username,
+        specialty: doctor.specialty || 'General',
+        portfolioScore,
+        treatmentSuccessRate,
+        totalPatients: doctor.patientFeedbacks.length,
+        totalPosts,
+        totalComments,
+        conversionRate,
+        responseTime: 2.5 + Math.random() * 3, // Mock response time (2.5-5.5 hours)
+        rating: Number(avgRating),
+        rank: 0 // Will be set after sorting
+      };
+    });
+
+    // Sort by portfolio score and assign ranks
+    doctorPerformance.sort((a, b) => b.portfolioScore - a.portfolioScore);
+    doctorPerformance.forEach((doctor, index) => {
+      doctor.rank = index + 1;
+    });
+
+    // Return top N doctors
+    const topDoctors = doctorPerformance.slice(0, Number(limit));
+
+    res.json({
+      success: true,
+      data: topDoctors,
+      total: doctorPerformance.length
+    });
+  } catch (error: any) {
+    console.error('Error fetching doctor leaderboard:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;
+

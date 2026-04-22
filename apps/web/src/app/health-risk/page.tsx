@@ -24,15 +24,24 @@ export default function HealthRiskPage() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const token = localStorage.getItem('auth_token');
-      const response = await fetch(`${apiUrl}/api/v1/health-risk/assessment/${user?.id}`, {
+      
+      // Fetch predictions (not assessment data)
+      const response = await fetch(`${apiUrl}/api/health-risk/predictions/${user?.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch predictions');
+      }
+      
       const data = await response.json();
+      console.log('[Health Risk Page] Predictions data:', data);
       setRiskData(data);
     } catch (error) {
       console.error('Error fetching risk data:', error);
+      setRiskData(null);
     } finally {
       setLoading(false);
     }
@@ -75,8 +84,8 @@ export default function HealthRiskPage() {
           </p>
         </div>
 
-        {riskData ? (
-          <RiskDashboard userId={user.id} />
+        {riskData && riskData.predictions && riskData.predictions.length > 0 ? (
+          <RiskDashboard userId={user.id} onStartAssessment={() => setShowAssessment(true)} />
         ) : (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <div className="max-w-md mx-auto">

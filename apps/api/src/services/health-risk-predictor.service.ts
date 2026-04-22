@@ -972,15 +972,27 @@ export class HealthRiskPredictorService {
   private extractHealthData(user: any): UserHealthData {
     const profile = user.healthProfile || user.patientHealthProfile;
     
+    // Get clinical data from secondaryHealthConcerns JSON field
+    const clinicalData = profile?.secondaryHealthConcerns as any || {};
+    
     return {
-      age: this.calculateAge(profile?.ageGroup),
-      gender: profile?.biologicalSex || profile?.gender || 'Unknown',
-      bmi: this.calculateBMI(profile?.weightRange, profile?.heightRange),
+      age: clinicalData.age || this.calculateAge(profile?.ageGroup),
+      gender: clinicalData.gender || profile?.biologicalSex || 'Unknown',
+      bmi: clinicalData.bmi || this.calculateBMI(profile?.weightRange, profile?.heightRange),
+      bloodPressure: clinicalData.bloodPressure,
+      bloodSugar: clinicalData.bloodSugar,
+      cholesterol: clinicalData.cholesterol,
+      hdlCholesterol: clinicalData.hdlCholesterol,
+      ldlCholesterol: clinicalData.ldlCholesterol,
+      triglycerides: clinicalData.triglycerides,
+      waistCircumference: clinicalData.waistCircumference,
       smokingStatus: profile?.smokingStatus,
       alcoholConsumption: profile?.alcoholConsumption,
       activityLevel: profile?.activityLevel,
       familyHistory: profile?.preExistingConditions || [],
-      currentConditions: profile?.medicalConditions || []
+      currentConditions: profile?.medicalConditions || [],
+      gestationalDiabetes: clinicalData.gestationalDiabetes,
+      hypertensionMedication: clinicalData.hypertensionMedication
     };
   }
 
@@ -1033,48 +1045,132 @@ export class HealthRiskPredictorService {
    * Save prediction to database
    */
   private async savePrediction(userId: string, prediction: RiskPrediction): Promise<void> {
-    const validUntil = new Date();
-    validUntil.setMonth(validUntil.getMonth() + (prediction.timeframe === '6_MONTHS' ? 6 : 12));
+      // Store predictions in PatientHealthProfile's secondaryHealthConcerns JSON field
+      const profile = await prisma.patientHealthProfile.findUnique({
+        where: { userId }
+      });
 
-    await prisma.healthRiskPrediction.create({
-      data: {
-        userId,
-        riskType: prediction.riskType,
+      if (!profile) {
+        console.warn(`No health profile found for user ${userId}, skipping prediction save`);
+        return;
+      }
+
+      // Get existing clinical data
+      const clinicalData = (profile.secondaryHealthConcerns as any) || {};
+
+      // Add predictions array if it doesn't exist
+      if (!clinicalData.predictions) {
+        clinicalData.predictions = [];
+      }
+
+      // Determine risk level based on risk score
+      let riskLevel: string;
+      if (prediction.riskScore < 10) {
+        riskLevel = 'LOW';
+      } else if (prediction.riskScore < 20) {
+        riskLevel = 'MODERATE';
+      } else if (prediction.riskScore < 30) {
+        riskLevel = 'HIGH';
+      } else {
+        riskLevel = 'CRITICAL';
+      }
+
+      // Add this prediction with timestamp and risk level
+      const predictionWithTimestamp = {
+        disease: prediction.riskType,
         riskScore: prediction.riskScore,
+        riskPercentage: prediction.riskScore,
+        riskLevel,
         timeframe: prediction.timeframe,
         factors: prediction.factors,
         preventionPlan: prediction.preventionPlan,
         confidence: prediction.confidence,
-        validUntil
-      }
-    });
-  }
+        predictedAt: new Date().toISOString(),
+        validUntil: new Date(Date.now() + (prediction.timeframe === '6_MONTHS' ? 6 : 12) * 30 * 24 * 60 * 60 * 1000).toISOString()
+      };
+
+      // Keep only the latest prediction for each risk type
+      clinicalData.predictions = [
+        ...clinicalData.predictions.filter((p: any) => p.disease !== prediction.riskType),
+        predictionWithTimestamp
+      ];
+
+      // Update the profile
+      await prisma.patientHealthProfile.update({
+        where: { userId },
+        data: {
+          secondaryHealthConcerns: clinicalData,
+          lastUpdatedAt: new Date()
+        }
+      });
+    }
+
 
   /**
    * Get user's risk predictions
    */
   async getUserRiskPredictions(userId: string): Promise<any[]> {
-    return await prisma.healthRiskPrediction.findMany({
-      where: {
-        userId,
-        validUntil: { gte: new Date() }
-      },
-      orderBy: {
-        riskScore: 'desc'
-      }
+    const profile = await prisma.patientHealthProfile.findUnique({
+      where: { userId }
     });
+
+    if (!profile || !profile.secondaryHealthConcerns) {
+      return [];
+    }
+
+    const clinicalData = profile.secondaryHealthConcerns as any;
+    const predictions = clinicalData.predictions || [];
+
+    // Filter out expired predictions and sort by risk score
+    const now = new Date();
+    return predictions
+      .filter((p: any) => new Date(p.validUntil) >= now)
+      .map((p: any) => ({
+        ...p,
+        // Normalize field names for consistency
+        disease: p.disease || p.riskType,
+        riskPercentage: p.riskPercentage || p.riskScore,
+        preventionTips: p.preventionTips || p.preventionPlan,
+        basedOn: p.basedOn || p.factors
+      }))
+      .sort((a: any, b: any) => b.riskScore - a.riskScore);
   }
 
   /**
    * Update prediction with actual outcome
    */
   async updatePredictionOutcome(
-    predictionId: string,
+    userId: string,
+    riskType: string,
     actualOutcome: string
   ): Promise<void> {
-    await prisma.healthRiskPrediction.update({
-      where: { id: predictionId },
-      data: { actualOutcome }
+    const profile = await prisma.patientHealthProfile.findUnique({
+      where: { userId }
+    });
+
+    if (!profile || !profile.secondaryHealthConcerns) {
+      return;
+    }
+
+    const clinicalData = profile.secondaryHealthConcerns as any;
+    if (!clinicalData.predictions) {
+      return;
+    }
+
+    // Update the specific prediction
+    clinicalData.predictions = clinicalData.predictions.map((p: any) => {
+      if (p.riskType === riskType) {
+        return { ...p, actualOutcome, outcomeRecordedAt: new Date().toISOString() };
+      }
+      return p;
+    });
+
+    await prisma.patientHealthProfile.update({
+      where: { userId },
+      data: {
+        secondaryHealthConcerns: clinicalData,
+        lastUpdatedAt: new Date()
+      }
     });
   }
 
@@ -1109,85 +1205,54 @@ export class HealthRiskPredictorService {
     const heightInMeters = height / 100;
     const bmi = weight / (heightInMeters * heightInMeters);
 
-    // Update or create health profile
-    await prisma.healthProfile.upsert({
-      where: { userId },
-      create: {
-        userId,
-        ageGroup: this.getAgeGroup(age),
-        biologicalSex: gender,
-        heightRange: `${height}cm`,
-        weightRange: `${weight}kg`,
-        smokingStatus,
-        alcoholConsumption,
-        activityLevel,
-        preExistingConditions: familyHistory || [],
-        medicalConditions: currentConditions || [],
-        currentMedications: medications || []
+    // Prepare clinical data to store as JSON
+    const clinicalData = {
+      age: parseInt(age),
+      gender,
+      height: parseFloat(height),
+      weight: parseFloat(weight),
+      bmi,
+      waistCircumference: waistCircumference ? parseFloat(waistCircumference) : null,
+      bloodPressure: {
+        systolic: bloodPressureSystolic ? parseInt(bloodPressureSystolic) : null,
+        diastolic: bloodPressureDiastolic ? parseInt(bloodPressureDiastolic) : null
       },
-      update: {
-        ageGroup: this.getAgeGroup(age),
-        biologicalSex: gender,
-        heightRange: `${height}cm`,
-        weightRange: `${weight}kg`,
-        smokingStatus,
-        alcoholConsumption,
-        activityLevel,
-        preExistingConditions: familyHistory || [],
-        medicalConditions: currentConditions || [],
-        currentMedications: medications || []
-      }
-    });
+      bloodSugar: bloodSugar ? parseFloat(bloodSugar) : null,
+      cholesterol: cholesterol ? parseFloat(cholesterol) : null,
+      hdlCholesterol: hdlCholesterol ? parseFloat(hdlCholesterol) : null,
+      ldlCholesterol: ldlCholesterol ? parseFloat(ldlCholesterol) : null,
+      triglycerides: triglycerides ? parseFloat(triglycerides) : null,
+      gestationalDiabetes: gestationalDiabetes || false,
+      hypertensionMedication: hypertensionMedication || false,
+      assessmentDate: new Date().toISOString()
+    };
 
-    // Store detailed clinical data in patient health profile
+    // Store in PatientHealthProfile using existing schema fields
     await prisma.patientHealthProfile.upsert({
       where: { userId },
       create: {
         userId,
-        age: parseInt(age),
-        gender,
-        height: parseFloat(height),
-        weight: parseFloat(weight),
-        bmi,
-        waistCircumference: waistCircumference ? parseFloat(waistCircumference) : null,
-        bloodPressureSystolic: bloodPressureSystolic ? parseInt(bloodPressureSystolic) : null,
-        bloodPressureDiastolic: bloodPressureDiastolic ? parseInt(bloodPressureDiastolic) : null,
-        bloodSugar: bloodSugar ? parseFloat(bloodSugar) : null,
-        cholesterol: cholesterol ? parseFloat(cholesterol) : null,
-        hdlCholesterol: hdlCholesterol ? parseFloat(hdlCholesterol) : null,
-        ldlCholesterol: ldlCholesterol ? parseFloat(ldlCholesterol) : null,
-        triglycerides: triglycerides ? parseFloat(triglycerides) : null,
+        ageGroup: this.getAgeGroup(age),
+        biologicalSex: gender,
         smokingStatus,
         alcoholConsumption,
         activityLevel,
-        familyHistory: familyHistory || [],
-        currentConditions: currentConditions || [],
-        medications: medications || [],
-        gestationalDiabetes: gestationalDiabetes || false,
-        hypertensionMedication: hypertensionMedication || false
+        preExistingConditions: familyHistory || [],
+        currentMedications: medications || [],
+        secondaryHealthConcerns: clinicalData, // Store all clinical data here
+        completedAt: new Date(),
+        lastUpdatedAt: new Date()
       },
       update: {
-        age: parseInt(age),
-        gender,
-        height: parseFloat(height),
-        weight: parseFloat(weight),
-        bmi,
-        waistCircumference: waistCircumference ? parseFloat(waistCircumference) : null,
-        bloodPressureSystolic: bloodPressureSystolic ? parseInt(bloodPressureSystolic) : null,
-        bloodPressureDiastolic: bloodPressureDiastolic ? parseInt(bloodPressureDiastolic) : null,
-        bloodSugar: bloodSugar ? parseFloat(bloodSugar) : null,
-        cholesterol: cholesterol ? parseFloat(cholesterol) : null,
-        hdlCholesterol: hdlCholesterol ? parseFloat(hdlCholesterol) : null,
-        ldlCholesterol: ldlCholesterol ? parseFloat(ldlCholesterol) : null,
-        triglycerides: triglycerides ? parseFloat(triglycerides) : null,
+        ageGroup: this.getAgeGroup(age),
+        biologicalSex: gender,
         smokingStatus,
         alcoholConsumption,
         activityLevel,
-        familyHistory: familyHistory || [],
-        currentConditions: currentConditions || [],
-        medications: medications || [],
-        gestationalDiabetes: gestationalDiabetes || false,
-        hypertensionMedication: hypertensionMedication || false
+        preExistingConditions: familyHistory || [],
+        currentMedications: medications || [],
+        secondaryHealthConcerns: clinicalData, // Store all clinical data here
+        lastUpdatedAt: new Date()
       }
     });
   }
