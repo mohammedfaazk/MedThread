@@ -39,3 +39,5 @@ export const doctorData = [
     medicalUniversity: 'Madras Medical College',
     bio: 'Dermatologist specializing in acne treatment, anti-aging procedures, and skin cancer screening. Advocate for holistic skin health.'
   },
+
+];

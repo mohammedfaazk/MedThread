@@ -19,7 +19,7 @@ const authenticateSocket = (socket: AuthenticatedSocket): boolean => {
       return false;
     }
     
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-change-in-production') as any;
     socket.userId = decoded.userId;
     socket.userRole = decoded.role;
     

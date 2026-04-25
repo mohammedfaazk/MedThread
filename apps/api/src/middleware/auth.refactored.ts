@@ -19,17 +19,36 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     // Get token from cookie or Authorization header
     const token = getTokenFromRequest(req);
     
+    console.log('[AUTH] Authenticating request:', {
+      path: req.path,
+      method: req.method,
+      hasToken: !!token,
+      authHeader: req.headers.authorization ? 'present' : 'missing',
+      authHeaderValue: req.headers.authorization ? req.headers.authorization.substring(0, 50) + '...' : 'none',
+      cookies: req.cookies ? Object.keys(req.cookies) : 'no cookies',
+      jwtSecret: config.jwtSecret ? config.jwtSecret.substring(0, 20) + '...' : 'NOT SET'
+    });
+    
     if (!token) {
+      console.log('[AUTH] No token found - throwing UnauthorizedError');
       throw new UnauthorizedError('No token provided');
     }
     
+    console.log('[AUTH] Token found, verifying with secret:', config.jwtSecret.substring(0, 20) + '...');
     const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
     
+    console.log('[AUTH] Token verified for user:', decoded.userId);
     req.userId = decoded.userId;
     req.userRole = decoded.role;
     
     next();
-  } catch (error) {
+  } catch (error: any) {
+    console.log('[AUTH] Error:', {
+      type: error.constructor.name,
+      message: error.message,
+      jwtSecret: config.jwtSecret ? config.jwtSecret.substring(0, 20) + '...' : 'NOT SET'
+    });
+    
     if (error instanceof jwt.JsonWebTokenError) {
       next(new UnauthorizedError('Invalid token'));
     } else if (error instanceof jwt.TokenExpiredError) {

@@ -39,14 +39,25 @@ export function clearAuthCookies(res: Response) {
 export function getTokenFromRequest(req: any): string | null {
   // First check cookies
   if (req.cookies && req.cookies.auth_token) {
+    console.log('[TOKEN] Found token in cookies');
     return req.cookies.auth_token;
   }
 
   // Fallback to Authorization header for backward compatibility
   const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
+  if (authHeader) {
+    console.log('[TOKEN] Authorization header found:', authHeader.substring(0, 50) + '...');
+    if (authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      console.log('[TOKEN] Extracted Bearer token:', token.substring(0, 50) + '...');
+      return token;
+    } else {
+      console.log('[TOKEN] Authorization header does not start with "Bearer "');
+    }
+  } else {
+    console.log('[TOKEN] No Authorization header found');
   }
 
+  console.log('[TOKEN] No token found in cookies or Authorization header');
   return null;
 }

@@ -53,7 +53,7 @@ authRouter.post('/register', async (req, res) => {
 
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      process.env.JWT_SECRET || 'secret',
+      process.env.JWT_SECRET || 'dev-secret-change-in-production',
       { expiresIn: '7d' }
     );
 
@@ -115,7 +115,7 @@ authRouter.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      process.env.JWT_SECRET || 'secret',
+      process.env.JWT_SECRET || 'dev-secret-change-in-production',
       { expiresIn: '7d' }
     );
 
@@ -170,7 +170,7 @@ authRouter.post('/verify-password', async (req, res) => {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-change-in-production') as any;
     console.log('✅ Token decoded:', { userId: decoded.userId, role: decoded.role });
     
     const { password } = req.body;

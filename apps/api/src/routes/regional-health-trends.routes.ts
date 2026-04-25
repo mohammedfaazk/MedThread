@@ -33,5 +33,23 @@ async function extractSymptomsFromText(text: string): Promise<string[]> {
       messages: [
         {
           role: 'system',
-          content: `You are a medical symptom extractor. Extract all medical symptoms mentioned in the text.
-Return ONLY a JSON array of symptom names in 
+          content: `You are a medical symptom extractor. Extract all medical symptoms mentioned in the text. Return ONLY a JSON array of symptom names.`
+        },
+        {
+          role: 'user',
+          content: text
+        }
+      ],
+      model: 'mixtral-8x7b-32768',
+      temperature: 0.3,
+      max_tokens: 500
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '[]';
+    const symptoms = JSON.parse(responseText);
+    return Array.isArray(symptoms) ? symptoms : [];
+  } catch (error) {
+    console.error('Error extracting symptoms:', error);
+    return [];
+  }
+}

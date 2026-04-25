@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useJWTAuth } from '@/context/JWTAuthContext'
 import { FileText, Image, Video, Link2, BarChart3, Bold, Italic, List } from 'lucide-react'
 import axios from 'axios'
+import { clearAuthAndRedirect } from '@/utils/logout'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
@@ -46,7 +47,7 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
   const [uploadPreviews, setUploadPreviews] = useState<string[]>([])
   
   const { fetchPosts } = useStore()
-  const { user, role } = useJWTAuth()
+  const { user, role, logout } = useJWTAuth()
   const router = useRouter()
 
   // Check if user is an unverified doctor
@@ -198,6 +199,20 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
 
     try {
       const token = localStorage.getItem('auth_token')
+      
+      console.log('[CreatePost] Token check:', {
+        tokenExists: !!token,
+        tokenLength: token?.length,
+        tokenPreview: token ? token.substring(0, 50) + '...' : 'none'
+      });
+      
+      if (!token) {
+        alert('Your session has expired. Please log in again.')
+        logout()
+        router.push('/login')
+        return
+      }
+      
       let mediaUrls: string[] = []
 
       // Upload files if image/video post
@@ -253,6 +268,8 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
         }
       )
 
+      console.log('[CreatePost] Post created successfully:', response.data);
+
       // Handle both response formats
       const newPost = response.data.data || response.data
 
@@ -274,9 +291,16 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
       fetchPosts()
       
       // Show success message
-      alert('Post created successfully!')
+      alert('✅ Post created successfully!')
     } catch (error: any) {
       console.error('Failed to create post:', error)
+      console.error('[CreatePost] Error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+        headers: error.response?.headers
+      });
       
       // Provide user-friendly error messages
       let errorMessage = 'Failed to create post. Please try again.'
@@ -284,7 +308,14 @@ export function CreatePostModal({ isOpen, onClose }: CreatePostModalProps) {
       if (error.response?.data?.error) {
         errorMessage = error.response.data.error
       } else if (error.response?.status === 401) {
+        // Token is invalid - user needs to re-login
         errorMessage = 'Your session has expired. Please log in again.'
+        // Clear auth and logout
+        logout()
+        setTimeout(() => {
+          clearAuthAndRedirect()
+        }, 500)
+        return
       } else if (error.response?.status === 400) {
         errorMessage = error.response.data?.error || 'Invalid post data. Please check your inputs.'
       } else if (error.response?.status === 404) {

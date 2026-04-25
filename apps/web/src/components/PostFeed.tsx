@@ -126,32 +126,9 @@ export const PostFeed = memo(function PostFeed({ community }: PostFeedProps = {}
         detectedSymptoms: newPost.detectedSymptoms || newPost.priority?.detectedSymptoms || []
       }
 
-      // Insert post at correct position based on priority
-      const PRIORITY_ORDER = { HIGH: 0, MEDIUM: 1, LOW: 2 }
-      const newPriority = PRIORITY_ORDER[transformedPost.priorityLevel as keyof typeof PRIORITY_ORDER] ?? 2
-      const newScore = transformedPost.urgencyScore || 0
-
-      const updatedPosts = [...currentPosts]
-      let insertIndex = 0
-
-      // Find correct insertion position
-      for (let i = 0; i < updatedPosts.length; i++) {
-        const postPriority = PRIORITY_ORDER[updatedPosts[i].priorityLevel as keyof typeof PRIORITY_ORDER] ?? 2
-        const postScore = updatedPosts[i].urgencyScore || 0
-
-        if (newPriority < postPriority) {
-          // New post has higher priority
-          insertIndex = i
-          break
-        } else if (newPriority === postPriority && newScore > postScore) {
-          // Same priority, but higher score
-          insertIndex = i
-          break
-        }
-        insertIndex = i + 1
-      }
-
-      updatedPosts.splice(insertIndex, 0, transformedPost as any)
+      // Insert new post at the top of the feed
+      // New posts always appear first, regardless of priority
+      const updatedPosts = [transformedPost as any, ...currentPosts]
       useStore.setState({ posts: updatedPosts })
 
       // Show notification if user has scrolled down

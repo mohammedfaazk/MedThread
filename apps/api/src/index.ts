@@ -48,6 +48,7 @@ import doctorPublicAnalyticsRouter from './routes/doctor-public-analytics.routes
 import analyticsSSERouter from './routes/analytics-sse.routes';
 import { paymentRouter } from './routes/payment.routes';
 import { fileUploadRouter } from './routes/file-upload.routes';
+import { healthRouter } from './routes/health';
 import notificationRouter from './routes/notification.routes';
 import doctorSentimentRouter from './routes/doctor-sentiment.routes';
 import { emailQueueService } from './services/email-queue.service';
@@ -235,6 +236,7 @@ app.use('/api', updateUserActivity);
 
 // Routes
 app.use('/api/auth', authRouter);
+app.use('/api/health', healthRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/reports', reportRouter);
@@ -370,9 +372,9 @@ app.use(errorHandler);
 httpServer.listen(PORT, () => {
   console.log(`🏥 MedThread API running on port ${PORT}`);
   
-  // Start performance monitoring
-  console.log('📊 Starting performance monitoring...');
-  performanceMonitorService.monitorSystemResources();
+  // Start performance monitoring (DISABLED - causing connection pool issues)
+  // console.log('📊 Starting performance monitoring...');
+  // performanceMonitorService.monitorSystemResources();
   
   // Start email queue processing
   try {

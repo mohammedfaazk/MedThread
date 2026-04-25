@@ -15,7 +15,7 @@ router.get('/events', (req: Request, res: Response) => {
 
   try {
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-change-in-production') as any;
     
     // Check if user is admin
     if (decoded.role !== 'ADMIN') {

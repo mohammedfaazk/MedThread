@@ -11,6 +11,7 @@ import { LoadingProvider } from '@/contexts/LoadingContext';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { NavigationWrapper } from '@/components/NavigationWrapper';
 import { ActivityHeartbeat } from '@/components/ActivityHeartbeat';
+import { AxiosSetup } from '@/components/AxiosSetup';
 import dynamic from 'next/dynamic';
 
 // Dynamically import Iridescence to avoid SSR issues
@@ -69,6 +70,9 @@ export default function RootLayout({
           <LoadingProvider>
             <JWTAuthProvider>
               <AccessibilityProvider>
+                {/* Setup Axios Interceptors */}
+                <AxiosSetup />
+                
                 {/* Activity Heartbeat - keeps user active in analytics */}
                 <ActivityHeartbeat />
                 

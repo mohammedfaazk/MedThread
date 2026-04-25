@@ -25,20 +25,38 @@ export default function HealthRiskPage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
       const token = localStorage.getItem('auth_token');
       
-      // Fetch predictions (not assessment data)
-      const response = await fetch(`${apiUrl}/api/health-risk/predictions/${user?.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // Fetch both predictions AND assessment data
+      const [predictionsResponse, assessmentResponse] = await Promise.all([
+        fetch(`${apiUrl}/api/health-risk/predictions/${user?.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`${apiUrl}/api/health-risk/assessment/${user?.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch predictions');
+      let predictions = null;
+      let assessment = null;
+
+      if (predictionsResponse.ok) {
+        const predData = await predictionsResponse.json();
+        predictions = predData.predictions;
+      }
+
+      if (assessmentResponse.ok) {
+        const assessData = await assessmentResponse.json();
+        assessment = assessData.assessment;
       }
       
-      const data = await response.json();
-      console.log('[Health Risk Page] Predictions data:', data);
-      setRiskData(data);
+      console.log('[Health Risk Page] Predictions:', predictions);
+      console.log('[Health Risk Page] Assessment:', assessment);
+      
+      // Set risk data if either predictions OR assessment exists
+      if (predictions || assessment) {
+        setRiskData({ predictions, assessment });
+      } else {
+        setRiskData(null);
+      }
     } catch (error) {
       console.error('Error fetching risk data:', error);
       setRiskData(null);
@@ -84,7 +102,7 @@ export default function HealthRiskPage() {
           </p>
         </div>
 
-        {riskData && riskData.predictions && riskData.predictions.length > 0 ? (
+        {riskData && (riskData.predictions?.length > 0 || riskData.assessment) ? (
           <RiskDashboard userId={user.id} onStartAssessment={() => setShowAssessment(true)} />
         ) : (
           <div className="bg-white rounded-lg shadow p-8 text-center">

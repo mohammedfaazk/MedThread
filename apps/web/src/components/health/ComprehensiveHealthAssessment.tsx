@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface AssessmentProps {
   userId: string;
@@ -43,6 +43,23 @@ export default function ComprehensiveHealthAssessment({ userId, onClose, onCompl
     hypertensionMedication: false
   });
 
+  // Restore saved form data on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('health_assessment_draft');
+    if (savedDraft) {
+      try {
+        const parsedData = JSON.parse(savedDraft);
+        setFormData(parsedData);
+        // Show notification that data was restored
+        setError('✅ Your previous form data has been restored. You can continue where you left off.');
+        // Clear the success message after 5 seconds
+        setTimeout(() => setError(''), 5000);
+      } catch (e) {
+        console.error('Failed to restore form data:', e);
+      }
+    }
+  }, []);
+
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
@@ -57,8 +74,14 @@ export default function ComprehensiveHealthAssessment({ userId, onClose, onCompl
       console.log('[Health Assessment] Token present:', !!token);
       
       if (!token) {
-        setError('You must be logged in to submit an assessment');
+        // Save form data before redirecting
+        localStorage.setItem('health_assessment_draft', JSON.stringify(formData));
+        setError('Session expired. Please log in again. Your form data has been saved.');
         setLoading(false);
+        // Redirect to login after 3 seconds
+        setTimeout(() => {
+          window.location.href = '/login?redirect=/health-risk';
+        }, 3000);
         return;
       }
 
@@ -79,15 +102,35 @@ export default function ComprehensiveHealthAssessment({ userId, onClose, onCompl
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to submit assessment' }));
         console.error('[Health Assessment] Error response:', errorData);
+        
+        // Handle token expiration
+        if (response.status === 401) {
+          // Save form data before redirecting
+          localStorage.setItem('health_assessment_draft', JSON.stringify(formData));
+          setError('Your session has expired. Please log in again. Your form data has been saved and will be restored.');
+          // Clear invalid token
+          localStorage.removeItem('auth_token');
+          // Redirect to login after 3 seconds
+          setTimeout(() => {
+            window.location.href = '/login?redirect=/health-risk';
+          }, 3000);
+          return;
+        }
+        
         throw new Error(errorData.error || `Server error: ${response.status}`);
       }
 
       const data = await response.json();
       console.log('[Health Assessment] Success:', data);
       
+      // Clear saved draft on successful submission
+      localStorage.removeItem('health_assessment_draft');
+      
       // Show success message with prediction count
       if (data.predictions && data.predictions.length > 0) {
         alert(`✅ Assessment Complete!\n\n${data.predictions.length} risk predictions generated.\n\nClick OK to view your results.`);
+      } else {
+        alert(`✅ Assessment Saved!\n\nYour health assessment has been saved successfully.`);
       }
       
       onComplete();
@@ -132,7 +175,11 @@ export default function ComprehensiveHealthAssessment({ userId, onClose, onCompl
           <p className="text-sm text-gray-600 mt-2">Step {step} of {totalSteps}</p>
           
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className={`mt-4 p-3 rounded-lg text-sm ${
+              error.startsWith('✅') 
+                ? 'bg-green-50 border border-green-200 text-green-700' 
+                : 'bg-red-50 border border-red-200 text-red-700'
+            }`}>
               {error}
             </div>
           )}

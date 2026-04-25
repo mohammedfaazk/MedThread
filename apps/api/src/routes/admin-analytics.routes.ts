@@ -821,7 +821,7 @@ router.get('/doctor-leaderboard', async (req, res) => {
         patientFeedbacks: {
           select: {
             rating: true,
-            treatmentOutcome: true
+            status: true
           }
         }
       }
@@ -835,7 +835,7 @@ router.get('/doctor-leaderboard', async (req, res) => {
       const completedAppointments = doctor.appointmentsAsDoctor.filter(a => a.status === 'COMPLETED').length;
       
       // Calculate treatment success rate
-      const treatmentOutcomes = doctor.patientFeedbacks.map(f => f.treatmentOutcome).filter(Boolean);
+      const treatmentOutcomes = doctor.patientFeedbacks.map(f => f.status).filter(Boolean);
       const successfulTreatments = treatmentOutcomes.filter(o => o === 'CURED' || o === 'IMPROVED').length;
       const treatmentSuccessRate = treatmentOutcomes.length > 0 
         ? Math.round((successfulTreatments / treatmentOutcomes.length) * 100)

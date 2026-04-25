@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { UnauthorizedError } from '../utils/errors';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -11,19 +12,19 @@ export interface AuthRequest extends Request {
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-  console.log('[AUTH] Authorization header:', authHeader ? 'Present' : 'Missing');
-  
-  const token = authHeader?.split(' ')[1];
-  
-  if (!token) {
-    console.log('[AUTH] No token found in request');
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-  
   try {
-    const secret = process.env.JWT_SECRET || 'secret';
-    console.log('[AUTH] Verifying token with secret length:', secret.length);
+    const authHeader = req.headers.authorization;
+    console.log('[AUTH] Authorization header:', authHeader ? 'Present' : 'Missing');
+    
+    const token = authHeader?.split(' ')[1];
+    
+    if (!token) {
+      console.log('[AUTH] No token found in request');
+      throw new UnauthorizedError('Authentication required');
+    }
+    
+    const secret = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+    console.log('[AUTH] Verifying token with secret:', secret.substring(0, 20) + '...');
     const decoded = jwt.verify(token, secret) as any;
     console.log('[AUTH] Token verified successfully for user:', decoded.userId);
     req.userId = decoded.userId;
@@ -36,7 +37,15 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     next();
   } catch (error: any) {
     console.log('[AUTH] Token verification failed:', error.message);
-    res.status(401).json({ error: 'Invalid token', details: error.message });
+    if (error instanceof UnauthorizedError) {
+      next(error);
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      next(new UnauthorizedError('Invalid token'));
+    } else if (error instanceof jwt.TokenExpiredError) {
+      next(new UnauthorizedError('Token expired'));
+    } else {
+      next(error);
+    }
   }
 };
 

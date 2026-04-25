@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Line, Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -42,9 +43,51 @@ interface RiskDashboardProps {
 }
 
 export default function RiskDashboard({ userId, onStartAssessment }: RiskDashboardProps) {
+  const router = useRouter();
   const [predictions, setPredictions] = useState<RiskPrediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRisk, setSelectedRisk] = useState<RiskPrediction | null>(null);
+
+  // Map disease to doctor specialty
+  const getSpecialtyForDisease = (disease: string): string => {
+    const diseaseMap: { [key: string]: string } = {
+      'Type 2 Diabetes': 'Endocrinology',
+      'Diabetes': 'Endocrinology',
+      'Cardiovascular Disease': 'Cardiology',
+      'Heart Disease': 'Cardiology',
+      'Hypertension': 'Cardiology',
+      'High Blood Pressure': 'Cardiology',
+      'Stroke': 'Neurology',
+      'Obesity': 'Endocrinology',
+      'Kidney Disease': 'Nephrology',
+      'Liver Disease': 'Gastroenterology',
+      'Cancer': 'Oncology',
+      'Respiratory Disease': 'Pulmonology',
+      'Asthma': 'Pulmonology',
+      'COPD': 'Pulmonology',
+      'Arthritis': 'Rheumatology',
+      'Osteoporosis': 'Orthopedics',
+      'Depression': 'Psychiatry',
+      'Anxiety': 'Psychiatry',
+      'Thyroid': 'Endocrinology'
+    };
+
+    // Try exact match first
+    if (diseaseMap[disease]) {
+      return diseaseMap[disease];
+    }
+
+    // Try partial match
+    for (const [key, value] of Object.entries(diseaseMap)) {
+      if (disease.toLowerCase().includes(key.toLowerCase()) || 
+          key.toLowerCase().includes(disease.toLowerCase())) {
+        return value;
+      }
+    }
+
+    // Default to General Medicine
+    return 'General Medicine';
+  };
 
   useEffect(() => {
     fetchRiskPredictions();
@@ -343,10 +386,19 @@ export default function RiskDashboard({ userId, onStartAssessment }: RiskDashboa
               </div>
 
               <div className="flex gap-3">
-                <button className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
+                <button 
+                  onClick={() => {
+                    const specialty = getSpecialtyForDisease(selectedRisk.disease);
+                    router.push(`/doctors?specialty=${encodeURIComponent(specialty)}`);
+                  }}
+                  className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                >
                   Find Specialists
                 </button>
-                <button className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                <button 
+                  onClick={() => router.push('/appointments')}
+                  className="flex-1 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
                   Schedule Checkup
                 </button>
               </div>

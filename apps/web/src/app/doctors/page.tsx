@@ -4,18 +4,35 @@ import { Sidebar } from '@/components/Sidebar'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
 import IridescenceLayout from '@/components/IridescenceLayout'
 
 import { Stethoscope } from 'lucide-react'
 
 export default function DoctorsPage() {
+  const searchParams = useSearchParams()
+  const specialtyFilter = searchParams.get('specialty')
   const [doctors, setDoctors] = useState<any[]>([])
+  const [filteredDoctors, setFilteredDoctors] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchDoctors()
   }, [])
+
+  useEffect(() => {
+    if (specialtyFilter && doctors.length > 0) {
+      const filtered = doctors.filter(doctor => {
+        const specialty = doctor.specialization || doctor.specialty || '';
+        return specialty.toLowerCase().includes(specialtyFilter.toLowerCase()) ||
+               specialtyFilter.toLowerCase().includes(specialty.toLowerCase());
+      });
+      setFilteredDoctors(filtered);
+    } else {
+      setFilteredDoctors(doctors);
+    }
+  }, [specialtyFilter, doctors])
 
   const fetchDoctors = async () => {
     try {
@@ -82,12 +99,27 @@ export default function DoctorsPage() {
           <Sidebar />
           <main className="flex-1 max-w-[900px]">
           <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-6 mb-4 shadow-lg">
-            <h1 className="text-3xl font-bold mb-2">Verified Doctors</h1>
-            <p className="text-gray-600">Connect with verified healthcare professionals</p>
+            <h1 className="text-3xl font-bold mb-2">
+              {specialtyFilter ? `${specialtyFilter} Specialists` : 'Verified Doctors'}
+            </h1>
+            <p className="text-gray-600">
+              {specialtyFilter 
+                ? `Showing ${filteredDoctors.length} ${specialtyFilter} specialist${filteredDoctors.length !== 1 ? 's' : ''}`
+                : 'Connect with verified healthcare professionals'
+              }
+            </p>
+            {specialtyFilter && (
+              <button
+                onClick={() => window.location.href = '/doctors'}
+                className="mt-3 text-sm text-orange-600 hover:text-orange-700 font-medium"
+              >
+                ← View All Doctors
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {doctors.map((doctor) => {
+            {filteredDoctors.map((doctor) => {
               // Use id for link
               const doctorLinkId = doctor.id;
               const displayName = doctor.name || doctor.full_name || doctor.username || `Dr. ${doctor.email?.split('@')[0]}`;
@@ -137,15 +169,30 @@ export default function DoctorsPage() {
             })}
           </div>
 
-          {doctors.length === 0 && !loading && (
+          {filteredDoctors.length === 0 && !loading && (
             <div className="bg-white/40 backdrop-blur-xl rounded-2xl border border-white/20 p-12 text-center shadow-lg">
               <div className="flex justify-center mb-4">
                 <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center">
                   <Stethoscope className="w-12 h-12 text-blue-600" />
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No Verified Doctors Yet</h3>
-              <p className="text-gray-600">Check back soon as we verify more healthcare professionals.</p>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {specialtyFilter ? `No ${specialtyFilter} Specialists Found` : 'No Verified Doctors Yet'}
+              </h3>
+              <p className="text-gray-600">
+                {specialtyFilter 
+                  ? 'Try viewing all doctors or search for a different specialty.'
+                  : 'Check back soon as we verify more healthcare professionals.'
+                }
+              </p>
+              {specialtyFilter && (
+                <button
+                  onClick={() => window.location.href = '/doctors'}
+                  className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                >
+                  View All Doctors
+                </button>
+              )}
             </div>
           )}
         </main>

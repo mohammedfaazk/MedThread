@@ -33,20 +33,9 @@ export function DoctorProfileGraphs({ doctorId, compact = false }: DoctorProfile
   ];
 
   useEffect(() => {
-    // ALWAYS use mock data for now
-    console.log('🎯 [DoctorProfileGraphs] Loading mock data for doctor:', doctorId);
-    const mockData: any = {};
-    charts.forEach(chart => {
-      const chartMockData = getMockData(chart.key);
-      mockData[chart.key] = chartMockData;
-      console.log(`📊 [DoctorProfileGraphs] Mock data for ${chart.key}:`, chartMockData);
-    });
-    setData(mockData);
-    console.log('✅ [DoctorProfileGraphs] All mock data loaded:', mockData);
-    setLoading(false);
-    
-    // Uncomment below to fetch real data
-    // fetchAllCharts();
+    // FETCH REAL DATA FROM API
+    console.log('🎯 [DoctorProfileGraphs] Fetching REAL data for doctor:', doctorId);
+    fetchAllCharts();
     
     // Initialize chart types from localStorage
     const savedTypes: Record<string, ChartType> = {};

@@ -25,7 +25,7 @@ postsRouter.get('/', async (req, res) => {
     if (token) {
       try {
         const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-change-in-production') as any;
         userId = decoded.userId;
       } catch (error) {
         // Invalid token, continue without userId
@@ -294,7 +294,7 @@ postsRouter.get('/:id', async (req, res) => {
     if (token) {
       try {
         const jwt = require('jsonwebtoken');
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as any;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret-change-in-production') as any;
         userId = decoded.userId;
       } catch (error) {
         // Invalid token, continue without userId

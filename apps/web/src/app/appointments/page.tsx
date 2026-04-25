@@ -529,8 +529,20 @@ export default function AppointmentsPage() {
                                         </div>
 
                                         <div className="mb-6 p-4 bg-blue-50/50 backdrop-blur-sm rounded-xl border border-blue-200/30">
-                                            <p className="text-sm font-semibold text-blue-900">Dr. {selectedDoctor.username}</p>
-                                            <p className="text-xs text-blue-700">{selectedDoctor.specialty}</p>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    console.log('[Appointments] Navigating to doctor profile:', selectedDoctor.id);
+                                                    router.push(`/u/${selectedDoctor.id}`);
+                                                }}
+                                                className="text-sm font-semibold text-blue-900 hover:text-blue-700 hover:underline transition-all flex items-center gap-1 group cursor-pointer"
+                                            >
+                                                Dr. {selectedDoctor.username}
+                                                <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                                            </button>
+                                            <p className="text-xs text-blue-700 mt-1">{selectedDoctor.specialty}</p>
                                         </div>
 
                                         <div className="mb-6">
